@@ -1,4 +1,5 @@
 # Automate AWS Network Firewall Rule Management
+
 An event-based serverless application that automatically performs CRUD operations on AWS Network Firewall rule-groups and rules based on distrubuted configuration files. The application consist of three modules:
 
 1. VPC (Optional)
@@ -17,6 +18,7 @@ The Application has one optional module "StackSets". The Stacksets are only requ
 NOTE: All the modules above are deployed using dedicated cross-account CICD pipelines (AWS CodePipeline) hosted in Resource Account.
 
 ## PRE-REQUISITES
+
 * Atleast two AWS Accounts are required as follows: 
     * Application Account - to deploy application. This is same account where AWS Network Firewall is deployed.
     * Resource Account - to deploy CICD pipeline for application deployment
@@ -25,7 +27,9 @@ NOTE: All the modules above are deployed using dedicated cross-account CICD pipe
     * Spoke Account - to test the application
 
 ## DEPLOYMENT
+
 ### PREPARE
+
 * Install npm and run `npm install`
 * Create deploy_vars.sh in root of repository using following template. Not all paramters are required, please add/delete parameters based on you AWS Account Setup.
 
@@ -50,6 +54,7 @@ export AWS_PROFILE=${RES_ACCOUNT_AWS_PROFILE}
 * Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`
 
 ### BOOTSTRAP
+
 * Login to all AWS Account of AWS profiles configured in deploy_vars.sh
 * CDK Bootstrap Resource Account:
 `cdk bootstrap --profile $RES_ACCOUNT_AWS_PROFILE aws://${ACCOUNT_RES}/${AWS_REGION}`
@@ -63,6 +68,7 @@ export AWS_PROFILE=${RES_ACCOUNT_AWS_PROFILE}
 NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Network Firewall or Application or both modules.
 
 ### CONFIGURE
+
 * The application loads configuration and names resources created by CDK using the variable `STAGE` defined later. As such create a folder in `conf` matching the name of the `STAGE`. Consider the `STAGE` variable as representing your application environment i.e. dev, int, prod, etc.
 * create `vpc.json` in `<STAGE>` folder if you want to deploy VPCs. Follow the schema defined in `conf/schemas/vpc.json`. Refer to Glossary to understand each parameter.
 * create `firewall.json` in `<STAGE>` folder if you want to deploy AWS Network Firewall. Follow the schema defined in `conf/schemas/firewall.json`. Refer to Glossary to understand each parameter.
@@ -70,6 +76,7 @@ NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Netw
 * create `stackset.json` in `<STAGE>` folder. Follow the schema defined in `conf/schemas/stackset.json`. Refer to Glossary to understand each parameter.
 
 ### DEPLOY
+
 * Run `export STAGE=xxx` to configure the STAGE value matching the folder you created.
 * Run `export AWS_REGION=xx-yyyy-1` to configure the default AWS Region used for CodePipeline deployment.
 * Run `cdk deploy vpc-pipeline-anfw-stack-${STAGE}` to deploy VPC module (optional)
@@ -77,6 +84,7 @@ NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Netw
 * Run `cdk deploy app-pipeline-anfw-stack-${STAGE}` to deploy Application module
 
 #### Other Useful commands
+
 * `npm run build`   compile typescript to js
 * `npm run watch`   watch for changes and compile
 * `npm run test`    perform the jest unit tests
@@ -126,4 +134,13 @@ These packages are not part of the solution.
 | source-map-support | ^0.5.21 |
 
 ## APPENDIX
+
 Please refer the [GLOSSARY](GLOSSARY.md) before creating any configuration files
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This project is licensed under the Apache-2.0 License.
