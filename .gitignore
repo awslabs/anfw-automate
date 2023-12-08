@@ -1,0 +1,13 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+archives
+dist
+.venv
+.cdk.staging
+cdk.out
+.hypothesis
+.pytest_cache
+__pycache__
+.vscode

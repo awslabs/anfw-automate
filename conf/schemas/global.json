@@ -1,0 +1,133 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "project": {
+            "type": "object",
+            "properties": {
+                "aws_organziation_scope": {
+                    "type": "string"
+                },
+                "brand": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "project_name": {
+                    "type": "string"
+                },
+                "module_name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "aws_organziation_scope",
+                "brand",
+                "department",
+                "project_name",
+                "module_name"
+            ]
+        },
+        "base": {
+            "type": "object",
+            "properties": {
+                "primary_region": {
+                    "type": "string",
+                    "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                },
+                "target_account_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{12}$"
+                },
+                "resource_account_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{12}$"
+                },
+                "delegated_admin_account_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{12}$"
+                },
+                "organziation_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^o-[a-zA-Z0-9]+$"
+                    },
+                    "minItems": 1
+                }
+            },
+            "required": [
+                "primary_region",
+                "target_account_id",
+                "resource_account_id",
+                "delegated_admin_account_id",
+                "organziation_ids"
+            ]
+        },
+        "pipeline": {
+            "type": "object",
+            "properties": {
+                "codestar_connection_arn": {
+                    "type": "string"
+                },
+                "repo_name": {
+                    "type": "string"
+                },
+                "repo_branch_name": {
+                    "type": "string"
+                },
+                "auto_promote_pipeline": {
+                    "type": "boolean"
+                },
+                "auto_detect_changes": {
+                    "type": "boolean"
+                },
+                "vpc_regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                    },
+                    "minItems": 1
+                },
+                "firewall_regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                    },
+                    "minItems": 1
+                },
+                "app_regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                    },
+                    "minItems": 1
+                },
+                "deploy_stacksets": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "codestar_connection_arn",
+                "repo_name",
+                "repo_branch_name",
+                "auto_promote_pipeline",
+                "auto_detect_changes",
+                "vpc_regions",
+                "firewall_regions",
+                "app_regions",
+                "deploy_stacksets"
+            ]
+        }
+    },
+    "required": [
+        "project",
+        "base",
+        "pipeline"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,34 @@
+{
+    "eu-west-1": {
+        "permission_model": "SERVICE_MANAGED",
+        "auto_deployment": true,
+        "account_filter_type": "NONE",
+        "organizational_unit_ids": [
+            "ou-tbtc-xxxxx"
+        ],
+        "failure_tolerance_percentage": 0,
+        "max_concurrent_percentage": 100,
+        "region_concurrency_type": "PARALLEL",
+        "call_as": "DELEGATED_ADMIN",
+        "stack_regions": [
+            "eu-west-1",
+            "eu-central-1"
+        ]
+    },
+    "eu-central-1": {
+        "permission_model": "SERVICE_MANAGED",
+        "auto_deployment": true,
+        "account_filter_type": "NONE",
+        "organizational_unit_ids": [
+            "ou-tbtc-yyyyy"
+        ],
+        "failure_tolerance_percentage": 0,
+        "max_concurrent_percentage": 100,
+        "region_concurrency_type": "PARALLEL",
+        "call_as": "DELEGATED_ADMIN",
+        "stack_regions": [
+            "eu-west-1",
+            "eu-central-1"
+        ]
+    }
+}

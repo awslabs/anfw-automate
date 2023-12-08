@@ -1,0 +1,50 @@
+{
+    "Records": [
+        {
+            "messageId": "123123-abcd-abdc-abcd-abcd123123123",
+            "receiptHandle": "AQEBFymlDhY0VykgdpRKre8Db+COh1urXAu1DTZRFnxu7I0ozdb1Hiyt0ziLf1GLrZ4ogNNPqEIEkS0WfCtOdnmiaVj6xiRiz7HrMXDMzqou+mWIR8rkpWVS66usqFmN8X/NJnEEM5brBkoIyRFKs+g/zTbAj1dtzKocbkwApwV76N+/KMMuztPkhmuWBn7ewNTQPxNuFiL309kGVqYsZqEAXNGP5tfkTJwA0zYrEbw6U0C4xzxNCVmE+ddx2fM8z9t/t17yB/bfHXGDNvcbLR4KoQc2bxQR4ms8M4qp7a64PoH7fEr3k6kQaTsCa8F4TvAe",
+            "body": "{\"VPC\": \"1234abcd6789ef\", \"Account\": \"112233445566\", \"Region\": \"eu-west-1\", \"CIDR\": \"10.10.0.0/24\", \"Rules\": {\"112233445566-1234abcd6789ef-96ccf8d27f\": \"pass tls $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\\\\\".amazonaws.com\\\\\"; endswith; priority:1;flow:to_server, established; sid:65731; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-96ccf8d27f;)\", \"112233445566-1234abcd6789ef-9773e15683\": \"pass tls $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\\\\\".example.com\\\\\"; endswith; priority:1;flow:to_server, established; sid:853129; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-9773e15683;)\", \"112233445566-1234abcd6789ef-39e4a33c8a\": \"pass http $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (http.host; content:\\\\\"google.com\\\\\"; startswith; endswith; priority:1;flow:to_server, established; sid:341833; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-39e4a33c8a;)\", \"112233445566-1234abcd6789ef-ab670070c7\": \"pass http $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (http.host; content:\\\\\"helpdomain.org\\\\\"; startswith; endswith; priority:1;flow:to_server, established; sid:279682; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-ab670070c7;)\", \"112233445566-1234abcd6789ef-ebd1db72a6\": \"pass http $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (http.host; content:\\\\\".amazon.com\\\\\"; startswith; endswith; flow:to_server, established;priority:1; sid:269674; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-ebd1db72a6;)\", \"112233445566-1234abcd6789ef-51449db790\": \"pass tls $a1122334455661234abcd6789ef any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\\\\\".facebook.com\\\\\"; endswith; flow:to_server, established;priority:1; sid:796342; rev:1; metadata: rule_name 112233445566-1234abcd6789ef-51449db790;)\"}}",
+            "attributes": {
+                "ApproximateReceiveCount": "8",
+                "AWSTraceHeader": "Root=1-6527e1ac-abc123123123;Parent=abc123123123;Sampled=1;Lineage=abc12312:0",
+                "SentTimestamp": "169711249000",
+                "SequenceNumber": "123123123abc",
+                "MessageGroupId": "112233445566",
+                "SenderId": "AROA4ULT4TXVJZ6BPBGQ4:eu-west-1-lambda-pp-nfwff-RuleCollectLambdaC604AE4-jlqTs40ahgps",
+                "MessageDeduplicationId": "123123123123abc",
+                "ApproximateFirstReceiveTimestamp": "169711249000"
+            },
+            "messageAttributes": {
+                "Account": {
+                    "stringValue": "112233445566",
+                    "stringListValues": [],
+                    "binaryListValues": [],
+                    "dataType": "String"
+                },
+                "Version": {
+                    "stringValue": "0.2.0",
+                    "stringListValues": [],
+                    "binaryListValues": [],
+                    "dataType": "String"
+                },
+                "Event": {
+                    "stringValue": "Update",
+                    "stringListValues": [],
+                    "binaryListValues": [],
+                    "dataType": "String"
+                },
+                "Region": {
+                    "stringValue": "eu-west-1",
+                    "stringListValues": [],
+                    "binaryListValues": [],
+                    "dataType": "String"
+                }
+            },
+            "md5OfMessageAttributes": "abcdd1233213123",
+            "md5OfBody": "abcdd1233213123",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:eu-west-1:000011112222:sqs-pp-nfwffm-proxy-local-LambdaSQS.fifo",
+            "awsRegion": "eu-west-1"
+        }
+    ]
+}
