@@ -1,0 +1,16 @@
+{
+    "VPC": "123456789aaaaaaa",
+    "Account": "123456789120",
+    "Region": "eu-west-3",
+    "CIDR": "10.1.0.0/16",
+    "Rules": {
+        "123456789120-123456789aaaaaaa-96ccf8d27f": "pass tls $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\".amazonaws.com\"; endswith; priority:1;flow:to_server, established; sid:200269; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-96ccf8d27f;)",
+        "123456789120-123456789aaaaaaa-709f471759": "pass tls $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\".google.com\"; endswith; priority:1;flow:to_server, established; sid:90430; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-709f471759;)",
+        "123456789120-123456789aaaaaaa-9773e15683": "pass tls $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\".example.com\"; endswith; priority:1;flow:to_server, established; sid:919522; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-9773e15683;)",
+        "123456789120-123456789aaaaaaa-b35652bab4": "pass http $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (http.host; content:\"amazonaws.com\"; startswith; endswith; priority:1;flow:to_server, established; sid:980221; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-b35652bab4;)",
+        "123456789120-123456789aaaaaaa-39e4a33c8a": "pass http $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (http.host; content:\"google.com\"; startswith; endswith; priority:1;flow:to_server, established; sid:84043; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-39e4a33c8a;)",
+        "123456789120-123456789aaaaaaa-ab670070c7": "pass http $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (http.host; content:\"helpdomain.org\"; startswith; endswith; priority:1;flow:to_server, established; sid:281524; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-ab670070c7;)",
+        "123456789120-123456789aaaaaaa-c99b75ea83": "pass http $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (http.host; content:\"amazon.com\"; startswith; endswith; flow:to_server, established;priority:1; sid:424687; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-c99b75ea83;)",
+        "123456789120-123456789aaaaaaa-67fa7be395": "pass tls $a123456789120123456789aaaaaaa any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:\".facebook.com\"; endswith; flow:to_server, established;priority:1; sid:828628; rev:1; metadata: rule_name 123456789120-123456789aaaaaaa-67fa7be395;)"
+    }
+}

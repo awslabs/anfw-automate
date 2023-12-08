@@ -1,0 +1,34 @@
+# The protocol configurations supported by the solution.
+# PredfinedRuleProtocols provide an abstraction over surricata rules.There is no need to defined rules in surricata format.
+# CustomRuleProtocols are for advanced users that need additional protocols over the PredfinedRuleProtocols
+# Any user with such a need must define the rules in surricata rule format: https://docs.suricata.io/en/latest/rules/intro.html
+
+PredfinedRuleProtocols:
+  http: "http.host"
+  https: "tls.sni"
+  tls: "tls.sni"
+
+CustomRuleProtocols:
+  - ftp #(data protocol not supported by ANFW)
+  - smb
+  - dns
+  - dcerpc
+  - ssh
+  - smtp
+  - imap
+  - modbus
+  - dnp3
+  - nfs
+  - ikev2
+  - krb5
+  - ntp
+  - dhcp
+  - rfb
+  - rdp
+  - snmp
+  - tftp
+  - sip
+  - tcp
+  - udp
+  - icmp
+  - ip

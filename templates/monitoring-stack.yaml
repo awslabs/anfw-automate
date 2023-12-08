@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "(DO NOT USE) Optional sample Monitoring Stack to monitor the Customer Log Group and enable CW alarms"
+Parameters:
+  CentralEventBusARN:
+    Type: String
+    Description: ARN of the Central Event bus that receives the events from local event bus
+
+  CentralEventBusId:
+    Type: String
+    Description: Id of the Central Event bus that receives the events from local event bus
+
+  TargetAccountId:
+    Type: String
+    Description: Account Id of Firewall Account
+
+  NamePrefix:
+    Description: Prefix used for resource naming
+    Type: String
+
+  NameDotPrefix:
+    Description: Prefix used for resource naming using "." instead of "-"
+    Type: String
+
+  Stage:
+    Description: Stage to use
+    Type: String
+
+Resources:
+  CloudWatchAlarmsSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: ANFW CloudWatch Alarms SNS Notification Topic
+      TopicName: !Sub "${NamePrefix}-CloudWatchAlarmsSNSTopic-${Stage}" 
+
+  CloudWatchAlarmsSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref CloudWatchAlarmsSNSTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: SSEAndSSLPolicy
+        Statement:
+          - Sid: Allow_Publish_Alarms
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudwatch.amazonaws.com
+            Action: sns:Publish
+            Resource:
+              - !Join
+                - ':'
+                - - 'arn'
+                  - !Ref AWS::Partition
+                  - 'sns'
+                  - !Ref AWS::Region
+                  - !Ref AWS::AccountId
+                  - !GetAtt CloudWatchAlarmsSNSTopic.TopicName
+
+  DLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Dead letter Queue for failed eventbridge rule invocations"
+      AlarmName: !Sub cwa-${NamePrefix}-SQSAlarm-${Stage}
+      Metrics:
+      - Expression: "m2-m1"
+        Id: "e1"
+        Label: "ChangeInAmountVisible"
+        ReturnData: true
+      - Id: "m1"
+        Label: "MessagesVisibleMin"
+        MetricStat:
+            Metric:
+                Dimensions:
+                - Name: QueueName
+                  Value: !GetAtt EBDLQueue.QueueName
+                MetricName: ApproximateNumberOfMessagesVisible
+                Namespace: "AWS/SQS"
+            Period: 300 # evaluate maximum over period of 5 mins
+            Stat: Minimum
+            Unit: Count
+        ReturnData: false
+      - Id: "m2"
+        Label: "MessagesVisibleMax"
+        MetricStat:
+            Metric:
+                Dimensions:
+                - Name: QueueName
+                  Value: !GetAtt EBDLQueue.QueueName
+                MetricName: ApproximateNumberOfMessagesVisible
+                Namespace: "AWS/SQS"
+            Period: 300 # evaluate maximum over period of 5 min
+            Stat: Maximum
+            Unit: Count
+        ReturnData: false
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref CloudWatchAlarmsSNSTopic
+      Threshold: 1
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+
+  CustomerLogBucket:
+    DeletionPolicy: Retain
+    Type: "AWS::S3::Bucket"
+    Description: ANFW customer log bucket
+    Properties:
+      BucketName: !Sub "anfw-logs-${AWS::Region}-${AWS::AccountId}-${Stage}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: True
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  CustomerLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CustomerLogBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowCloudWatchLogs
+            Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action: s3:PutObject
+            Resource:
+              - !Sub arn:aws:s3:::${CustomerLogBucket}/*
+          - Sid: ReadObjectAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: s3:GetObject
+            Resource:
+              - !Sub arn:aws:s3:::${CustomerLogBucket}/*
+          - Sid: ListBucket
+            Action: s3:ListBucket
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Resource:
+              - !Sub arn:aws:s3:::${CustomerLogBucket}
+          - Sid: PublicReadGetObject
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${CustomerLogBucket}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  LogExportTask:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !GetAtt CustomerLogBucket.Arn
+      RoleArn: 
+      LogGroupName: !Ref CustomerLogGroup
+      FilterPattern: |
+        {
+          $.timestamp < (floor(currentTime() / 60000) - 7 * 24 * 60)
+        }
+
+  ExportTaskSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Export logs older than 7 days"
+      ScheduleExpression: "rate(1 day)"  # Run the task every day
+      Targets:
+        - Arn: !GetAtt LogExportTask.Arn
+          Id: "ExportTaskTarget"
+
+  FailedObjectInvocationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+        AlarmName: !Sub "${NamePrefix}-S3ObjectFailedInvocations-${Stage}" 
+        # !Join [ '-', [!Ref ProjectName,'s3-object-failed-invocations', !Ref OrgScope ]]
+        ActionsEnabled: true
+        OKActions: []
+        AlarmActions:
+          - !Ref CloudWatchAlarmsSNSTopic
+        InsufficientDataActions: []
+        MetricName: FailedInvocations
+        Namespace: AWS/Events
+        Statistic: Average
+        Dimensions:
+            - Name: RuleName
+              Value: !Ref S3ObjectEventRule
+        Period: 60
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: missing
+
+  FailedBucketInvocationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+        AlarmName: !Sub "${NamePrefix}-S3BucketDeleteFailedInvocations-${Stage}" 
+        # !Join [ '-', [!Ref ProjectName,'s3-bucket-delete-failed-invocations', !Ref OrgScope ]]
+        ActionsEnabled: true
+        OKActions: []
+        AlarmActions:
+            - !Ref CloudWatchAlarmsSNSTopic
+        InsufficientDataActions: []
+        MetricName: FailedInvocations
+        Namespace: AWS/Events
+        Statistic: Average
+        Dimensions:
+            - Name: RuleName
+              Value: !Ref S3BucketEventRule
+        Period: 60
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: missing
+
+  FailedVpcInvocationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+        AlarmName: !Sub "${NamePrefix}-VpcDeleteFailedInvocations-${Stage}" 
+        # !Join [ '-', [!Ref ProjectName,'vpc-delete-failed-invocations', !Ref OrgScope ]]
+        ActionsEnabled: true
+        OKActions: []
+        AlarmActions:
+            - !Ref CloudWatchAlarmsSNSTopic
+        InsufficientDataActions: []
+        MetricName: FailedInvocations
+        Namespace: AWS/Events
+        Statistic: Average
+        Dimensions:
+            - Name: RuleName
+              Value: !Ref VPCDeleteEventRule
+        Period: 60
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: missing

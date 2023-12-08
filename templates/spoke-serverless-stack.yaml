@@ -1,0 +1,275 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Deploys an S3 bucket to store rule configuration, IAM Cross-Account trusted Role used by AWS Network Firewall Lambda Application, and Event Bridge rules to forward relevant events to cross-account central bus."
+Parameters:
+  CentralEventBusARN:
+    Type: String
+    Description: ARN of the Central Event bus that receives the events from local event bus
+
+  CentralEventBusId:
+    Type: String
+    Description: Id of the Central Event bus that receives the events from local event bus
+
+  TargetAccountId:
+    Type: String
+    Description: Account Id of Firewall Account
+
+  NamePrefix:
+    Description: Prefix used for resource naming
+    Type: String
+
+  NameDotPrefix:
+    Description: Prefix used for resource naming using "." instead of "-"
+    Type: String
+
+  Stage:
+    Description: Stage to use
+    Type: String
+
+Resources:
+  ConfigBucket:
+    DeletionPolicy: Delete
+    Type: "AWS::S3::Bucket"
+    Description: ANFW allowlist bucket shared among all regions
+    Properties:
+      BucketName: !Sub "anfw-allowlist-${AWS::Region}-${AWS::AccountId}-${Stage}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: True
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  ConfigBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ConfigBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ReadWriteObjectAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: s3:*Object
+            Resource:
+              - !Sub arn:aws:s3:::${ConfigBucket}
+              - !Sub arn:aws:s3:::${ConfigBucket}/*
+          - Sid: ListBucket
+            Action: s3:ListBucket
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Resource:
+              - !Sub arn:aws:s3:::${ConfigBucket}
+          - Sid: PublicReadGetObject
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${ConfigBucket}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  CrossTargetAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "rle.${NameDotPrefix}.xaccount.lmb.${AWS::Region}.${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${TargetAccountId}:root
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: ValidationPerms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                  - s3:List*
+                  - s3:PutBucketNotification
+                Resource:
+                  - !Sub arn:aws:s3:::${ConfigBucket}/*
+                  - !Sub arn:aws:s3:::${ConfigBucket}
+              - Effect: Allow
+                Action:
+                  - "ec2:DescribeVpcs"
+                  - "ec2:DescribeVpcAttribute"
+                  - "ec2:DescribeTransitGatewayAttachments"
+                Resource: "*"
+        - PolicyName: LoggerPerms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                - logs:Describe*
+                - logs:List*
+                - logs:GetLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                - logs:CreateLogGroup
+                - logs:CreateExportTask
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                Resource: "*"
+
+  EventBridgeIAMrole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub "rle.${NameDotPrefix}.eb.${AWS::Region}.${Stage}"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub events.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: PutEventsDestinationBus
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "events:PutEvents"
+                Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${TargetAccountId}:event-bus/${CentralEventBusId}
+
+  EBDLQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub dlq-${NamePrefix}-ConfigEventBus-${Stage}
+
+  EBDLQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DependsOn:
+      - EBDLQueue
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+            Resource: !GetAtt EBDLQueue.Arn
+            Condition:
+              ForAnyValue:StringEquals:
+                  aws:SourceArn: [
+                    !GetAtt S3ObjectEventRule.Arn, 
+                    !GetAtt S3BucketEventRule.Arn,
+                    !GetAtt VPCDeleteEventRule.Arn
+                    ]
+          - Effect: Deny
+            Principal: "*"
+            Action: "*"
+            Resource: !GetAtt EBDLQueue.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+      Queues:
+        - Ref: EBDLQueue
+
+  S3ObjectEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: !Sub "DoNotDelete-S3ObjectRule-${NamePrefix}-${Stage}"
+      Description: Routes S3 object event notifications to central event bus or global endpoint
+      State: ENABLED
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - "Object Created"
+          - "Object Deleted"
+          - "Object Restore Completed"
+          - "Object Restore Expired"
+          - "Object Restore Initiated"
+        detail:
+          bucket:
+            name:
+              - !Ref ConfigBucket
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${TargetAccountId}:event-bus/${CentralEventBusId}
+          Id: !Ref CentralEventBusId
+          RoleArn: !GetAtt EventBridgeIAMrole.Arn
+          DeadLetterConfig:
+            Arn: !GetAtt EBDLQueue.Arn
+
+  S3BucketEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: !Sub "DoNotDelete-S3BucketRule-${NamePrefix}-${Stage}" 
+      Description: Routes S3 bucket notifications to central event bus or global endpoint
+      State: ENABLED
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - "AWS API Call via CloudTrail"
+        detail:
+          eventSource:
+            - "s3.amazonaws.com"
+          eventName:
+            - "DeleteBucket"
+          requestParameters:
+            bucketName:
+              - !Ref ConfigBucket
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${TargetAccountId}:event-bus/${CentralEventBusId}
+          Id: !Ref CentralEventBusId
+          RoleArn: !GetAtt EventBridgeIAMrole.Arn
+          DeadLetterConfig:
+            Arn: !GetAtt EBDLQueue.Arn
+
+  VPCDeleteEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: !Sub "DoNotDelete-VPCDeleteRule-${NamePrefix}-${Stage}"
+      Description: Routes VPC Delete events to central bus
+      State: ENABLED
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - "AWS API Call via CloudTrail"
+        detail:
+          eventSource:
+            - "ec2.amazonaws.com"
+          eventName:
+            - "DeleteVpc"
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${TargetAccountId}:event-bus/${CentralEventBusId}
+          Id: !Ref CentralEventBusId
+          RoleArn: !GetAtt EventBridgeIAMrole.Arn
+          DeadLetterConfig:
+            Arn: !GetAtt EBDLQueue.Arn          
+
+# Monitoring and Logging Components
+  CustomerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub cw-${NamePrefix}-CustomerLog-${Stage}
+      RetentionInDays: 7

@@ -1,0 +1,55 @@
+{
+    "version": "0",
+    "id": "acc75d4b-60c1-1d87-1e8e-754684f1cbde",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "123456789012",
+    "time": "2022-11-21T10:40:07Z",
+    "region": "eu-west-3",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.08",
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "PRINCIPALID:d77qtts",
+            "arn": "arn:aws:sts::123456789012:assumed-role/DemoUser/d77qtts",
+            "accountId": "123456789012",
+            "accessKeyId": "ABC12345678",
+            "sessionContext": {
+                "sessionIssuer": {
+                    "type": "Role",
+                    "principalId": "PRINCIPALID",
+                    "arn": "arn:aws:iam::123456789012:role/DemoUser",
+                    "accountId": "123456789012",
+                    "userName": "DemoUser"
+                },
+                "webIdFederationData": {},
+                "attributes": {
+                    "creationDate": "2022-11-21T10:21:22Z",
+                    "mfaAuthenticated": "false"
+                }
+            }
+        },
+        "eventTime": "2022-11-21T10:40:07Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DeleteVpc",
+        "awsRegion": "eu-west-3",
+        "sourceIPAddress": "AWS Internal",
+        "userAgent": "AWS Internal",
+        "requestParameters": {
+            "vpcId": "vpc-0123456789abcdef0"
+        },
+        "responseElements": {
+            "requestId": "906a6534-6e4c-4899-bf37-abc123123123",
+            "_return": true
+        },
+        "requestID": "906a6534-6e4c-4899-bf37-abc123123123",
+        "eventID": "c2c80977-5b84-4a87-bbbe-abc123123123",
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "123456789012",
+        "eventCategory": "Management",
+        "sessionCredentialFromConsole": "true"
+    }
+}
