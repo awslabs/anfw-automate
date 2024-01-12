@@ -2,6 +2,7 @@
 description = "Lambda Functions for automate rule management in AWS Network Firewall"
 name = "app"
 version = "0.1.13"
+authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.com>"]
 
 [tool.poetry.dependencies]
 aws-lambda-powertools = "^2.25.1"
