@@ -12,5 +12,8 @@ update:
 pre-synth:
 	bash -e scripts/pre-synth-script.sh
 
+deploy:
+	make deploy
+
 clean:
 	git clean -fdx
