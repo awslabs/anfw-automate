@@ -66,7 +66,7 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-firewall`
                 })
             )
 
@@ -80,7 +80,7 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-baserouting`
                 })
             )
 
@@ -94,7 +94,7 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-routing`
                 })
             )
         });

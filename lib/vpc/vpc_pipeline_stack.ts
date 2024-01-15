@@ -63,7 +63,7 @@ export class VpcPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-vpc`
                 })
             )
 

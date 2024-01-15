@@ -69,7 +69,7 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-lambda`
                 })
             );
 
@@ -83,7 +83,7 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-serverless`
                 })
             );
 
@@ -97,7 +97,7 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${delegated_admin_account}`
                     },
-                    stageName: `${region}`
+                    stageName: `${region}-stackset`
                 })
             );
         });
