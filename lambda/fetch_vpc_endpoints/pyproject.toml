@@ -3,7 +3,7 @@ description = "Lambda function to fetch VPC endpoint IDs in order of Availabilit
 name = "fetch-vpc-endpoints"
 packages = [{include = "fetch_vpc_endpoints"}]
 authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.de>"]
-version = "0.1.10"
+version = "0.1.12"
 
 [tool.poetry.dependencies]
 bandit = "^1.7.5"
