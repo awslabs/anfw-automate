@@ -1,6 +1,5 @@
  Name                     Version   License                              
  CacheControl             0.14.0    Apache Software License              
- GitPython                3.1.41    BSD License                          
  PyYAML                   6.0.1     MIT License                          
  Pygments                 2.17.2    BSD License                          
  bandit                   1.7.7     Apache Software License              
@@ -11,7 +10,6 @@
  cyclonedx-python-lib     6.4.1     Apache Software License              
  defusedxml               0.7.1     Python Software Foundation License   
  filelock                 3.13.1    The Unlicense (Unlicense)            
- gitdb                    4.0.11    BSD License                          
  html5lib                 1.1       MIT License                          
  idna                     3.6       BSD License                          
  license-expression       30.2.0    Apache-2.0                           
@@ -29,7 +27,6 @@
  requests                 2.31.0    Apache Software License              
  rich                     13.7.0    MIT License                          
  six                      1.16.0    MIT License                          
- smmap                    5.0.1     BSD License                          
  sortedcontainers         2.4.0     Apache Software License              
  stevedore                5.1.0     Apache Software License              
  toml                     0.10.2    MIT License                          

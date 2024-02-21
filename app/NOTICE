@@ -1,6 +1,5 @@
  Name                       Version    License                                         
  CacheControl               0.14.0     Apache Software License                         
- GitPython                  3.1.41     BSD License                                     
  PyYAML                     6.0.1      MIT License                                     
  Pygments                   2.17.2     BSD License                                     
  attrs                      23.2.0     MIT License                                     
@@ -8,13 +7,12 @@
  aws-xray-sdk               2.12.1     Apache Software License                         
  bandit                     1.7.7      Apache Software License                         
  boolean.py                 4.0        BSD-2-Clause                                    
- botocore                   1.34.45    Apache Software License                         
+ botocore                   1.34.46    Apache Software License                         
  certifi                    2024.2.2   Mozilla Public License 2.0 (MPL 2.0)            
  charset-normalizer         3.3.2      MIT License                                     
  cyclonedx-python-lib       6.4.1      Apache Software License                         
  defusedxml                 0.7.1      Python Software Foundation License              
  filelock                   3.13.1     The Unlicense (Unlicense)                       
- gitdb                      4.0.11     BSD License                                     
  html5lib                   1.1        MIT License                                     
  idna                       3.6        BSD License                                     
  jmespath                   1.0.1      MIT License                                     
@@ -38,7 +36,6 @@
  rich                       13.7.0     MIT License                                     
  rpds-py                    0.18.0     MIT License                                     
  six                        1.16.0     MIT License                                     
- smmap                      5.0.1      BSD License                                     
  sortedcontainers           2.4.0      Apache Software License                         
  stevedore                  5.1.0      Apache Software License                         
  toml                       0.10.2     MIT License                                     

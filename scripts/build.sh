@@ -15,7 +15,7 @@ do
     python3 -m venv .venv
     source .venv/bin/activate
     poetry install --no-root
-    poetry run pip-audit --local --ignore-vuln PYSEC-2022-43012
+    poetry run pip-audit --local
     poetry run bandit -r . -x "**.venv/*","**test/*"
     poetry run pip-licenses --output NOTICE
     popd
