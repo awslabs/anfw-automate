@@ -1,6 +1,6 @@
 {
     "eu-west-1": {
-        "vpc_id": "lambda_subnet_a",
+        "vpc_id": "vpc-010eb1e943e875731",
         "vpc_cidr": "10.1.0.0/24",
         "multi_az": true,
         "internet_gateway_id": "igw-08d807a8c192f8a69",
