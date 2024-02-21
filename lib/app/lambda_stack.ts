@@ -1,12 +1,8 @@
 import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps, aws_cloudwatch_actions } from 'aws-cdk-lib';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
-import * as sns from 'aws-cdk-lib/aws-sns';
-import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Construct } from "constructs";
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as pylambda from "@aws-cdk/aws-lambda-python-alpha";
@@ -15,8 +11,8 @@ export class LambdaStack extends Stack {
     constructor(scope: Construct, id: string, props: {
         namePrefix: string;
         vpcId: string;
-        vpcCidr: string;
-        internalNet: string;
+        // vpcCidr: string;
+        // internalNet: string;
         supportedRegions: [string];
         stage: string;
     }) {
@@ -97,8 +93,8 @@ export class LambdaStack extends Stack {
             environment: {
                 QUEUE_NAME: `${ruleSqsQueue.queueName}`,
                 LOG_LEVEL: "DEBUG",
-                HOME_NET: `${props.vpcCidr}`,
-                INTERNAL_NET: `${props.internalNet}`,
+                // HOME_NET: `${props.vpcCidr}`,
+                // INTERNAL_NET: `${props.internalNet}`,
                 POWERTOOLS_SERVICE_NAME: "RuleExecuteLambda",
                 XACCOUNT_ROLE: `rle.${namedotprefix}.xaccount.lmb.${this.region}.${props.stage}`,
                 SUPPORTED_REGIONS: `${props.supportedRegions.toString()}`,

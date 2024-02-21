@@ -16,12 +16,11 @@ export class LambdaStage extends Stage {
         new LambdaStack(this, `lambda-${props.namePrefix}-${props.stage}`, {
             namePrefix: props.namePrefix,
             vpcId: props.config.vpc_id,
-            vpcCidr: props.config.vpc_cidr,
-            internalNet: props.config.internal_network_cidrs,
+            // vpcCidr: props.config.vpc_cidr,
+            // internalNet: props.config.internal_network_cidrs,
             supportedRegions: props.config.supported_regions,
             stage: props.stage,
         });
-
     }
 }
 
