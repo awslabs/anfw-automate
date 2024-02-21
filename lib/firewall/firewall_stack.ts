@@ -13,10 +13,11 @@ export class NetworkFirewallStack extends Stack {
         subnetIds: { [key: string]: string };
         azIds: { [key: string]: string };
         stage: string;
+        internalNet: string,
     }) {
         super(scope, id);
 
-        const { namePrefix, vpcId, subnetIds, azIds, stage } = props;
+        const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
         const namedotprefix = namePrefix.replace(/-/g, ".");
 
         // Create subnet mappings based on the provided dictionary
@@ -45,6 +46,7 @@ export class NetworkFirewallStack extends Stack {
             });
         }
 
+        let internal_net_list: string[] = internalNet.split(',');
 
         // Create a Network Firewall policy
         const firewallPolicy = new anfw.CfnFirewallPolicy(this, 'FirewallPolicy', {
@@ -52,6 +54,13 @@ export class NetworkFirewallStack extends Stack {
             firewallPolicy: {
                 statelessDefaultActions: ['aws:forward_to_sfe'],
                 statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+                policyVariables: {
+                    ruleVariables: {
+                        HOME_NET: {
+                            definition: internal_net_list,
+                        },
+                    },
+                },
             },
         });
 

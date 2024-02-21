@@ -445,16 +445,18 @@ class FirewallRuleHandler:
         """Creates a reserved rule group from defaultdeny config file.
 
         :return: None"""
-        internal_net_list = os.getenv("INTERNAL_NET").split(",")
-        fw_vpc_cidr = os.getenv("HOME_NET").split(",")
-        ipset = {
-            "RuleVariables": {
-                "IPSets": {
-                    "INTERNAL_NET": {"Definition": internal_net_list},
-                    "HOME_NET": {"Definition": fw_vpc_cidr},
-                }
-            }
-        }
+        # internal_net_list = os.getenv("INTERNAL_NET").split(",")
+        # fw_vpc_cidr = os.getenv("HOME_NET").split(",")
+        # ipset = {
+        #     "RuleVariables": {
+        #         "IPSets": {
+        #             "INTERNAL_NET": {"Definition": internal_net_list},
+        #             "HOME_NET": {"Definition": fw_vpc_cidr},
+        #         }
+        #     }
+        # }
+        # ipset = {"RuleVariables": {"IPSets": {}}}
+        ipset = {}
         rule_string = "\n".join(self._create_reserved_rules())
         self.logger.debug(f"Rule string passed: {rule_string}")
         rule_source = {"RulesSource": {"RulesString": rule_string}}
@@ -513,7 +515,7 @@ class FirewallRuleHandler:
         return smallest_group
 
     def _associate_rule_group_to_policy(self, rule_arn: str) -> None:
-        """Associate the rule to the policy.
+        """Associate the rule group to the policy.
 
         :return: None"""
         for cached_policy in self.policy_collection:
