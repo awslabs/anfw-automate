@@ -181,7 +181,7 @@ Resources:
                     ]
           - Effect: Deny
             Principal: "*"
-            Action: "*"
+            Action: "sqs:*"
             Resource: !GetAtt EBDLQueue.Arn
             Condition:
               Bool:
