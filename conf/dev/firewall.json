@@ -1,50 +1,26 @@
 {
     "eu-west-1": {
-        "vpc_id": "vpc-xxx",
-        "vpc_cidr": "x.x.x.x/24",
+        "vpc_id": "lambda_subnet_a",
+        "vpc_cidr": "10.1.0.0/24",
         "multi_az": true,
-        "internet_gateway_id": "igw-xxxxx",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
-        "transit_gateway": "tgw-yyyyy",
+        "internet_gateway_id": "igw-08d807a8c192f8a69",
+        "internal_network_cidr": "10.0.0.0/8",
+        "transit_gateway": "tgw-064cc90f9a573ee3b",
         "availability_zones": {
             "az_a": "eu-west-1a",
             "az_b": "eu-west-1b",
             "az_c": "eu-west-1c"
         },
         "subnet_ids": {
-            "tgw_subnet_a": "subnet-aaa",
-            "tgw_subnet_b": "subnet-bbb",
-            "tgw_subnet_c": "subnet-ccc",
-            "firewall_subnet_a": "subnet-ddd",
-            "firewall_subnet_b": "subnet-eee",
-            "firewall_subnet_c": "subnet-fff",
-            "nat_subnet_a": "subnet-jjj",
-            "nat_subnet_b": "subnet-kkk",
-            "nat_subnet_c": "subnet-lll"
-        }
-    },
-    "eu-central-1": {
-        "vpc_id": "vpc-yyy",
-        "vpc_cidr": "y.y.y.y/24",
-        "multi_az": true,
-        "internet_gateway_id": "igw-zzzz",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
-        "transit_gateway": "tgw-vvvvv",
-        "availability_zones": {
-            "az_a": "eu-central-1a",
-            "az_b": "eu-central-1b",
-            "az_c": "eu-central-1c"
-        },
-        "subnet_ids": {
-            "tgw_subnet_a": "subnet-mmm",
-            "tgw_subnet_b": "subnet-nnn",
-            "tgw_subnet_c": "subnet-ooo",
-            "firewall_subnet_a": "subnet-ppp",
-            "firewall_subnet_b": "subnet-qqq",
-            "firewall_subnet_c": "subnet-rrr",
-            "nat_subnet_a": "subnet-vvv",
-            "nat_subnet_b": "subnet-www",
-            "nat_subnet_c": "subnet-xxx"
+            "tgw_subnet_a": "subnet-0d32944df9f9e88e1",
+            "tgw_subnet_b": "subnet-03e6c373cc80e267b",
+            "tgw_subnet_c": "subnet-04e64564807a4cc24",
+            "firewall_subnet_a": "subnet-0510baaea9220bc2d",
+            "firewall_subnet_b": "subnet-04c625e0c9ae07c65",
+            "firewall_subnet_c": "subnet-049c51b6f1303b5f0",
+            "nat_subnet_a": "subnet-05f7d387d0c1d8546",
+            "nat_subnet_b": "subnet-09aed67ce2345004c",
+            "nat_subnet_c": "subnet-024cda2e73273847c"
         }
     }
 }
