@@ -2,7 +2,7 @@
     "eu-west-1": {
         "vpc_id": "vpc-xxx",
         "vpc_cidr": "x.x.x.x/24",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
+        "internal_network_cidrs": "x.x.x.x/8,y.y.y.y/8",
         "supported_regions": [
             "eu-west-1",
             "eu-central-1"
@@ -16,7 +16,7 @@
     "eu-central-1": {
         "vpc_id": "vpc-yyy",
         "vpc_cidr": "y.y.y.y/24",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
+        "internal_network_cidrs": "x.x.x.x/8,y.y.y.y/8",
         "supported_regions": [
             "eu-west-1",
             "eu-central-1"

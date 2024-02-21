@@ -4,7 +4,7 @@
         "vpc_cidr": "x.x.x.x/24",
         "multi_az": true,
         "internet_gateway_id": "igw-xxxxx",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
+        "internal_network_cidrs": "x.x.x.x/8,y.y.y.y/8",
         "transit_gateway": "tgw-yyyyy",
         "availability_zones": {
             "az_a": "eu-west-1a",
@@ -28,7 +28,7 @@
         "vpc_cidr": "y.y.y.y/24",
         "multi_az": true,
         "internet_gateway_id": "igw-zzzz",
-        "internal_network_cidr": "x.x.x.x/8,y.y.y.y/8",
+        "internal_network_cidrs": "x.x.x.x/8,y.y.y.y/8",
         "transit_gateway": "tgw-vvvvv",
         "availability_zones": {
             "az_a": "eu-central-1a",

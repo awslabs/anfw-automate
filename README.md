@@ -89,9 +89,9 @@ NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Netw
 
 * Run `export STAGE=xxx` to configure the STAGE value matching the folder you created.
 * Run `export AWS_REGION=xx-yyyy-1` to configure the default AWS Region used for CodePipeline deployment.
-* Run `export STACKNAME=vpc && make deploy` to deploy VPC module (optional)
-* Run `export STACKNAME=firewall && make deploy` to deploy AWS Network Firewall module (optional)
-* Run `export STACKNAME=app && make deploy` to deploy Application module
+* Run `export STACK_NAME=vpc && make deploy` to deploy VPC module (optional)
+* Run `export STACK_NAME=firewall && make deploy` to deploy AWS Network Firewall module (optional)
+* Run `export STACK_NAME=app && make deploy` to deploy Application module
 
 #### Other Useful commands
 

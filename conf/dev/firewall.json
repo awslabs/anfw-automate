@@ -4,7 +4,7 @@
         "vpc_cidr": "10.1.0.0/24",
         "multi_az": true,
         "internet_gateway_id": "igw-08d807a8c192f8a69",
-        "internal_network_cidr": "10.0.0.0/8",
+        "internal_network_cidrs": "10.0.0.0/8",
         "transit_gateway": "tgw-064cc90f9a573ee3b",
         "availability_zones": {
             "az_a": "eu-west-1a",

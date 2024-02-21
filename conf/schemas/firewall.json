@@ -20,7 +20,7 @@
                     "type": "string",
                     "pattern": "^igw-[a-zA-Z0-9]+$"
                 },
-                "internal_network_cidr": {
+                "internal_network_cidrs": {
                     "type": "string",
                     "pattern": "^(\\d+\\.\\d+\\.\\d+\\.\\d+/\\d{1,2},?)+$"
                 },
@@ -108,7 +108,7 @@
                 "vpc_cidr",
                 "multi_az",
                 "internet_gateway_id",
-                "internal_network_cidr",
+                "internal_network_cidrs",
                 "transit_gateway",
                 "availability_zones",
                 "subnet_ids"

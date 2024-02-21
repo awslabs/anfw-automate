@@ -1,7 +1,7 @@
 {
   "app": "npx ts-node --prefer-ts-exts bin/anfw-automate.ts",
   "regions": {
-    "default": "us-east-1"
+    "default": "eu-west-1"
   },
   "watch": {
     "include": [
