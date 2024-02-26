@@ -1,0 +1,8 @@
+{
+    "statelessDefaultActions": [
+        "aws:forward_to_sfe"
+    ],
+    "statelessFragmentDefaultActions": [
+        "aws:forward_to_sfe"
+    ]
+}
