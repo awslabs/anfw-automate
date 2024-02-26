@@ -2,7 +2,6 @@
 
 # This file is part of anfw-automate. See LICENSE file for license information.
 
-from asyncio.log import logger
 import datetime
 import hashlib
 import json
@@ -20,12 +19,11 @@ from aws_lambda_powertools import Logger
 from lib.rule_config import ConfigEntry, DefaultDenyRules
 from lib.log_handler import Level
 
-MAX_RULES_PRE_POLICY: int = 19  # max 20
+MAX_RULES_PER_POLICY: int = 19  # max 20
 MAX_POLICIES: int = 19  # max 20 AWS soft-limit
 RULE_PRIORITY: int = 1
-POLICY_NAME_PREFIX: str = "Policy-"  # e.g. Policy- will be Policy-1, Policy-2 etc.
+POLICY_NAME_PREFIX: str = "anfw-policy-backup-"
 RULE_GROUP_CAPACITY: int = 2000  # Max 30.000
-# ['eu-west-1', 'eu-central-1'] etc.
 RESERVED_RULEGROUP_CAPACITY: int = 100  # Max 30.000
 
 
@@ -45,7 +43,6 @@ class FirewallRuleHandler:
         self._lambda = boto3.client("lambda", region_name=region, config=config)
         self.context = context
         self.rule_group_collection: set = self._get_all_groups()
-        self.policy_collection: set = self._get_all_policies()
         self.logger = Logger(child=True)
         self.customer_log_handler = customer_log_handler
         self.log_stream_name = log_stream_name
@@ -53,6 +50,9 @@ class FirewallRuleHandler:
         with open("data/defaultdeny.yaml", mode="r", encoding="utf-8") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
+        # fetch policy arn for event region
+        self.policy_collection: set = os.getenv("POLICY_ARNS")[region]
+        # self.policy_collection: set = self._get_all_policies()
 
     # Initial get functions -#############################################
 
@@ -524,7 +524,7 @@ class FirewallRuleHandler:
                 policy["FirewallPolicy"].update({"StatefulRuleGroupReferences": []})
             if (
                 len(policy["FirewallPolicy"]["StatefulRuleGroupReferences"])
-                <= MAX_RULES_PRE_POLICY
+                <= MAX_RULES_PER_POLICY
             ):
                 references: list = policy["FirewallPolicy"][
                     "StatefulRuleGroupReferences"
@@ -539,6 +539,7 @@ class FirewallRuleHandler:
                 # Slot found ... go back
                 return
         # no slot found .... create one
+        self.logger.error("Firewall policy capacity full. Creating backup policy")
         new_policy_name = f"{POLICY_NAME_PREFIX}{randint(1000, 1000000)}"  # nosec: Not used for security
         arn = self._create_new_policy(policy_name=new_policy_name, rule_arn=rule_arn)
         self.policy_collection.add(arn)

@@ -7,6 +7,14 @@
             "eu-west-1",
             "eu-central-1"
         ],
+        "firewall_policy_arns": {
+            "eu-west-1": [
+                "arn of firewall policy to update"
+            ],
+            "eu-central-1": [
+                "arn of firewall policy to update"
+            ]
+        },
         "subnet_ids": {
             "lambda_subnet_a": "subnet-xxxxx",
             "lambda_subnet_b": "subnet-xxxxx",
@@ -21,6 +29,14 @@
             "eu-west-1",
             "eu-central-1"
         ],
+        "firewall_policy_arns": {
+            "eu-west-1": [
+                "arn of firewall policy to update"
+            ],
+            "eu-central-1": [
+                "arn of firewall policy to update"
+            ]
+        },
         "subnet_ids": {
             "lambda_subnet_a": "subnet-xxxxx",
             "lambda_subnet_b": "subnet-yyyyy",

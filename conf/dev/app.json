@@ -5,6 +5,11 @@
         "internal_network_cidrs": "10.0.0.0/8",
         "supported_regions": [
             "eu-west-1"
-        ]
+        ],
+        "firewall_policy_arns": {
+            "eu-west-1": [
+                "arn:aws:network-firewall:eu-west-1:421222417363:firewall-policy/plc-aws-anfw-automate-fwbase-00-dev"
+            ]
+        }
     }
 }

@@ -14,6 +14,7 @@ export class LambdaStack extends Stack {
         // vpcCidr: string;
         // internalNet: string;
         supportedRegions: [string];
+        policyArns: { [key: string]: string[] };
         stage: string;
     }) {
         super(scope, id);
@@ -98,6 +99,7 @@ export class LambdaStack extends Stack {
                 POWERTOOLS_SERVICE_NAME: "RuleExecuteLambda",
                 XACCOUNT_ROLE: `rle.${namedotprefix}.xaccount.lmb.${this.region}.${props.stage}`,
                 SUPPORTED_REGIONS: `${props.supportedRegions.toString()}`,
+                POLICY_ARNS: `${props.policyArns}`,
                 VPC_ID: `${props.vpcId}`,
                 NAME_PREFIX: `${props.namePrefix}`,
                 STAGE: `${props.stage}`
