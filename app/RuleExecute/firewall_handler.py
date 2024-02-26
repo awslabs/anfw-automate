@@ -51,8 +51,13 @@ class FirewallRuleHandler:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
         # fetch policy arn for event region
-        self.policy_collection: set = os.getenv("POLICY_ARNS")[region]
-        # self.policy_collection: set = self._get_all_policies()
+        # self.policy_collection: set = os.getenv("POLICY_ARNS")[region]
+        # self.policy_arns_str = os.getenv("POLICY_ARNS")
+        # self.policy_arns = (
+        #     json.loads(self.policy_arns_str) if self.policy_arns_str else {}
+        # )
+        # self.policy_collection: set = self.policy_arns.get(region, set())
+        self.policy_collection: set = self._get_all_policies(region=region)
 
     # Initial get functions -#############################################
 
@@ -105,24 +110,28 @@ class FirewallRuleHandler:
                     )
         return rule_entries, response["UpdateToken"]
 
-    def _get_all_policies(self) -> set:
+    def _get_all_policies(self, region) -> set:
         """Get all Firewall polices.
 
         :return: set - all existing policy ARNs"""
-        names: set = set()
-        # First junk of rules
-        policies = self._nfw.list_firewall_policies(MaxResults=100)
-        for policy in policies["FirewallPolicies"]:
-            names.add(policy["Arn"])
-        # if there are more, get another 100 until end
-        while "NextToken" in policies:
-            policies = self._nfw.list_firewall_policies(
-                MaxResults=100, NextToken=policies["NextToken"]
-            )
-            for policy in policies["FirewallPolicies"]:
-                names.add(policy["Arn"])
+        collection: set = set()
 
-        return names
+        policy_arns_str = os.getenv("POLICY_ARNS")
+        policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
+        collection.update(policy_arns.get(region, set()))
+        # # First junk of rules
+        # policies = self._nfw.list_firewall_policies(MaxResults=100)
+        # for policy in policies["FirewallPolicies"]:
+        #     names.add(policy["Arn"])
+        # # if there are more, get another 100 until end
+        # while "NextToken" in policies:
+        #     policies = self._nfw.list_firewall_policies(
+        #         MaxResults=100, NextToken=policies["NextToken"]
+        #     )
+        #     for policy in policies["FirewallPolicies"]:
+        #         names.add(policy["Arn"])
+
+        return collection
 
     # End get functions ##############################################
 
