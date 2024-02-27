@@ -4,5 +4,9 @@
     ],
     "statelessFragmentDefaultActions": [
         "aws:forward_to_sfe"
-    ]
+    ],
+    "statefulEngineOptions": {
+        "ruleOrder": "DEFAULT_ACTION_ORDER",
+        "streamExceptionPolicy": "REJECT"
+    }
 }
