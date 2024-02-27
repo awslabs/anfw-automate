@@ -65,9 +65,11 @@ export class NetworkFirewallStack extends Stack {
             },
         }
 
+        const ordername: string = props.ruleOrder === 'DEFAULT_ACTION_ORDER' ? 'action' : 'strict';
+
         // Create a Network Firewall policy
         const firewallPolicy = new anfw.CfnFirewallPolicy(this, 'FirewallPolicy', {
-            firewallPolicyName: `plc-${namePrefix}-fwbase-00-${stage}`,
+            firewallPolicyName: `plc-${namePrefix}-fwbase-00-${ordername}-${stage}`,
             firewallPolicy: {
                 ...firewallPolicyJson,
                 // statelessDefaultActions: ['aws:forward_to_sfe'],
