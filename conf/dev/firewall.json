@@ -22,6 +22,6 @@
             "nat_subnet_b": "subnet-09aed67ce2345004c",
             "nat_subnet_c": "subnet-024cda2e73273847c"
         },
-        "rule_order": "DEFAULT_ACTION_ORDER"
+        "rule_order": "STRICT_ORDER"
     }
 }
