@@ -19,6 +19,7 @@ from aws_lambda_powertools import Logger
 from lib.rule_config import ConfigEntry, DefaultDenyRules
 from lib.log_handler import Level
 
+DEFAULT_PRIORITY: int = 255  # default priority for reserved rules
 MAX_RULES_PER_POLICY: int = 19  # max 20
 MAX_POLICIES: int = 19  # max 20 AWS soft-limit
 RULE_PRIORITY: int = 1
@@ -58,6 +59,12 @@ class FirewallRuleHandler:
         # )
         # self.policy_collection: set = self.policy_arns.get(region, set())
         self.policy_collection: set = self._get_all_policies(region=region)
+        self.rule_order = os.getenv("RULE_ORDER")
+        self.priority = (
+            f"priority:{DEFAULT_PRIORITY};"
+            if self.rule_order == "DEFAULT_ACTION_ORDER"
+            else ""
+        )
 
     # Initial get functions -#############################################
 
@@ -394,14 +401,14 @@ class FirewallRuleHandler:
                 rule_options = (
                     f"{rule_options.group(0)} "
                     f'msg: "Drop all {proto.upper()}"; '  # value must be double quoted
-                    f"priority:255; flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};"
                 )
                 re.sub(r"\((.*)\)$", rule_options, rulestring)
             else:
                 rule_options = (
                     f'(msg: "Drop all {proto.upper()}"; '  # value must be double quoted
-                    f"priority:255; flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};)"
                 )
                 rulestring += rule_options
@@ -421,6 +428,8 @@ class FirewallRuleHandler:
 
         :return: None"""
 
+        self.logger.debug(f"Rule string passed: {rule_string}")
+
         ipset = {
             "RuleVariables": {
                 "IPSets": {
@@ -428,7 +437,9 @@ class FirewallRuleHandler:
                 }
             }
         }
-        self.logger.debug(f"Rule string passed: {rule_string}")
+
+        rule_order_option = {"StatefulRuleOptions": {"RuleOrder": self.rule_order}}
+        ipset.update(rule_order_option)
         rule_source = {"RulesSource": {"RulesString": rule_string}}
         ipset.update(rule_source)
         new_rule = self._nfw.create_rule_group(
@@ -470,6 +481,8 @@ class FirewallRuleHandler:
         self.logger.debug(f"Rule string passed: {rule_string}")
         rule_source = {"RulesSource": {"RulesString": rule_string}}
         ipset.update(rule_source)
+        rule_order_option = {"StatefulRuleOptions": {"RuleOrder": self.rule_order}}
+        ipset.update(rule_order_option)
         self.logger.debug(f"RuleGroup input: {ipset}")
 
         for rule_group_arn in self.rule_group_collection:

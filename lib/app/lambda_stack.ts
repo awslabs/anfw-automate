@@ -7,6 +7,8 @@ import { Construct } from "constructs";
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as pylambda from "@aws-cdk/aws-lambda-python-alpha";
 
+type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
+
 export class LambdaStack extends Stack {
     constructor(scope: Construct, id: string, props: {
         namePrefix: string;
@@ -15,6 +17,7 @@ export class LambdaStack extends Stack {
         // internalNet: string;
         supportedRegions: [string];
         policyArns: { [key: string]: string[] };
+        ruleOrder: RuleOrder;
         stage: string;
     }) {
         super(scope, id);
@@ -74,6 +77,7 @@ export class LambdaStack extends Stack {
                 LAMBDA_REGION: `${this.region}`,
                 LOG_LEVEL: "DEBUG",
                 XACCOUNT_ROLE: `rle.${namedotprefix}.xaccount.lmb.${this.region}.${props.stage}`,
+                RULE_ORDER: `${props.ruleOrder}`,
                 ENVIRONMENT: `${props.stage}`,
                 POWERTOOLS_SERVICE_NAME: "RuleCollectLambda",
                 NAME_PREFIX: `${props.namePrefix}`,
@@ -99,6 +103,7 @@ export class LambdaStack extends Stack {
                 POWERTOOLS_SERVICE_NAME: "RuleExecuteLambda",
                 XACCOUNT_ROLE: `rle.${namedotprefix}.xaccount.lmb.${this.region}.${props.stage}`,
                 SUPPORTED_REGIONS: `${props.supportedRegions.toString()}`,
+                RULE_ORDER: `${props.ruleOrder}`,
                 POLICY_ARNS: JSON.stringify(props.policyArns),
                 VPC_ID: `${props.vpcId}`,
                 NAME_PREFIX: `${props.namePrefix}`,

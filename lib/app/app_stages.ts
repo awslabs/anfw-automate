@@ -20,6 +20,7 @@ export class LambdaStage extends Stage {
             // internalNet: props.config.internal_network_cidrs,
             supportedRegions: props.config.supported_regions,
             policyArns: props.config.firewall_policy_arns,
+            ruleOrder: props.config.rule_order,
             stage: props.stage,
         });
     }

@@ -7,6 +7,8 @@ import { CfnOutput } from 'aws-cdk-lib';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as fs from "fs";
 
+type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
+
 export class NetworkFirewallStack extends Stack {
     constructor(scope: Construct, id: string, props: {
         namePrefix: string;
@@ -14,13 +16,14 @@ export class NetworkFirewallStack extends Stack {
         subnetIds: { [key: string]: string };
         azIds: { [key: string]: string };
         stage: string;
-        internalNet: string,
+        internalNet: string;
+        ruleOrder: RuleOrder;
     }) {
         super(scope, id);
 
         const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
         const namedotprefix = namePrefix.replace(/-/g, ".");
-        const absoluteFilePath = "policy/action_order.json";
+        const absoluteFilePath = `policy/${props.ruleOrder}.json`;
 
         // Create subnet mappings based on the provided dictionary
         const subnetMappingList: anfw.CfnFirewall.SubnetMappingProperty[] = [];

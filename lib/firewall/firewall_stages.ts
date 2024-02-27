@@ -23,6 +23,7 @@ export class FirewallStage extends Stage {
             azIds: props.config.availability_zones,
             stage: props.stage,
             internalNet: props.config.internal_network_cidrs,
+            ruleOrder: props.config.rule_order,
         });
     }
 }
