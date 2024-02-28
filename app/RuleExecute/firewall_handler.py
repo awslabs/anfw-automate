@@ -78,7 +78,13 @@ class FirewallRuleHandler:
         groups = self._nfw.list_rule_groups(Scope="ACCOUNT", MaxResults=100)
         # First chunk of rules
         for group_name in groups["RuleGroups"]:
-            names.add(group_name["Arn"])
+            if (
+                self.rule_order == "DEFAULT_ACTION_ORDER"
+                and "-action" in group_name["Name"]
+            ):
+                names.add(group_name["Arn"])
+            elif self.rule_order == "STRICT_ORDER" and "-strict" in group_name["Name"]:
+                names.add(group_name["Arn"])
         # if there are more, get another 100 until end
         while "NextToken" in groups:
             groups = self._nfw.list_rule_groups(
@@ -156,7 +162,10 @@ class FirewallRuleHandler:
                 arn = self.__add_rule_entry(rule_string, vpc_cidr, ip_set_name)
                 if arn is None:
                     # No arn can be found - create new rule group
-                    random_name: str = self._generate_random_name()
+                    if self.rule_order == "DEFAULT_ACTION_ORDER":
+                        random_name: str = self._generate_random_name() + "-action"
+                    else:
+                        random_name: str = self._generate_random_name() + "-strict"
                     self.logger.info(
                         f"Create new rule group {random_name} and add the first rule string."
                     )
@@ -500,8 +509,10 @@ class FirewallRuleHandler:
                     Type="STATEFUL",
                 )
                 return
-
-        rulegroup_name = self._generate_random_name() + "-reserved"
+        if self.rule_order == "DEFAULT_ACTION_ORDER":
+            rulegroup_name = self._generate_random_name() + "-action-reserved"
+        else:
+            rulegroup_name = self._generate_random_name() + "-strict-reserved"
         self.logger.debug(f"Entering Rule Create for: {rulegroup_name}")
         new_rule = self._nfw.create_rule_group(
             RuleGroupName=rulegroup_name,
