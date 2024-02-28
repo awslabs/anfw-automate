@@ -43,7 +43,6 @@ class FirewallRuleHandler:
         self._nfw = boto3.client("network-firewall", region_name=region, config=config)
         self._lambda = boto3.client("lambda", region_name=region, config=config)
         self.context = context
-        self.rule_group_collection: set = self._get_all_groups()
         self.logger = Logger(child=True)
         self.customer_log_handler = customer_log_handler
         self.log_stream_name = log_stream_name
@@ -65,6 +64,7 @@ class FirewallRuleHandler:
             if self.rule_order == "DEFAULT_ACTION_ORDER"
             else ""
         )
+        self.rule_group_collection: set = self._get_all_groups()
 
     # Initial get functions -#############################################
 

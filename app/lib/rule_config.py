@@ -56,7 +56,7 @@ class ConfigEntry:
         self.rule_order = os.getenv("RULE_ORDER")
         self.priority = (
             f"priority:{DEFAULT_PRIORITY};"
-            if self.rule_order == "DEFAULT_ACTION_ORDER"
+            if os.getenv("RULE_ORDER") == "DEFAULT_ACTION_ORDER"
             else ""
         )
 
