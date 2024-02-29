@@ -12,7 +12,7 @@ from yaml import safe_load
 from dataclasses import dataclass
 from aws_lambda_powertools import Logger, Tracer
 
-DEFAULT_PRIORITY: int = 100  # default priority for customer rules
+CUSTOMER_RULEGROUP_PRIORITY: int = 250  # default priority for customer rules
 # Reserve all metakeywords: https://suricata.readthedocs.io/en/suricata-6.0.1/rules/meta.html#meta-keywords
 RESERVED_META_KEYWORDS = [
     "msg",
@@ -55,7 +55,7 @@ class ConfigEntry:
         self.tracer = Tracer()
         self.rule_order = os.getenv("RULE_ORDER")
         self.priority = (
-            f"priority:{DEFAULT_PRIORITY};"
+            f"priority:{CUSTOMER_RULEGROUP_PRIORITY};"
             if os.getenv("RULE_ORDER") == "DEFAULT_ACTION_ORDER"
             else ""
         )
