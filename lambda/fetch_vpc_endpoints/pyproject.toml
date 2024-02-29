@@ -1,19 +1,18 @@
 [tool.poetry]
 description = "Lambda function to fetch VPC endpoint IDs in order of Availability zones for NFW"
 name = "fetch-vpc-endpoints"
-packages = [{include = "fetch_vpc_endpoints"}]
 authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.de>"]
 version = "0.1.12"
 
 [tool.poetry.dependencies]
-bandit = "^1.7.5"
 cfnresponse = "^1.1.2"
-pip-audit = "^2.6.1"
-pip-licenses = "^4.3.3"
 python = "^3.11"
 
-[tool.poetry.group.dev.dependencies]
-pip-licenses = "^4.3.3"
+[tool.poetry.group.test.dependencies]
+bandit = "^1.7.7"
+pip-licenses = "^4.3.4"
+pip-audit = "^2.7.2"
+pytest = "^8.0.2"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

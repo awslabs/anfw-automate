@@ -10,39 +10,29 @@
         ],
         "firewall_policy_arns": {
             "eu-west-1": [
-                "arn of firewall policy to update"
+                "arn:aws:network-firewall:region:account-id:policy/policy-id-1"
             ],
             "eu-central-1": [
-                "arn of firewall policy to update"
+                "arn:aws:network-firewall:region:account-id:policy/policy-id-2"
             ]
-        },
-        "subnet_ids": {
-            "lambda_subnet_a": "subnet-xxxxx",
-            "lambda_subnet_b": "subnet-xxxxx",
-            "lambda_subnet_c": "subnet-xxxxx"
         }
     },
     "eu-central-1": {
         "vpc_id": "vpc-yyy",
         "vpc_cidr": "y.y.y.y/24",
         "internal_network_cidrs": "x.x.x.x/8,y.y.y.y/8",
-        "rule_order": "DEFAULT_ACTION_ORDER",
+        "rule_order": "STRICT_ORDER",
         "supported_regions": [
             "eu-west-1",
             "eu-central-1"
         ],
         "firewall_policy_arns": {
             "eu-west-1": [
-                "arn of firewall policy to update"
+                "arn:aws:network-firewall:region:account-id:policy/policy-id-1"
             ],
             "eu-central-1": [
-                "arn of firewall policy to update"
+                "arn:aws:network-firewall:region:account-id:policy/policy-id-2"
             ]
-        },
-        "subnet_ids": {
-            "lambda_subnet_a": "subnet-xxxxx",
-            "lambda_subnet_b": "subnet-yyyyy",
-            "lambda_subnet_c": "subnet-zzzzz"
         }
     }
 }

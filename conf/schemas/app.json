@@ -1,36 +1,56 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "patternProperties": {
-        "^[a-z]+-[a-z]+-[0-9]+$": {
-            "type": "object",
-            "properties": {
-                "vpc_id": {
-                    "type": "string",
-                    "pattern": "^vpc-\\w{8}(\\w{9})?$"
+    "propertyNames": {
+        "pattern": "^[a-z]+(-[a-z]+)*$"
+    },
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "vpc_id": {
+                "type": "string"
+            },
+            "vpc_cidr": {
+                "type": "string",
+                "format": "ipv4"
+            },
+            "internal_network_cidrs": {
+                "type": "string"
+            },
+            "rule_order": {
+                "type": "string",
+                "enum": [
+                    "DEFAULT_ACTION_ORDER",
+                    "STRICT_ORDER"
+                ]
+            },
+            "supported_regions": {
+                "type": "array",
+                "items": {
+                    "pattern": "^[a-z]+(-[a-z]+)*$"
+                }
+            },
+            "firewall_policy_arns": {
+                "type": "object",
+                "propertyNames": {
+                    "pattern": "^[a-z]+(-[a-z]+)*$"
                 },
-                "vpc_cidr": {
-                    "type": "string",
-                    "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(3[0-2]|[12]?[0-9])$"
-                },
-                "internal_network_cidrs": {
-                    "type": "string",
-                    "pattern": "^(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(3[0-2]|[12]?[0-9]))(,(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(3[0-2]|[12]?[0-9])))*$"
-                },
-                "supported_regions": {
+                "additionalProperties": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "pattern": "^[a-z]+-[a-z]+-[0-9]+$"
+                        "pattern": "^arn:aws:.+:[a-z0-9-]+:[0-9]+:.+$"
                     }
                 }
-            },
-            "required": [
-                "vpc_id",
-                "vpc_cidr",
-                "internal_network_cidrs",
-                "supported_regions"
-            ]
-        }
+            }
+        },
+        "required": [
+            "vpc_id",
+            "vpc_cidr",
+            "internal_network_cidrs",
+            "rule_order",
+            "supported_regions",
+            "firewall_policy_arns"
+        ]
     }
 }
