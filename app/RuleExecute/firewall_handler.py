@@ -562,26 +562,28 @@ class FirewallRuleHandler:
                 references: list = policy["FirewallPolicy"][
                     "StatefulRuleGroupReferences"
                 ]
-                if self.rule_order is "DEFAULT_ACTION_ORDER":
+                if self.rule_order == "DEFAULT_ACTION_ORDER":
                     references.append({"ResourceArn": rule_arn})
-                elif self.rule_order is "STRICT_ORDER" and group_type is "customer":
-                    references.append(
-                        {
-                            "ResourceArn": rule_arn,
-                            "Priority": CUSTOMER_RULEGROUP_PRIORITY,
-                        }
-                    )
-                elif self.rule_order is "STRICT_ORDER" and group_type is "reserved":
-                    references.append(
-                        {
-                            "ResourceArn": rule_arn,
-                            "Priority": RESERVED_RULEGROUP_PRIORITY,
-                        }
-                    )
+                elif self.rule_order == "STRICT_ORDER":
+                    if group_type == "customer":
+                        references.append(
+                            {
+                                "ResourceArn": rule_arn,
+                                "Priority": CUSTOMER_RULEGROUP_PRIORITY,
+                            }
+                        )
+                    elif group_type == "reserved":
+                        references.append(
+                            {
+                                "ResourceArn": rule_arn,
+                                "Priority": RESERVED_RULEGROUP_PRIORITY,
+                            }
+                        )
+                    else:
+                        self.logger.error(f"Invalid group_type: {group_type}")
                 else:
-                    self.logger.error(
-                        f"Invalid rule_order {self.rule_order} or grouptype {group_type} pairing"
-                    )
+                    self.logger.error(f"Invalid rule_order: {self.rule_order}")
+
                 policy["FirewallPolicy"]["StatefulRuleGroupReferences"] = references
                 self._nfw.update_firewall_policy(
                     UpdateToken=policy["UpdateToken"],
