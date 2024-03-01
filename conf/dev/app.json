@@ -1,8 +1,6 @@
 {
     "eu-west-1": {
         "vpc_id": "vpc-010eb1e943e875731",
-        "vpc_cidr": "10.1.0.0/24",
-        "internal_network_cidrs": "10.0.0.0/8",
         "rule_order": "STRICT_ORDER",
         "supported_regions": [
             "eu-west-1"

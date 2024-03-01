@@ -10,13 +10,6 @@
             "vpc_id": {
                 "type": "string"
             },
-            "vpc_cidr": {
-                "type": "string",
-                "format": "ipv4"
-            },
-            "internal_network_cidrs": {
-                "type": "string"
-            },
             "rule_order": {
                 "type": "string",
                 "enum": [
@@ -46,8 +39,6 @@
         },
         "required": [
             "vpc_id",
-            "vpc_cidr",
-            "internal_network_cidrs",
             "rule_order",
             "supported_regions",
             "firewall_policy_arns"

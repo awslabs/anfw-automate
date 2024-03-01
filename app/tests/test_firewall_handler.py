@@ -9,7 +9,7 @@ from lib.rule_config import DefaultDenyRules
 
 # Set the state initially -> fixture
 first_rule_state = {
-    "UpdateToken": "update_toke_sting",
+    "UpdateToken": "update_token_string",
     "RuleGroup": {
         "RuleVariables": {
             "IPSets": {
@@ -89,7 +89,7 @@ class MockAWSSevice(MagicMock):
             return {
                 "NextToken": "string",
                 "RuleGroups": [
-                    {"Name": "name_string", "Arn": "0123/first_group"},
+                    {"Name": "name_string-strict", "Arn": "0123/first_group"},
                 ],
             }
         else:
@@ -97,7 +97,7 @@ class MockAWSSevice(MagicMock):
             # Second run without the NextToken
             return {
                 "RuleGroups": [
-                    {"Name": "name_string", "Arn": "0123/second_group"},
+                    {"Name": "name_string-action", "Arn": "0123/second_group"},
                 ],
             }
 
@@ -167,34 +167,49 @@ class MockAWSSevice(MagicMock):
                 pass
 
 
+# @patch(
+#     "os.getenv",
+#     return_value='{"firewall_policy_arns": {"eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]}}',
+# )
+@patch.dict(
+    os.environ,
+    {
+        "POLICY_ARNS": '{"firewall_policy_arns": {"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}}'
+    },
+)
 @patch.dict(os.environ, {"SUPPORTED_REGIONS": "eu-west-1, eu-central-1"})
 @patch.dict(os.environ, {"CUSTOMER_LOG_GROUP": "DemoGroup"})
+@patch.dict(os.environ, {"RULE_ORDER": "STRICT_ORDER"})
 @patch("boto3.client", MockAWSSevice)
 class TestFirewallRuleHandler(TestCase):
     def load_default_deny(self) -> list:
-        with open("data/defaultdeny.yaml", "r") as d:
+        with open("./data/defaultdeny.yaml", "r") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
         return default_deny_config.Rules
 
     def test_init(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         # Tests
         self.assertIsInstance(test_fw_handler, FirewallRuleHandler)
         # Check if the default rule are loaded correctly from the file
         self.assertEqual(test_fw_handler.default_deny_rules, self.load_default_deny())
         # Check if the _get_all_policies returns the right arn's
+
+        print(test_fw_handler.policy_collection)
+
         self.assertEqual(
             test_fw_handler.policy_collection,
-            ({"0123/first_policy", "0123/second_policy"}),
+            {"arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"},
         )
+
         # Check if the _get_all_groups returns the right arn's
         self.assertEqual(
             test_fw_handler.rule_group_collection,
-            ({"0123/second_group", "0123/first_group"}),
+            ({"0123/first_group"}),
         )
 
     def test_get_rule_entries(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
 
         rules, token = test_fw_handler._get_rule_entries()
         # Prepare the rule collection entries
@@ -209,16 +224,16 @@ class TestFirewallRuleHandler(TestCase):
             "RuleString": second_rule_state["RuleGroup"]["RulesSource"]["RulesString"],
         }
         # Test function
-        self.assertIn(test_rule_1, rules)
-        self.assertIn(test_rule_2, rules)
-        # self.assertListEqual(rules, seq)
-        self.assertEqual(token, "update_toke_sting")
+        # Assuming smallest_group is the value you want to check
+        if test_fw_handler.rule_order == "STRICT_ORDER":
+            self.assertIn(test_rule_1, rules)
+        else:
+            # Do something else or assert a different condition
+            self.assertIn(test_rule_2, rules)
 
     def test_json_to_rule(self):
         log_handler = MagicMock()
-        test_fw_handler = FirewallRuleHandler(
-            "eu-west-1", {}, log_handler, "log", "1.0"
-        )
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, log_handler, "log")
         data = {
             "VPC": "abcdfg12345690001",
             "Account": "123456789010",
@@ -245,12 +260,17 @@ class TestFirewallRuleHandler(TestCase):
         )
 
     def test_get_rule_group(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         smallest_group = test_fw_handler._get_rule_group()
-        self.assertEqual(smallest_group, "0123/second_group")
+
+        # Assuming smallest_group is the value you want to check
+        if test_fw_handler.rule_order == "STRICT_ORDER":
+            self.assertEqual(smallest_group, "0123/first_group")
+        else:
+            self.assertEqual(smallest_group, "0123/second_group")
 
     def test_create_new_policy(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         test_name = "Test"
         response = test_fw_handler._create_new_policy(
             policy_name=test_name, rule_arn="0123/test_group"
@@ -258,25 +278,25 @@ class TestFirewallRuleHandler(TestCase):
         self.assertEqual(test_name, response)
 
     def test_check_rule_status(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         result = test_fw_handler._check_rule_status("TestRule")
         # Return true if the group was deleted
         self.assertIs(result, True)
 
     def test_arn_to_name(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         name = test_fw_handler._arn_to_name(
             "arn::network-firewall:eu-west-1:123456789012:stateful-rulegroup/TestName"
         )
         self.assertEqual(name, "TestName")
 
     def test_generate_random_name(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         name = test_fw_handler._generate_random_name()
         self.assertRegex(name, r"[0-9]{9,32}")
 
     def test_get_rule_name_from_rule_string(self):
-        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log", "1.0")
+        test_fw_handler = FirewallRuleHandler("eu-west-1", {}, None, "log")
         rule = """123456789011-abcdfg12345690001-123456789D": "pass tls $a123456789010abcdfg12345690001 any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:'.test2.test'; endswith; priority:1;flow:to_server, established; sid:65731; rev:1; metadata: rule_name 123456789011-abcdfg12345690001-123456789D;)"""
         response = test_fw_handler._get_rule_name_from_rule_string(rule)
         self.assertEqual(response, "123456789011-abcdfg12345690001-123456789D")

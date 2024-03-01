@@ -45,7 +45,9 @@ class TestFirewallRuleHandler(TestCase):
     def setUp(self) -> None:
         with open("./tests/sample_events/s3put.json") as s3eventfile:
             self.s3event = safe_load(s3eventfile)
-        with open("./tests/sample_events/sample-vpc-delete-event.json") as delete_vpc_file:
+        with open(
+            "./tests/sample_events/sample-vpc-delete-event.json"
+        ) as delete_vpc_file:
             self.delete_vpc_event = safe_load(delete_vpc_file)
 
     def test_handler(self):

@@ -91,8 +91,16 @@ class FirewallRuleHandler:
                 Scope="ACCOUNT", MaxResults=100, NextToken=groups["NextToken"]
             )
             for group_name in groups["RuleGroups"]:
-                names.add(group_name["Arn"])
-
+                if (
+                    self.rule_order == "DEFAULT_ACTION_ORDER"
+                    and "-action" in group_name["Name"]
+                ):
+                    names.add(group_name["Arn"])
+                elif (
+                    self.rule_order == "STRICT_ORDER"
+                    and "-strict" in group_name["Name"]
+                ):
+                    names.add(group_name["Arn"])
         return names
 
     def _get_rule_entries(self) -> list:
@@ -131,7 +139,7 @@ class FirewallRuleHandler:
 
         policy_arns_str = os.getenv("POLICY_ARNS")
         policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
-        collection.update(policy_arns.get(region, set()))
+        collection.update(policy_arns["firewall_policy_arns"].get(region, set()))
         # # First junk of rules
         # policies = self._nfw.list_firewall_policies(MaxResults=100)
         # for policy in policies["FirewallPolicies"]:
