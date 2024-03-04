@@ -47,7 +47,7 @@ class FirewallRuleHandler:
         self.customer_log_handler = customer_log_handler
         self.log_stream_name = log_stream_name
         self.supported_regions = os.getenv("SUPPORTED_REGIONS").split(",")
-        with open("data/reserved_rules.yaml", mode="r", encoding="utf-8") as d:
+        with open("data/defaultdeny.yaml", mode="r", encoding="utf-8") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
         self.policy_collection: set = self._get_all_policies(region=region)
@@ -374,7 +374,7 @@ class FirewallRuleHandler:
 
         return rule_arn
 
-    def _create_reserved_rules(self) -> list:
+    def _create_defaultdeny(self) -> list:
         # Get FW Account and VPC ID
         current_lambda_config = self._lambda.get_function_configuration(
             FunctionName=self.context.function_name
@@ -382,7 +382,7 @@ class FirewallRuleHandler:
         fw_vpc_id = os.environ["VPC_ID"].replace("vpc-", "")
         fw_account_id = self.context.invoked_function_arn.split(":")[4]
 
-        generated_reserved_rules: list = []
+        generated_defaultdeny: list = []
         for rulestring in self.default_deny_rules:
             proto = rulestring.split()[1]
             rule_options = re.search(rf"\((.*)\)$", rulestring)
@@ -410,9 +410,9 @@ class FirewallRuleHandler:
                 )
                 rulestring += rule_options
 
-            generated_reserved_rules.append(rulestring)
+            generated_defaultdeny.append(rulestring)
 
-        return generated_reserved_rules
+        return generated_defaultdeny
 
     def _create_new_rule_group(
         self,
@@ -459,7 +459,7 @@ class FirewallRuleHandler:
 
         :return: None"""
         ipset = {}
-        rule_string = "\n".join(self._create_reserved_rules())
+        rule_string = "\n".join(self._create_defaultdeny())
         self.logger.debug(f"Rule string passed: {rule_string}")
         rule_source = {"RulesSource": {"RulesString": rule_string}}
         ipset.update(rule_source)

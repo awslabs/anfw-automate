@@ -183,7 +183,7 @@ class MockAWSSevice(MagicMock):
 @patch("boto3.client", MockAWSSevice)
 class TestFirewallRuleHandler(TestCase):
     def load_default_deny(self) -> list:
-        with open("./data/reserved_rules.yaml", "r") as d:
+        with open("./data/defaultdeny.yaml", "r") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
         return default_deny_config.Rules
 
