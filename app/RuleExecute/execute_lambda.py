@@ -12,7 +12,6 @@ from botocore.config import Config
 logger = Logger()
 tracer = Tracer()
 
-# customer_log_s3 = os.getenv("CUSTOMER_LOG_S3")
 logger.debug("Loading RuleExecute function")
 
 

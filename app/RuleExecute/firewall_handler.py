@@ -23,7 +23,7 @@ CUSTOMER_RULEGROUP_PRIORITY: int = 250  # default priority for customer rules
 RESERVED_RULEGROUP_PRIORITY: int = 100  # default priority for reserved rules
 MAX_RULEGROUPS_PER_POLICY: int = 19  # max 20
 MAX_POLICIES: int = 19  # max 20 AWS soft-limit
-POLICY_NAME_PREFIX: str = "anfw-policy-backup-"
+POLICY_NAME_PREFIX: str = "anfw-policy-backup-"  # policy name e.g. anfw-policy-backup-1
 RULEGROUP_CAPACITY: int = 2000  # Max 30.000
 RESERVED_RULEGROUP_CAPACITY: int = 100  # Max 30.000
 
@@ -50,13 +50,6 @@ class FirewallRuleHandler:
         with open("data/defaultdeny.yaml", mode="r", encoding="utf-8") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
-        # fetch policy arn for event region
-        # self.policy_collection: set = os.getenv("POLICY_ARNS")[region]
-        # self.policy_arns_str = os.getenv("POLICY_ARNS")
-        # self.policy_arns = (
-        #     json.loads(self.policy_arns_str) if self.policy_arns_str else {}
-        # )
-        # self.policy_collection: set = self.policy_arns.get(region, set())
         self.policy_collection: set = self._get_all_policies(region=region)
         self.rule_order = os.getenv("RULE_ORDER")
         self.priority = (
@@ -114,7 +107,6 @@ class FirewallRuleHandler:
             # Return empty values because nothing exists
             return [], ""
         # rule_entires is a list of all rules with the rule group as key
-        #  key = rule group arn // value = rule
         for rule_group_arn in self.rule_group_collection:
             response = self._nfw.describe_rule_group(
                 RuleGroupArn=rule_group_arn, Type="STATEFUL"
@@ -132,26 +124,14 @@ class FirewallRuleHandler:
         return rule_entries, response["UpdateToken"]
 
     def _get_all_policies(self, region) -> set:
-        """Get all Firewall polices.
+        """Get all Firewall polices provided by user
 
-        :return: set - all existing policy ARNs"""
+        :return: set - all policy ARNs"""
         collection: set = set()
 
         policy_arns_str = os.getenv("POLICY_ARNS")
         policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
         collection.update(policy_arns["firewall_policy_arns"].get(region, set()))
-        # # First junk of rules
-        # policies = self._nfw.list_firewall_policies(MaxResults=100)
-        # for policy in policies["FirewallPolicies"]:
-        #     names.add(policy["Arn"])
-        # # if there are more, get another 100 until end
-        # while "NextToken" in policies:
-        #     policies = self._nfw.list_firewall_policies(
-        #         MaxResults=100, NextToken=policies["NextToken"]
-        #     )
-        #     for policy in policies["FirewallPolicies"]:
-        #         names.add(policy["Arn"])
-
         return collection
 
     # End get functions ##############################################
@@ -474,25 +454,10 @@ class FirewallRuleHandler:
 
     def create_reserved_rule_group(
         self,
-        # rule_group_name: str,
-        # rule_string: str,
-        # ip_set_space: list,
-        # ip_set_name: str,
     ) -> None:
         """Creates a reserved rule group from defaultdeny config file.
 
         :return: None"""
-        # internal_net_list = os.getenv("INTERNAL_NET").split(",")
-        # fw_vpc_cidr = os.getenv("HOME_NET").split(",")
-        # ipset = {
-        #     "RuleVariables": {
-        #         "IPSets": {
-        #             "INTERNAL_NET": {"Definition": internal_net_list},
-        #             "HOME_NET": {"Definition": fw_vpc_cidr},
-        #         }
-        #     }
-        # }
-        # ipset = {"RuleVariables": {"IPSets": {}}}
         ipset = {}
         rule_string = "\n".join(self._create_reserved_rules())
         self.logger.debug(f"Rule string passed: {rule_string}")
@@ -625,7 +590,6 @@ class FirewallRuleHandler:
                     self._nfw.delete_rule_group(
                         RuleGroupName=rule_group_name, Type="STATEFUL"
                     )
-                # self._check_rule_status(arn)
                 self.logger.debug(f"Rule group deleted: {rule_group_name}")
 
     def _cleanup_ip_sets(self, account: str, vpcid: str = "") -> None:
@@ -680,7 +644,6 @@ class FirewallRuleHandler:
             )
 
         rule_collection, update_token = self._get_rule_entries()
-        # raise ValueError("Function cannot take vpc and account as parameter.")
 
         for entry in rule_collection:
             rule_name = self._get_rule_name_from_rule_string(entry["RuleString"])

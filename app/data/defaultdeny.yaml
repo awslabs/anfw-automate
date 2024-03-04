@@ -2,5 +2,3 @@
 Rules:
   - 'drop tcp $HOME_NET any -> $EXTERNAL_NET any'
   - 'drop udp $HOME_NET any -> $EXTERNAL_NET any'
-  # - 'drop tcp $INTERNAL_NET any -> $EXTERNAL_NET any'
-  # - 'drop udp $INTERNAL_NET any -> $EXTERNAL_NET any'

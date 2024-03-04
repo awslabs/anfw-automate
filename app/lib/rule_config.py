@@ -161,7 +161,7 @@ class ConfigEntry:
         ):
             raise self.FormatError(f"Invalid Base Format for rule: {rulestring} ")
 
-        #### validate if content field exists
+        # validate if content field exists
         match = re.search(rf"content:(.*?);", rule_options_stripped)
         if not match:
             raise self.FormatError(f"Content keyword missing in : {ruleoptions} ")

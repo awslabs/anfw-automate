@@ -99,7 +99,6 @@ class EventHandler:
         # Check if the VPC is attached to the Transit Gateway
         return True if len(attachments) > 0 else False
 
-    # @tracer.capture_method
     def get_policy_document(
         self, doc: str, account: str, region: str, credentials: dict, key: str
     ) -> list:
@@ -211,7 +210,6 @@ class EventHandler:
                 skipped_vpc.append(vpc_id)
         return policies, skipped_vpc
 
-    # @tracer.capture_method
     def send_to_sqs(
         self,
         config: ConfigEntry,
@@ -224,7 +222,6 @@ class EventHandler:
 
         sqs = boto3.resource("sqs", region_name=region)
         queue = sqs.get_queue_by_name(QueueName=queuename)
-        # get the object as json
         object_json = config.get_json()
         try:
             queue.send_message(
