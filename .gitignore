@@ -11,4 +11,4 @@ cdk.out
 .pytest_cache
 __pycache__
 .vscode
-.DS_Store
+**/.DS_Store
