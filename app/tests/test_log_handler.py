@@ -12,7 +12,7 @@ class TestCustomerLogHandler(unittest.TestCase):
             log_group_name="test-log-group",
             credentials={
                 "AccessKeyId": "mock_access_key",
-                "SecretAccessKey": "mock_secret_key",
+                "SecretAccessKey": "mock_secret_key",  # nosec: Not a real key
                 "SessionToken": "mock_session_token",
             },
         )
@@ -24,7 +24,7 @@ class TestCustomerLogHandler(unittest.TestCase):
             log_group_name="test-log-group",
             credentials={
                 "AccessKeyId": "mock_access_key",
-                "SecretAccessKey": "mock_secret_key",
+                "SecretAccessKey": "mock_secret_key",  # nosec: Not a real key
                 "SessionToken": "mock_session_token",
             },
         )
@@ -36,7 +36,7 @@ class TestCustomerLogHandler(unittest.TestCase):
         mock_boto3_client.assert_called_with(
             "logs",
             aws_access_key_id="mock_access_key",
-            aws_secret_access_key="mock_secret_key",
+            aws_secret_access_key="mock_secret_key",  # nosec: Not a real key
             aws_session_token="mock_session_token",
         )
 

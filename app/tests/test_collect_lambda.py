@@ -40,7 +40,7 @@ class TestHandler(unittest.TestCase):
         mock_assume_role_for_s3.return_value = {
             "Credentials": {
                 "AccessKeyId": "mock_access_key",
-                "SecretAccessKey": "mock_secret_key",
+                "SecretAccessKey": "mock_secret_key",  # nosec: Not a real key
                 "SessionToken": "mock_session_token",
                 "Expiration": "mock_expiration",
             }
