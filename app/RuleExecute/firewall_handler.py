@@ -131,6 +131,8 @@ class FirewallRuleHandler:
 
         policy_arns_str = os.getenv("POLICY_ARNS")
         policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
+        self.logger.info(f"policy_arns:{policy_arns}")
+        self.logger.info(f"policy_arns type:{type(policy_arns)}")
         collection.update(policy_arns["firewall_policy_arns"].get(region, set()))
         return collection
 
