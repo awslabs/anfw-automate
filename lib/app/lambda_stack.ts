@@ -109,7 +109,7 @@ export class LambdaStack extends Stack {
                 NAME_PREFIX: `${props.namePrefix}`,
                 STAGE: `${props.stage}`
             },
-            timeout: Duration.seconds(30),
+            timeout: Duration.seconds(60),
             tracing: lambda.Tracing.ACTIVE,
             logRetention: logs.RetentionDays.THREE_MONTHS,
             layers: [lambdaLayer]
