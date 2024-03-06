@@ -9,7 +9,6 @@
  charset-normalizer       3.3.2     MIT License                          
  cyclonedx-python-lib     6.4.1     Apache Software License              
  defusedxml               0.7.1     Python Software Foundation License   
- delete-routes            0.1.12    UNKNOWN                              
  filelock                 3.13.1    The Unlicense (Unlicense)            
  html5lib                 1.1       MIT License                          
  idna                     3.6       BSD License                          

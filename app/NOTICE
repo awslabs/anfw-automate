@@ -7,6 +7,7 @@
  aws-xray-sdk               2.12.1     Apache Software License                         
  bandit                     1.7.7      Apache Software License                         
  boolean.py                 4.0        BSD-2-Clause                                    
+ boto3                      1.34.52    Apache Software License                         
  botocore                   1.34.52    Apache Software License                         
  certifi                    2024.2.2   Mozilla Public License 2.0 (MPL 2.0)            
  charset-normalizer         3.3.2      MIT License                                     
@@ -38,6 +39,7 @@
  requests                   2.31.0     Apache Software License                         
  rich                       13.7.1     MIT License                                     
  rpds-py                    0.18.0     MIT License                                     
+ s3transfer                 0.10.0     Apache Software License                         
  six                        1.16.0     MIT License                                     
  sortedcontainers           2.4.0      Apache Software License                         
  stevedore                  5.2.0      Apache Software License                         
