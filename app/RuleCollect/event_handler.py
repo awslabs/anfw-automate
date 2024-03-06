@@ -28,9 +28,7 @@ class EventHandler:
         try:
             return matches[0]
         except Exception as e:
-            self.logging.warning(
-                f"Invalid AWS Region name in filename {object_key}: {e}"
-            )
+            self.logger.warn(f"Invalid AWS Region name in filename {object_key}: {e}")
             raise self.FormatError(f"Invalid AWS Region name in filename: {object_key}")
 
     def validate_file_name(self, input: str) -> bool:
@@ -125,7 +123,7 @@ class EventHandler:
         try:
             validate(data, yaml.safe_load(schema))
         except ValidationError as ve:
-            self.logging.warning(f"Config file {key} not compliant with schema: {ve}")
+            self.logger.warn(f"Config file {key} not compliant with schema: {ve}")
             raise self.FormatError(f"Config file {key} not compliant with schema")
         except Exception as e:
             self.logger.critical(
@@ -168,7 +166,7 @@ class EventHandler:
                 entry.ip_set_space = vpc.cidr_block
                 self.logger.debug(f"Got cidr block for {vpc_id}")
             except Exception as e:
-                self.logging.warning(f"Invalid VPC id {vpc_id}: {e}")
+                self.logger.warn(f"Invalid VPC id {vpc_id}: {e}")
                 raise self.FormatError(f"Invalid VPC id {vpc_id}")
 
             # Generate rules only when VPC is attached to a Transit Gateway
@@ -184,14 +182,14 @@ class EventHandler:
                                 rule=rule,
                             )
                         except ConfigEntry.FormatError as fe:
-                            self.logging.warning(
+                            self.logger.warn(
                                 f"Invalid format in rule {rule_key}:{rule} for {vpc_id}: {fe}"
                             )
                             raise self.FormatError(
                                 f"Invalid format in rule {rule_key}:{rule} for {vpc_id}"
                             )
                         except ConfigEntry.NotSupportedProtocol as nse:
-                            self.logging.warning(
+                            self.logger.warn(
                                 f"Unsupported Protocol in rule {rule_key}:{rule} for {vpc_id}: {nse}"
                             )
                             raise self.FormatError(

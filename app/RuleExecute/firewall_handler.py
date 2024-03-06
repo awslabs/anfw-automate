@@ -252,7 +252,7 @@ class FirewallRuleHandler:
                     self._cleanup_ip_sets(account=account)
                 except ClientError as error:
                     if error.response["Error"]["Code"] == "ResourceNotFoundException":
-                        self.logging.warninging(
+                        self.logger.warning(
                             f"DeleteAccount - No resources in {account} @ {current_region} - skipping."
                         )
                     else:

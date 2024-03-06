@@ -229,7 +229,7 @@ def handler(event, context):
                     log_stream_name=log_stream_name,
                 )
         else:
-            logging.warning(
+            logger.warn(
                 f"Filename {key} not complaint with <region>-config.yaml pattern"
             )
             customer_log_handler.send_log_message(
