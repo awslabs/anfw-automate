@@ -68,7 +68,7 @@ class ConfigEntry:
                 list(self.predefined_rule_protocols.keys()) + self.custom_rule_protocols
             )
 
-        with open("data/defaultdeny.yaml", "r") as d:
+        with open("data/global_rules.yaml", "r") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
 

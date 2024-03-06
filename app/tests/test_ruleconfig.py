@@ -36,7 +36,7 @@ class TestConfigEntry(TestCase):
                 protocol_config.PredfinedRuleProtocols,
             )
 
-        with open("data/defaultdeny.yaml", "r") as d:
+        with open("data/global_rules.yaml", "r") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.assertEqual(
                 self.config_entry.default_deny_rules, default_deny_config.Rules

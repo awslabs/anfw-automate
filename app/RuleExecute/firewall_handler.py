@@ -47,7 +47,7 @@ class FirewallRuleHandler:
         self.customer_log_handler = customer_log_handler
         self.log_stream_name = log_stream_name
         self.supported_regions = os.getenv("SUPPORTED_REGIONS").split(",")
-        with open("data/defaultdeny.yaml", mode="r", encoding="utf-8") as d:
+        with open("data/global_rules.yaml", mode="r", encoding="utf-8") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
         self.policy_collection: set = self._get_all_policies(region=region)
