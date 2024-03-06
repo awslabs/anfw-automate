@@ -16,8 +16,8 @@
         ]
     },
     "pipeline": {
-        "codestar_connection_arn": "arn:aws:codestar-connections:eu-west-1:200517998814:connection/21fb84ac-c711-4868-a554-66f5fbdd3b9f",
-        "repo_name": "ajupatil/anfw-automate",
+        "codestar_connection_arn": "arn:aws:codestar-connections:eu-west-1:200517998814:connection/049cb04e-182b-487b-9415-d8017b6d7a27",
+        "repo_name": "ajupatil/anfw-automate-staging",
         "repo_branch_name": "develop",
         "auto_promote_pipeline": true,
         "auto_detect_changes": true,
