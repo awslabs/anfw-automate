@@ -167,19 +167,15 @@ class MockAWSSevice(MagicMock):
                 pass
 
 
-# @patch(
-#     "os.getenv",
-#     return_value='{"firewall_policy_arns": {"eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]}}',
-# )
 @patch.dict(
     os.environ,
     {
-        "POLICY_ARNS": '{"firewall_policy_arns": {"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}}'
+        "POLICY_ARNS": '{"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}',
+        "SUPPORTED_REGIONS": "eu-west-1, eu-central-1",
+        "CUSTOMER_LOG_GROUP": "DemoGroup",
+        "RULE_ORDER": "STRICT_ORDER",
     },
 )
-@patch.dict(os.environ, {"SUPPORTED_REGIONS": "eu-west-1, eu-central-1"})
-@patch.dict(os.environ, {"CUSTOMER_LOG_GROUP": "DemoGroup"})
-@patch.dict(os.environ, {"RULE_ORDER": "STRICT_ORDER"})
 @patch("boto3.client", MockAWSSevice)
 class TestFirewallRuleHandler(TestCase):
     def load_default_deny(self) -> list:
