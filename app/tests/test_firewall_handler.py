@@ -191,8 +191,6 @@ class TestFirewallRuleHandler(TestCase):
         self.assertEqual(test_fw_handler.default_deny_rules, self.load_default_deny())
         # Check if the _get_all_policies returns the right arn's
 
-        print(test_fw_handler.policy_collection)
-
         self.assertEqual(
             test_fw_handler.policy_collection,
             {"arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"},

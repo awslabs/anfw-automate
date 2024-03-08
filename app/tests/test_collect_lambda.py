@@ -1,8 +1,12 @@
+import datetime
+import io
 from typing import Any
 import os
-from yaml import safe_load
 import json
+import yaml
 from RuleCollect.collect_lambda import handler
+from RuleCollect.event_handler import EventHandler
+
 import unittest
 from unittest.mock import patch, MagicMock
 from unittest import TestCase, mock
@@ -11,17 +15,22 @@ from unittest import TestCase, mock
 class TestHandler(unittest.TestCase):
 
     def setUp(self) -> None:
+
         with open("./tests/sample_events/s3put.json") as s3eventfile:
-            self.s3event = safe_load(s3eventfile)
+            self.s3event = yaml.safe_load(s3eventfile)
         with open(
             "./tests/sample_events/sample-vpc-delete-event.json"
         ) as delete_vpc_file:
-            self.delete_vpc_event = safe_load(delete_vpc_file)
+            self.delete_vpc_event = yaml.safe_load(delete_vpc_file)
+        with open(
+            "./tests/sample_events/eu-west-1-config.yaml", "r", encoding="utf-8"
+        ) as file:
+            self.s3_config = yaml.safe_load(file)
 
     @patch("collect_lambda.boto3.client")
     @patch("event_handler.EventHandler")
     @patch("log_handler.CustomerLogHandler")
-    @patch("event_handler.EventHandler.get_policy_document")
+    @patch("RuleCollect.event_handler.EventHandler.get_policy_document")
     @patch("event_handler.EventHandler.assume_role_for_s3")
     @patch("log_handler.CustomerLogHandler._check_log_stream")
     def test_handler(
@@ -33,10 +42,6 @@ class TestHandler(unittest.TestCase):
         mock_assume_role_for_s3,
         mock__check_log_stream,
     ):
-        # Mocking external dependencies
-        # mock_s3_client = MagicMock()
-        # mock_boto3_client.return_value = mock_s3_client
-
         mock_assume_role_for_s3.return_value = {
             "Credentials": {
                 "AccessKeyId": "mock_access_key",
@@ -46,10 +51,23 @@ class TestHandler(unittest.TestCase):
             }
         }
 
-        def get_policy_document_side_effect(*args, **kwargs):
-            return ["rule1", "rule2"], ["skipped_vpc1"]
+        mock_s3_response = {
+            "Body": MagicMock(
+                spec=io.BytesIO,
+                read=lambda x: yaml.dump(self.s3_config).encode("utf-8"),
+            ),
+            "ContentType": "application/x-yaml",
+            "LastModified": datetime.datetime(2022, 1, 1, 0, 0, 0),
+            "Metadata": {"some_key": "some_value"},
+            "ContentLength": len(yaml.dump(self.s3_config)),
+            "ETag": "etag123",
+        }
 
-        mock_get_policy_document.side_effect = get_policy_document_side_effect
+        mock_s3_client = MagicMock()
+        mock_boto3_client.return_value = mock_s3_client
+        mock_s3_client.get_object.return_value = mock_s3_response
+
+        mock_get_policy_document.return_value = ["rule1", "rule2"], ["skipped_vpc1"]
 
         # Mocking environment variables
         with patch.dict(

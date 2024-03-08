@@ -2,6 +2,7 @@
 
 # This file is part of anfw-automate. See LICENSE file for license information.
 
+import os
 import re
 import boto3
 import yaml
@@ -112,7 +113,12 @@ class EventHandler:
 
         # Load schema file
         try:
-            with open("schema.json", mode="r", encoding="utf-8") as f:
+            current_dir = os.path.dirname(
+                os.path.abspath(__file__)
+            )  # Get the directory of the current script
+            with open(
+                os.path.join(current_dir, "schema.json"), mode="r", encoding="utf-8"
+            ) as f:
                 schema = f.read()
             data: dict = yaml.safe_load(doc)
         except Exception as e:

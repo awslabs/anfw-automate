@@ -41,11 +41,11 @@ def handler(event, context):
 
     # CloudTrail event for VPC deletion
     if source == "aws.ec2":
-        logger.info(f"VPC delete event detected from {vpc_id}")
         rule_event = "DeleteVpc"
         vpc_id = event["detail"]["requestParameters"]["vpcId"]
         account = event["detail"]["recipientAccountId"]
         region = event["detail"]["awsRegion"]
+        logger.info(f"VPC delete event detected from {vpc_id}")
         eh = EventHandler(version=vpc_id)
         config = Config(retries={"max_attempts": 10, "mode": "adaptive"})
 
