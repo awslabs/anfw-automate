@@ -21,7 +21,8 @@
             "nat_subnet_a": "subnet-jjj",
             "nat_subnet_b": "subnet-kkk",
             "nat_subnet_c": "subnet-lll"
-        }
+        },
+        "rule_order": "STRICT_ORDER"
     },
     "eu-central-1": {
         "vpc_id": "vpc-yyy",
@@ -45,6 +46,7 @@
             "nat_subnet_a": "subnet-vvv",
             "nat_subnet_b": "subnet-www",
             "nat_subnet_c": "subnet-xxx"
-        }
+        },
+        "rule_order": "DEFAULT_ACTION_ORDER"
     }
 }

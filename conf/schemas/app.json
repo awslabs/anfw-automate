@@ -2,13 +2,14 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "propertyNames": {
-        "pattern": "^[a-z]+(-[a-z]+)*$"
+        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
     },
     "additionalProperties": {
         "type": "object",
         "properties": {
             "vpc_id": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^vpc-[a-zA-Z0-9]+$"
             },
             "rule_order": {
                 "type": "string",
@@ -20,13 +21,14 @@
             "supported_regions": {
                 "type": "array",
                 "items": {
-                    "pattern": "^[a-z]+(-[a-z]+)*$"
+                    "type": "string",
+                    "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                 }
             },
             "firewall_policy_arns": {
                 "type": "object",
                 "propertyNames": {
-                    "pattern": "^[a-z]+(-[a-z]+)*$"
+                    "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                 },
                 "additionalProperties": {
                     "type": "array",

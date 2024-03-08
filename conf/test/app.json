@@ -1,0 +1,14 @@
+{
+    "eu-west-1": {
+        "vpc_id": "vpc-010eb1e943e875731",
+        "rule_order": "STRICT_ORDER",
+        "supported_regions": [
+            "eu-west-1"
+        ],
+        "firewall_policy_arns": {
+            "eu-west-1": [
+                "arn:aws:network-firewall:eu-west-1:421222417363:firewall-policy/plc-aws-anfw-automate-fwbase-00-strict-dev"
+            ]
+        }
+    }
+}

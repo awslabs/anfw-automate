@@ -13,7 +13,7 @@ pre-synth:
 	bash -e scripts/pre-synth-script.sh
 
 deploy: pre-synth	
-	cdk deploy
+	cdk deploy --all
 
 clean:
 	git clean -fdx

@@ -6,25 +6,38 @@
             "type": "object",
             "properties": {
                 "aws_organziation_scope": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 3,
+                    "pattern": "^[a-zA-Z0-9]+$"
                 },
                 "brand": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 3,
+                    "pattern": "^[a-zA-Z0-9]+$"
                 },
                 "department": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 3,
+                    "pattern": "^[a-zA-Z0-9]+$"
                 },
                 "project_name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 4,
+                    "pattern": "^[a-zA-Z0-9]+$"
                 },
                 "module_name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 10,
+                    "pattern": "^[a-zA-Z0-9]+$"
                 }
             },
             "required": [
                 "aws_organziation_scope",
-                "brand",
-                "department",
                 "project_name",
                 "module_name"
             ]
@@ -34,7 +47,7 @@
             "properties": {
                 "primary_region": {
                     "type": "string",
-                    "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                    "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                 },
                 "target_account_id": {
                     "type": "string",
@@ -69,7 +82,8 @@
             "type": "object",
             "properties": {
                 "codestar_connection_arn": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^arn:aws:.+:[a-z0-9-]+:[0-9]+:.+$"
                 },
                 "repo_name": {
                     "type": "string"
@@ -87,7 +101,7 @@
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                     },
                     "minItems": 1
                 },
@@ -95,7 +109,7 @@
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                     },
                     "minItems": 1
                 },
@@ -103,7 +117,7 @@
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$"
+                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
                     },
                     "minItems": 1
                 },
@@ -117,9 +131,6 @@
                 "repo_branch_name",
                 "auto_promote_pipeline",
                 "auto_detect_changes",
-                "vpc_regions",
-                "firewall_regions",
-                "app_regions",
                 "deploy_stacksets"
             ]
         }

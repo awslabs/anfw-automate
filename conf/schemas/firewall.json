@@ -1,119 +1,127 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "patternProperties": {
-        "^[a-z]{2}-[a-z]+-[0-9]+$": {
-            "type": "object",
-            "properties": {
-                "vpc_id": {
-                    "type": "string",
-                    "pattern": "^vpc-[a-zA-Z0-9]+$"
-                },
-                "vpc_cidr": {
-                    "type": "string",
-                    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d{1,2}$"
-                },
-                "multi_az": {
-                    "type": "boolean"
-                },
-                "internet_gateway_id": {
-                    "type": "string",
-                    "pattern": "^igw-[a-zA-Z0-9]+$"
-                },
-                "internal_network_cidrs": {
-                    "type": "string",
-                    "pattern": "^(\\d+\\.\\d+\\.\\d+\\.\\d+/\\d{1,2},?)+$"
-                },
-                "transit_gateway": {
-                    "type": "string",
-                    "pattern": "^tgw-[a-zA-Z0-9]+$"
-                },
-                "availability_zones": {
-                    "type": "object",
-                    "properties": {
-                        "az_a": {
-                            "type": "string",
-                            "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
-                        },
-                        "az_b": {
-                            "type": "string",
-                            "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
-                        },
-                        "az_c": {
-                            "type": "string",
-                            "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
-                        }
-                    },
-                    "required": [
-                        "az_a",
-                        "az_b",
-                        "az_c"
-                    ]
-                },
-                "subnet_ids": {
-                    "type": "object",
-                    "properties": {
-                        "tgw_subnet_a": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "tgw_subnet_b": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "tgw_subnet_c": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "firewall_subnet_a": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "firewall_subnet_b": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "firewall_subnet_c": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "nat_subnet_a": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "nat_subnet_b": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        },
-                        "nat_subnet_c": {
-                            "type": "string",
-                            "pattern": "^subnet-[a-zA-Z0-9]+$"
-                        }
-                    },
-                    "required": [
-                        "tgw_subnet_a",
-                        "tgw_subnet_b",
-                        "tgw_subnet_c",
-                        "firewall_subnet_a",
-                        "firewall_subnet_b",
-                        "firewall_subnet_c",
-                        "nat_subnet_a",
-                        "nat_subnet_b",
-                        "nat_subnet_c"
-                    ]
-                }
-            },
-            "required": [
-                "vpc_id",
-                "vpc_cidr",
-                "multi_az",
-                "internet_gateway_id",
-                "internal_network_cidrs",
-                "transit_gateway",
-                "availability_zones",
-                "subnet_ids"
-            ]
-        }
+    "propertyNames": {
+        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
     },
-    "additionalProperties": false
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "vpc_id": {
+                "type": "string",
+                "pattern": "^vpc-[a-zA-Z0-9]+$"
+            },
+            "vpc_cidr": {
+                "type": "string",
+                "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d{1,2}$"
+            },
+            "multi_az": {
+                "type": "boolean"
+            },
+            "internet_gateway_id": {
+                "type": "string",
+                "pattern": "^igw-[a-zA-Z0-9]+$"
+            },
+            "internal_network_cidrs": {
+                "type": "string",
+                "pattern": "^(\\d+\\.\\d+\\.\\d+\\.\\d+/\\d{1,2},?)+$"
+            },
+            "transit_gateway": {
+                "type": "string",
+                "pattern": "^tgw-[a-zA-Z0-9]+$"
+            },
+            "availability_zones": {
+                "type": "object",
+                "properties": {
+                    "az_a": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
+                    },
+                    "az_b": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
+                    },
+                    "az_c": {
+                        "type": "string",
+                        "pattern": "^[a-z]{2}-[a-z]+-[0-9][a-z]$"
+                    }
+                },
+                "required": [
+                    "az_a",
+                    "az_b",
+                    "az_c"
+                ]
+            },
+            "subnet_ids": {
+                "type": "object",
+                "properties": {
+                    "tgw_subnet_a": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "tgw_subnet_b": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "tgw_subnet_c": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "firewall_subnet_a": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "firewall_subnet_b": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "firewall_subnet_c": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "nat_subnet_a": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "nat_subnet_b": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    },
+                    "nat_subnet_c": {
+                        "type": "string",
+                        "pattern": "^subnet-[a-zA-Z0-9]+$"
+                    }
+                },
+                "required": [
+                    "tgw_subnet_a",
+                    "tgw_subnet_b",
+                    "tgw_subnet_c",
+                    "firewall_subnet_a",
+                    "firewall_subnet_b",
+                    "firewall_subnet_c",
+                    "nat_subnet_a",
+                    "nat_subnet_b",
+                    "nat_subnet_c"
+                ]
+            },
+            "rule_order": {
+                "type": "string",
+                "enum": [
+                    "DEFAULT_ACTION_ORDER",
+                    "STRICT_ORDER"
+                ]
+            }
+        },
+        "required": [
+            "vpc_id",
+            "vpc_cidr",
+            "multi_az",
+            "internet_gateway_id",
+            "internal_network_cidrs",
+            "transit_gateway",
+            "availability_zones",
+            "subnet_ids",
+            "rule_order"
+        ]
+    }
 }
