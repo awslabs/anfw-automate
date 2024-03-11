@@ -1,6 +1,6 @@
 {
   "name": "anfw-automate",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "bin": {
     "anfw-automate": "bin/anfw-automate.js"
   },
@@ -8,7 +8,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "release": "standard-version"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
