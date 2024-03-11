@@ -1,6 +1,6 @@
 {
   "name": "anfw-automate",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "bin": {
     "anfw-automate": "bin/anfw-automate.js"
   },
