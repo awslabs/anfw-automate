@@ -110,38 +110,38 @@ These packages are not part of the solution.
 
 ### Python dependencies
 
-| Package | Version |
-| ------- | ------- |
-| aws-lambda-powertools | ^2.25.1 |
-| aws-xray-sdk | ^2.12.0 |
-| bandit | ^1.7.5 |
-| jsonschema | ^4.19.1 |
-| pip-audit | ^2.6.1 |
-| python | ^3.11 |
-| pyyaml | ^6.0.1 |
-| requests | ^2.31.0 |
-| pip-licenses | ^4.3.3 |
-| cfnresponse | ^1.1.2 |
+| Package                | Version     |
+| ---------------------- | ----------- |
+| aws-lambda-powertools | ^2.25.1      |
+| aws-xray-sdk           | ^2.12.0      |
+| jsonschema             | ^4.19.1      |
+| python                 | ^3.11        |
+| pyyaml                 | ^6.0.1       |
+| requests               | ^2.31.0      |
+| pytest                 | ^8.0.2       |
+| bandit                 | ^1.7.7       |
+| pip-audit              | ^2.7.2       |
+| pip-licenses           | ^4.3.4       |
+| cfnresponse           | ^1.1.2       |
 
 ### Typescript dependencies
 
-| Package | Version |
-| ------- | ------- |
-| @types/jest | ^29.5.4 |
-| @types/node | 20.5.7 |
-| aws-cdk | 2.94.0 |
-| jest | ^29.6.4 |
-| ts-jest | ^29.1.1 |
-| ts-node | ^10.9.1 |
-| typescript | ~5.2.2
-| @aws-cdk/aws-lambda-python-alpha | ^2.97.0 |
-| ajv | ^8.12.0 |
-| aws-cdk-lib | ^2.94.0 |
-| cdk | ^2.97.0 |
-| cdk-nag | ^2.27.137 |
-| constructs | ^10.0.0 |
-| fs | ^0.0.1 |
-| source-map-support | ^0.5.21 |
+| Package                             | Version               |
+| ----------------------------------- | --------------------- |
+| @types/jest                         | ^29.5.4               |
+| @types/node                         | 20.5.7                |
+| jest                                | ^29.6.4               |
+| ts-jest                             | ^29.1.1               |
+| ts-node                             | ^10.9.1               |
+| typescript                          | ~5.2.2                |
+| @aws-cdk/aws-lambda-python-alpha    | ^2.128.0-alpha.0      |
+| ajv                                 | ^8.12.0               |
+| ajv-formats                         | ^2.1.1                |
+| aws-cdk                             | ^2.128.0              |
+| aws-cdk-lib                         | ^2.128.0              |
+| cdk-nag                             | ^2.28.41              |
+| fs                                  | ^0.0.2                |
+| source-map-support                  | ^0.5.21               |
 
 ## APPENDIX
 
