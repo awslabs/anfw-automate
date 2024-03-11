@@ -2,6 +2,7 @@
 
 # This file is part of anfw-automate. See LICENSE file for license information.
 
+import os
 import re
 import boto3
 import yaml
@@ -99,7 +100,6 @@ class EventHandler:
         # Check if the VPC is attached to the Transit Gateway
         return True if len(attachments) > 0 else False
 
-    # @tracer.capture_method
     def get_policy_document(
         self, doc: str, account: str, region: str, credentials: dict, key: str
     ) -> list:
@@ -113,7 +113,12 @@ class EventHandler:
 
         # Load schema file
         try:
-            with open("schema.json", mode="r", encoding="utf-8") as f:
+            current_dir = os.path.dirname(
+                os.path.abspath(__file__)
+            )  # Get the directory of the current script
+            with open(
+                os.path.join(current_dir, "schema.json"), mode="r", encoding="utf-8"
+            ) as f:
                 schema = f.read()
             data: dict = yaml.safe_load(doc)
         except Exception as e:
@@ -211,7 +216,6 @@ class EventHandler:
                 skipped_vpc.append(vpc_id)
         return policies, skipped_vpc
 
-    # @tracer.capture_method
     def send_to_sqs(
         self,
         config: ConfigEntry,
@@ -224,7 +228,6 @@ class EventHandler:
 
         sqs = boto3.resource("sqs", region_name=region)
         queue = sqs.get_queue_by_name(QueueName=queuename)
-        # get the object as json
         object_json = config.get_json()
         try:
             queue.send_message(

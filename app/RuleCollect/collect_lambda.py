@@ -41,11 +41,11 @@ def handler(event, context):
 
     # CloudTrail event for VPC deletion
     if source == "aws.ec2":
-        logger.info(f"VPC delete event detected from {vpc_id}")
         rule_event = "DeleteVpc"
         vpc_id = event["detail"]["requestParameters"]["vpcId"]
         account = event["detail"]["recipientAccountId"]
         region = event["detail"]["awsRegion"]
+        logger.info(f"VPC delete event detected from {vpc_id}")
         eh = EventHandler(version=vpc_id)
         config = Config(retries={"max_attempts": 10, "mode": "adaptive"})
 
@@ -56,7 +56,6 @@ def handler(event, context):
             config=config,
             rolename=s3_assume_role,
         )
-        # logger.debug(f"Got credentials for role {s3_assume_role} in account {account}")
 
         # Logger INIT with unique version ID
         logger.structure_logs(append=True, version=vpc_id)
@@ -66,7 +65,6 @@ def handler(event, context):
             credentials=credentials,
         )
         log_stream_name = customer_log_handler.generate_log_stream_name()
-        # customer_log_s3 = os.getenv("CUSTOMER_LOG_S3")
 
         # Process event and send rules to SQS
         logger.info(f"DeleteVpc event detected from {vpc_id}")
@@ -106,7 +104,6 @@ def handler(event, context):
             config=config,
             rolename=s3_assume_role,
         )
-        # logger.debug(f"Got credentials for role {s3_assume_role} in account {account}")
 
         # Logger INIT with unique version ID
         logger.structure_logs(append=True, version=version)
@@ -133,7 +130,6 @@ def handler(event, context):
             f"Processing object: {key}",
             level=Level.INFO,
         )
-        # customer_log_s3 = os.getenv("CUSTOMER_LOG_S3")
 
         if eh.validate_file_name(input=key):
             # Get Region name of file name

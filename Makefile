@@ -1,9 +1,9 @@
-all: build
+all: pre-synth build
 
 help: 
 	@cat Makefile
 
-build:
+build: 
 	bash -e scripts/build.sh
 	
 update: 
@@ -12,8 +12,8 @@ update:
 pre-synth:
 	bash -e scripts/pre-synth-script.sh
 
-deploy:
-	make deploy
+deploy: pre-synth	
+	cdk deploy --all
 
 clean:
 	git clean -fdx

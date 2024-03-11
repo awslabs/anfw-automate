@@ -1,0 +1,4 @@
+# Default deny rules used by AWS Network Firewall to create Reserved rule groups
+Rules:
+  - 'drop tcp $HOME_NET any -> $EXTERNAL_NET any'
+  - 'drop udp $HOME_NET any -> $EXTERNAL_NET any'

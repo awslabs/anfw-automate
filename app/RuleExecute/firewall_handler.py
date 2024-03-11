@@ -2,7 +2,6 @@
 
 # This file is part of anfw-automate. See LICENSE file for license information.
 
-from asyncio.log import logger
 import datetime
 import hashlib
 import json
@@ -20,12 +19,12 @@ from aws_lambda_powertools import Logger
 from lib.rule_config import ConfigEntry, DefaultDenyRules
 from lib.log_handler import Level
 
-MAX_RULES_PRE_POLICY: int = 19  # max 20
+CUSTOMER_RULEGROUP_PRIORITY: int = 250  # default priority for customer rules
+RESERVED_RULEGROUP_PRIORITY: int = 100  # default priority for reserved rules
+MAX_RULEGROUPS_PER_POLICY: int = 19  # max 20
 MAX_POLICIES: int = 19  # max 20 AWS soft-limit
-RULE_PRIORITY: int = 1
-POLICY_NAME_PREFIX: str = "Policy-"  # e.g. Policy- will be Policy-1, Policy-2 etc.
-RULE_GROUP_CAPACITY: int = 2000  # Max 30.000
-# ['eu-west-1', 'eu-central-1'] etc.
+POLICY_NAME_PREFIX: str = "anfw-policy-backup-"  # policy name e.g. anfw-policy-backup-1
+RULEGROUP_CAPACITY: int = 2000  # Max 30.000
 RESERVED_RULEGROUP_CAPACITY: int = 100  # Max 30.000
 
 
@@ -44,15 +43,21 @@ class FirewallRuleHandler:
         self._nfw = boto3.client("network-firewall", region_name=region, config=config)
         self._lambda = boto3.client("lambda", region_name=region, config=config)
         self.context = context
-        self.rule_group_collection: set = self._get_all_groups()
-        self.policy_collection: set = self._get_all_policies()
         self.logger = Logger(child=True)
         self.customer_log_handler = customer_log_handler
         self.log_stream_name = log_stream_name
         self.supported_regions = os.getenv("SUPPORTED_REGIONS").split(",")
-        with open("defaultdeny.yaml", mode="r", encoding="utf-8") as d:
+        with open("data/global_rules.yaml", mode="r", encoding="utf-8") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
+        self.policy_collection: set = self._get_all_policies(region=region)
+        self.rule_order = os.getenv("RULE_ORDER")
+        self.priority = (
+            f"priority:{CUSTOMER_RULEGROUP_PRIORITY};"
+            if self.rule_order == "DEFAULT_ACTION_ORDER"
+            else ""
+        )
+        self.rule_group_collection: set = self._get_all_groups()
 
     # Initial get functions -#############################################
 
@@ -66,15 +71,29 @@ class FirewallRuleHandler:
         groups = self._nfw.list_rule_groups(Scope="ACCOUNT", MaxResults=100)
         # First chunk of rules
         for group_name in groups["RuleGroups"]:
-            names.add(group_name["Arn"])
+            if (
+                self.rule_order == "DEFAULT_ACTION_ORDER"
+                and "-action" in group_name["Name"]
+            ):
+                names.add(group_name["Arn"])
+            elif self.rule_order == "STRICT_ORDER" and "-strict" in group_name["Name"]:
+                names.add(group_name["Arn"])
         # if there are more, get another 100 until end
         while "NextToken" in groups:
             groups = self._nfw.list_rule_groups(
                 Scope="ACCOUNT", MaxResults=100, NextToken=groups["NextToken"]
             )
             for group_name in groups["RuleGroups"]:
-                names.add(group_name["Arn"])
-
+                if (
+                    self.rule_order == "DEFAULT_ACTION_ORDER"
+                    and "-action" in group_name["Name"]
+                ):
+                    names.add(group_name["Arn"])
+                elif (
+                    self.rule_order == "STRICT_ORDER"
+                    and "-strict" in group_name["Name"]
+                ):
+                    names.add(group_name["Arn"])
         return names
 
     def _get_rule_entries(self) -> list:
@@ -88,7 +107,6 @@ class FirewallRuleHandler:
             # Return empty values because nothing exists
             return [], ""
         # rule_entires is a list of all rules with the rule group as key
-        #  key = rule group arn // value = rule
         for rule_group_arn in self.rule_group_collection:
             response = self._nfw.describe_rule_group(
                 RuleGroupArn=rule_group_arn, Type="STATEFUL"
@@ -105,24 +123,16 @@ class FirewallRuleHandler:
                     )
         return rule_entries, response["UpdateToken"]
 
-    def _get_all_policies(self) -> set:
-        """Get all Firewall polices.
+    def _get_all_policies(self, region) -> set:
+        """Get all Firewall polices provided by user
 
-        :return: set - all existing policy ARNs"""
-        names: set = set()
-        # First junk of rules
-        policies = self._nfw.list_firewall_policies(MaxResults=100)
-        for policy in policies["FirewallPolicies"]:
-            names.add(policy["Arn"])
-        # if there are more, get another 100 until end
-        while "NextToken" in policies:
-            policies = self._nfw.list_firewall_policies(
-                MaxResults=100, NextToken=policies["NextToken"]
-            )
-            for policy in policies["FirewallPolicies"]:
-                names.add(policy["Arn"])
+        :return: set - all policy ARNs"""
+        collection: set = set()
 
-        return names
+        policy_arns_str = os.getenv("POLICY_ARNS")
+        policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
+        collection.update(policy_arns.get(region, set()))
+        return collection
 
     # End get functions ##############################################
 
@@ -140,7 +150,10 @@ class FirewallRuleHandler:
                 arn = self.__add_rule_entry(rule_string, vpc_cidr, ip_set_name)
                 if arn is None:
                     # No arn can be found - create new rule group
-                    random_name: str = self._generate_random_name()
+                    if self.rule_order == "DEFAULT_ACTION_ORDER":
+                        random_name: str = self._generate_random_name() + "-action"
+                    else:
+                        random_name: str = self._generate_random_name() + "-strict"
                     self.logger.info(
                         f"Create new rule group {random_name} and add the first rule string."
                     )
@@ -361,7 +374,7 @@ class FirewallRuleHandler:
 
         return rule_arn
 
-    def _create_reserved_rules(self) -> list:
+    def _create_defaultdeny(self) -> list:
         # Get FW Account and VPC ID
         current_lambda_config = self._lambda.get_function_configuration(
             FunctionName=self.context.function_name
@@ -369,7 +382,7 @@ class FirewallRuleHandler:
         fw_vpc_id = os.environ["VPC_ID"].replace("vpc-", "")
         fw_account_id = self.context.invoked_function_arn.split(":")[4]
 
-        generated_reserved_rules: list = []
+        generated_defaultdeny: list = []
         for rulestring in self.default_deny_rules:
             proto = rulestring.split()[1]
             rule_options = re.search(rf"\((.*)\)$", rulestring)
@@ -385,21 +398,21 @@ class FirewallRuleHandler:
                 rule_options = (
                     f"{rule_options.group(0)} "
                     f'msg: "Drop all {proto.upper()}"; '  # value must be double quoted
-                    f"priority:255; flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};"
                 )
                 re.sub(r"\((.*)\)$", rule_options, rulestring)
             else:
                 rule_options = (
                     f'(msg: "Drop all {proto.upper()}"; '  # value must be double quoted
-                    f"priority:255; flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};)"
                 )
                 rulestring += rule_options
 
-            generated_reserved_rules.append(rulestring)
+            generated_defaultdeny.append(rulestring)
 
-        return generated_reserved_rules
+        return generated_defaultdeny
 
     def _create_new_rule_group(
         self,
@@ -412,6 +425,8 @@ class FirewallRuleHandler:
 
         :return: None"""
 
+        self.logger.debug(f"Rule string passed: {rule_string}")
+
         ipset = {
             "RuleVariables": {
                 "IPSets": {
@@ -419,46 +434,37 @@ class FirewallRuleHandler:
                 }
             }
         }
-        self.logger.debug(f"Rule string passed: {rule_string}")
+
+        rule_order_option = {"StatefulRuleOptions": {"RuleOrder": self.rule_order}}
+        ipset.update(rule_order_option)
         rule_source = {"RulesSource": {"RulesString": rule_string}}
         ipset.update(rule_source)
         new_rule = self._nfw.create_rule_group(
             RuleGroupName=rule_group_name,
             Type="STATEFUL",
             Description="Autogenerated - DONT CHANGE",
-            Capacity=RULE_GROUP_CAPACITY,
+            Capacity=RULEGROUP_CAPACITY,
             RuleGroup=ipset,
         )
 
         # After creation - associate with one policy
         arn: str = new_rule["RuleGroupResponse"]["RuleGroupArn"]
-        self._associate_rule_group_to_policy(arn)
+        self._associate_rule_group_to_policy(arn, "customer")
         self.rule_group_collection.add(arn)
 
     def create_reserved_rule_group(
         self,
-        # rule_group_name: str,
-        # rule_string: str,
-        # ip_set_space: list,
-        # ip_set_name: str,
     ) -> None:
         """Creates a reserved rule group from defaultdeny config file.
 
         :return: None"""
-        internal_net_list = os.getenv("INTERNAL_NET").split(",")
-        fw_vpc_cidr = os.getenv("HOME_NET").split(",")
-        ipset = {
-            "RuleVariables": {
-                "IPSets": {
-                    "INTERNAL_NET": {"Definition": internal_net_list},
-                    "HOME_NET": {"Definition": fw_vpc_cidr},
-                }
-            }
-        }
-        rule_string = "\n".join(self._create_reserved_rules())
+        ipset = {}
+        rule_string = "\n".join(self._create_defaultdeny())
         self.logger.debug(f"Rule string passed: {rule_string}")
         rule_source = {"RulesSource": {"RulesString": rule_string}}
         ipset.update(rule_source)
+        rule_order_option = {"StatefulRuleOptions": {"RuleOrder": self.rule_order}}
+        ipset.update(rule_order_option)
         self.logger.debug(f"RuleGroup input: {ipset}")
 
         for rule_group_arn in self.rule_group_collection:
@@ -476,8 +482,10 @@ class FirewallRuleHandler:
                     Type="STATEFUL",
                 )
                 return
-
-        rulegroup_name = self._generate_random_name() + "-reserved"
+        if self.rule_order == "DEFAULT_ACTION_ORDER":
+            rulegroup_name = self._generate_random_name() + "-action-reserved"
+        else:
+            rulegroup_name = self._generate_random_name() + "-strict-reserved"
         self.logger.debug(f"Entering Rule Create for: {rulegroup_name}")
         new_rule = self._nfw.create_rule_group(
             RuleGroupName=rulegroup_name,
@@ -488,7 +496,7 @@ class FirewallRuleHandler:
         )
         # After creation - associate with one policy
         arn: str = new_rule["RuleGroupResponse"]["RuleGroupArn"]
-        self._associate_rule_group_to_policy(arn)
+        self._associate_rule_group_to_policy(arn, "reserved")
         self.rule_group_collection.add(arn)
         return
 
@@ -496,7 +504,7 @@ class FirewallRuleHandler:
         """Returns a rule group ARN which has the lowest used capacity.
 
         :return: str - ARN of the group"""
-        lowest_capa: int = RULE_GROUP_CAPACITY
+        lowest_capa: int = RULEGROUP_CAPACITY
         smallest_group: str = ""
         for rule_group_arn in self.rule_group_collection:
             response = self._nfw.describe_rule_group(RuleGroupArn=rule_group_arn)
@@ -512,8 +520,8 @@ class FirewallRuleHandler:
         # I no rule has capa left - return none
         return smallest_group
 
-    def _associate_rule_group_to_policy(self, rule_arn: str) -> None:
-        """Associate the rule to the policy.
+    def _associate_rule_group_to_policy(self, rule_arn: str, group_type: str) -> None:
+        """Associate the rule group to the policy.
 
         :return: None"""
         for cached_policy in self.policy_collection:
@@ -522,12 +530,33 @@ class FirewallRuleHandler:
                 policy["FirewallPolicy"].update({"StatefulRuleGroupReferences": []})
             if (
                 len(policy["FirewallPolicy"]["StatefulRuleGroupReferences"])
-                <= MAX_RULES_PRE_POLICY
+                <= MAX_RULEGROUPS_PER_POLICY
             ):
                 references: list = policy["FirewallPolicy"][
                     "StatefulRuleGroupReferences"
                 ]
-                references.append({"ResourceArn": rule_arn})
+                if self.rule_order == "DEFAULT_ACTION_ORDER":
+                    references.append({"ResourceArn": rule_arn})
+                elif self.rule_order == "STRICT_ORDER":
+                    if group_type == "customer":
+                        references.append(
+                            {
+                                "ResourceArn": rule_arn,
+                                "Priority": CUSTOMER_RULEGROUP_PRIORITY,
+                            }
+                        )
+                    elif group_type == "reserved":
+                        references.append(
+                            {
+                                "ResourceArn": rule_arn,
+                                "Priority": RESERVED_RULEGROUP_PRIORITY,
+                            }
+                        )
+                    else:
+                        self.logger.error(f"Invalid group_type: {group_type}")
+                else:
+                    self.logger.error(f"Invalid rule_order: {self.rule_order}")
+
                 policy["FirewallPolicy"]["StatefulRuleGroupReferences"] = references
                 self._nfw.update_firewall_policy(
                     UpdateToken=policy["UpdateToken"],
@@ -537,6 +566,7 @@ class FirewallRuleHandler:
                 # Slot found ... go back
                 return
         # no slot found .... create one
+        self.logger.error("Firewall policy capacity full. Creating backup policy")
         new_policy_name = f"{POLICY_NAME_PREFIX}{randint(1000, 1000000)}"  # nosec: Not used for security
         arn = self._create_new_policy(policy_name=new_policy_name, rule_arn=rule_arn)
         self.policy_collection.add(arn)
@@ -560,7 +590,6 @@ class FirewallRuleHandler:
                     self._nfw.delete_rule_group(
                         RuleGroupName=rule_group_name, Type="STATEFUL"
                     )
-                # self._check_rule_status(arn)
                 self.logger.debug(f"Rule group deleted: {rule_group_name}")
 
     def _cleanup_ip_sets(self, account: str, vpcid: str = "") -> None:
@@ -615,7 +644,6 @@ class FirewallRuleHandler:
             )
 
         rule_collection, update_token = self._get_rule_entries()
-        # raise ValueError("Function cannot take vpc and account as parameter.")
 
         for entry in rule_collection:
             rule_name = self._get_rule_name_from_rule_string(entry["RuleString"])

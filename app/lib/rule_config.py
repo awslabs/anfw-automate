@@ -3,6 +3,7 @@
 # This file is part of anfw-automate. See LICENSE file for license information.
 
 import hashlib
+import os
 import random
 import json
 import re
@@ -11,6 +12,7 @@ from yaml import safe_load
 from dataclasses import dataclass
 from aws_lambda_powertools import Logger, Tracer
 
+CUSTOMER_RULEGROUP_PRIORITY: int = 250  # default priority for customer rules
 # Reserve all metakeywords: https://suricata.readthedocs.io/en/suricata-6.0.1/rules/meta.html#meta-keywords
 RESERVED_META_KEYWORDS = [
     "msg",
@@ -51,6 +53,12 @@ class ConfigEntry:
         self.ip_set_space: str = ""
         self.logger = Logger(child=True)
         self.tracer = Tracer()
+        self.rule_order = os.getenv("RULE_ORDER")
+        self.priority = (
+            f"priority:{CUSTOMER_RULEGROUP_PRIORITY};"
+            if os.getenv("RULE_ORDER") == "DEFAULT_ACTION_ORDER"
+            else ""
+        )
 
         with open("data/protocols.yaml", "r") as p:
             protocol_config = Protocols(**safe_load(p))
@@ -60,7 +68,7 @@ class ConfigEntry:
                 list(self.predefined_rule_protocols.keys()) + self.custom_rule_protocols
             )
 
-        with open("data/defaultdeny.yaml", "r") as d:
+        with open("data/global_rules.yaml", "r") as d:
             default_deny_config = DefaultDenyRules(**safe_load(d))
             self.default_deny_rules = default_deny_config.Rules
 
@@ -153,7 +161,7 @@ class ConfigEntry:
         ):
             raise self.FormatError(f"Invalid Base Format for rule: {rulestring} ")
 
-        #### validate if content field exists
+        # validate if content field exists
         match = re.search(rf"content:(.*?);", rule_options_stripped)
         if not match:
             raise self.FormatError(f"Content keyword missing in : {ruleoptions} ")
@@ -235,14 +243,14 @@ class ConfigEntry:
                 policy = (
                     f"pass {s_proto} $a{self.account}{self.vpc} any -> $EXTERNAL_NET {d_port} "
                     f'({s_rule}; dotprefix; content:"{domain}"; endswith; '  # must be double quoted
-                    f"priority:1;flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};)"
                 )
             else:
                 policy = (
                     f"pass {s_proto} $a{self.account}{self.vpc} any -> $EXTERNAL_NET {d_port} "
                     f'({s_rule}; content:"{domain}"; startswith; endswith; '  # must be double quoted
-                    f"priority:1;flow:to_server, established; sid:{sid}; rev:1; "
+                    f"{self.priority}flow:to_server, established; sid:{sid}; rev:1; "
                     f"metadata: rule_name {rule_name};)"
                 )
 
@@ -274,7 +282,7 @@ class ConfigEntry:
                 # fmt: on
                 new_rule_options = (
                     f"({rule_options.group(1)}"  # only get content inside the brackets
-                    f"priority:1; sid:{sid}; rev:1; "
+                    f"{self.priority}sid:{sid};rev:1;"
                     f"metadata: rule_name {rule_name};)"
                 )
                 rule = re.sub(rf"\((.*)\)$", new_rule_options, rule)

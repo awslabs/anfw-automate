@@ -5,6 +5,9 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { aws_networkfirewall as anfw } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
+import * as fs from "fs";
+
+type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
 
 export class NetworkFirewallStack extends Stack {
     constructor(scope: Construct, id: string, props: {
@@ -13,11 +16,14 @@ export class NetworkFirewallStack extends Stack {
         subnetIds: { [key: string]: string };
         azIds: { [key: string]: string };
         stage: string;
+        internalNet: string;
+        ruleOrder: RuleOrder;
     }) {
         super(scope, id);
 
-        const { namePrefix, vpcId, subnetIds, azIds, stage } = props;
+        const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
         const namedotprefix = namePrefix.replace(/-/g, ".");
+        const absoluteFilePath = `policy/${props.ruleOrder}.json`;
 
         // Create subnet mappings based on the provided dictionary
         const subnetMappingList: anfw.CfnFirewall.SubnetMappingProperty[] = [];
@@ -45,13 +51,36 @@ export class NetworkFirewallStack extends Stack {
             });
         }
 
+        let internal_net_list: string[] = internalNet.split(',');
+
+        const policyContent = fs.readFileSync(absoluteFilePath, 'utf-8');
+        const firewallPolicyJson = JSON.parse(policyContent);
+
+        // Update HOME_NET policyVariables in the policy
+        firewallPolicyJson.policyVariables = {
+            ruleVariables: {
+                HOME_NET: {
+                    definition: internal_net_list,
+                },
+            },
+        }
+
+        const ordername: string = props.ruleOrder === 'DEFAULT_ACTION_ORDER' ? 'action' : 'strict';
 
         // Create a Network Firewall policy
         const firewallPolicy = new anfw.CfnFirewallPolicy(this, 'FirewallPolicy', {
-            firewallPolicyName: `plc-${namePrefix}-fwbase-00-${stage}`,
+            firewallPolicyName: `plc-${namePrefix}-fwbase-00-${ordername}-${stage}`,
             firewallPolicy: {
-                statelessDefaultActions: ['aws:forward_to_sfe'],
-                statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+                ...firewallPolicyJson,
+                // statelessDefaultActions: ['aws:forward_to_sfe'],
+                // statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+                // policyVariables: {
+                //     ruleVariables: {
+                //         HOME_NET: {
+                //             definition: internal_net_list,
+                //         },
+                //     },
+                // },
             },
         });
 

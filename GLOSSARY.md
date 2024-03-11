@@ -31,9 +31,10 @@ Application configuration is used to deploy application stacks. Create a configu
 | Parameter               | Datatype              | Description                                               |
 |-------------------------|-----------------------|-----------------------------------------------------------|
 | `vpc_id`                | String                | Unique identifier for the Virtual Private Cloud (VPC).     |
-| `vpc_cidr`              | String                | CIDR block assigned to the VPC (e.g., "10.1.0.0/24").      |
-| `internal_network_cidrs`| String                | Comma-separated CIDR blocks for internal network ranges. (e.g., "10.0.0.0/8,11.0.0.0/8").  |
+| `rule_order`              | String                | Rule evaluation order for AWS Network Firewall rule groups created by solution. i.e. "STRICT_ORDER" or "DEFAULT_ACTION_ORDER". Please refer [StatefulRuleOptions](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_StatefulRuleOptions.html)    |
 | `supported_regions`     | List of Strings       | List of AWS regions supported by the solution for rule updates. The region should existing AWS Network Firewall and policy            |
+| `firewall_policy_arns`     | Dictionary      | List of firewall policy arns that can be used to attach the firewall rule groups. Dictionary with valid AWS Region as key and List of valid firewall policy arns as value. The region should existing AWS Network Firewall and policy should already be in place. Please check the [sample config](conf/sample/app.json)  |
+
 
 ## `stackset.json`
 Stackset configuration is used to contol stackset deployment in the Delegated Administrator Account. Create a configuration file by referring the [JSON schema](conf/schemas/firewall.json), the [sample config](conf/sample/firewall.json) and, parameter glossary below.
@@ -75,9 +76,10 @@ Firewall configuration is used to deploy AWS Network Firewall stacks. Create a c
 | `multi_az`                 | Boolean           | Indicates whether the VPC spans multiple Availability Zones. |
 | `internet_gateway_id`      | String            | Unique identifier for the Internet Gateway.                |
 | `internal_network_cidrs`   | String            | Comma-separated CIDR blocks for internal network ranges.   |
-| `transit_gateway`          | String            | Identifier for the Transit Gateway.                         |
+| `transit_gateway`          | String            | Identifier for the Transit Gateway.                        |
 | `availability_zones`       | Map of Strings    | Mapping of Availability Zone names to their identifiers.   |
 | `subnet_ids`               | Map of Strings    | Mapping of subnet names to their identifiers.              |
+| `rule_order`              | String                | Rule evaluation order for AWS Network Firewall rule groups created by solution. i.e. "STRICT_ORDER" or "DEFAULT_ACTION_ORDER". Please refer [StatefulRuleOptions](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_StatefulRuleOptions.html)    |
 
 
 
