@@ -1,6 +1,6 @@
 # Automate AWS Network Firewall Rule Management
 
-An event-based serverless application that automatically performs CRUD operations on AWS Network Firewall rule-groups and rules based on distrubuted configuration files. The application consist of three modules:
+An event-based serverless application that automatically performs CRUD operations on AWS Network Firewall rule-groups and rules based on distributed configuration files. The application consist of three modules:
 
 1. VPC (Optional)
 Creates VPC based on `vpc.json` config using AWS CodePipeline. Not required if you already have existing VPC in AWS Network Firewall and Application deployment. VPC for Application is only required if you want to run AWS Lambda Functions inside a VPC.
