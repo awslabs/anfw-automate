@@ -21,7 +21,7 @@ class TestLambdaHandler(unittest.TestCase):
     @patch("collect_lambda.boto3.client")
     @patch("event_handler.EventHandler")
     @patch("log_handler.CustomerLogHandler")
-    def test_handler_vpc_delete_event(
+    def test_handler_s3_event(
         self, mock_boto_client, mock_log_handler, mock_event_handler
     ):
         # Mocking necessary objects

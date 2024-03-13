@@ -1,6 +1,21 @@
+import os
+import re
+import boto3
+import yaml
 import unittest
-from unittest.mock import MagicMock
-from event_handler import EventHandler
+from unittest.mock import MagicMock, patch
+from RuleCollect.event_handler import EventHandler
+
+
+# Mock sts response
+def get_sts_creds():
+    sts_credentials = {
+        "AccessKeyId": "mock_access_key_id",
+        "SecretAccessKey": "mock_secret_access_key",
+        "SessionToken": "mock_session_token",
+    }
+
+    return {"Credentials": sts_credentials}
 
 
 class TestEventHandler(unittest.TestCase):
@@ -22,7 +37,145 @@ class TestEventHandler(unittest.TestCase):
         self.assertTrue(self.handler.validate_file_name(valid_filename))
         self.assertFalse(self.handler.validate_file_name(invalid_filename))
 
-    # Add more test methods for other functions in EventHandler
+    @patch("RuleCollect.event_handler.boto3.client")
+    def test_assume_role_for_s3(self, mock_boto3_client):
+        mock_sts_client = MagicMock()
+        mock_boto3_client.return_value = mock_sts_client
+
+        mock_sts_client.assume_role.return_value = get_sts_creds()
+
+        account = "123456789012"
+        region = "us-west-2"
+        config = MagicMock()
+        rolename = "mock_role_name"
+
+        credentials = self.handler.assume_role_for_s3(account, region, config, rolename)
+
+        assert credentials["AccessKeyId"] == "mock_access_key_id"
+        assert credentials["SecretAccessKey"] == "mock_secret_access_key"
+        assert credentials["SessionToken"] == "mock_session_token"
+
+    @patch("RuleCollect.event_handler.boto3.client")
+    def test__is_vpc_attached_to_transit_gateway(self, mock_boto3_client):
+        mock_ec2_client = MagicMock()
+        mock_boto3_client.return_value = mock_ec2_client
+
+        mock_ec2_client.describe_transit_gateway_attachments.return_value = {
+            "TransitGatewayAttachments": [{"AttachmentId": "attachment_1"}]
+        }
+
+        vpc_id = "vpc-12345678"
+
+        result = self.handler._is_vpc_attached_to_transit_gateway(
+            mock_ec2_client, vpc_id
+        )
+
+        assert result is True
+
+    @patch("RuleCollect.event_handler.boto3.resource")
+    @patch("RuleCollect.event_handler.boto3.client")
+    def test_send_to_sqs(self, mock_boto3_client, mock_boto3_resource):
+        mock_sqs_resource = MagicMock()
+        mock_queue = MagicMock()
+        mock_sqs_resource.get_queue_by_name.return_value = mock_queue
+        mock_boto3_resource.return_value = mock_sqs_resource
+
+        config_entry = MagicMock()
+        config_entry.account = "mock_account"
+        config_entry.region = "us-west-2"
+        config_entry.vpc = "vpc-12345678"
+        config_entry.get_json.return_value = "{}"
+
+        self.handler.send_to_sqs(
+            config_entry, "us-west-2", "mock_queue", "mock_event", "mock_log_stream"
+        )
+
+        mock_queue.send_message.assert_called_once_with(
+            MessageGroupId="mock_account",
+            MessageBody="{}",
+            MessageAttributes={
+                "Event": {"StringValue": "mock_event", "DataType": "String"},
+                "Account": {"StringValue": "mock_account", "DataType": "String"},
+                "Region": {"StringValue": "us-west-2", "DataType": "String"},
+                "LogstreamName": {
+                    "StringValue": "mock_log_stream",
+                    "DataType": "String",
+                },
+                "Version": {"StringValue": "1.0", "DataType": "String"},
+            },
+        )
+
+    @patch("RuleCollect.event_handler.boto3.resource")
+    @patch("RuleCollect.event_handler.boto3.client")
+    @patch("RuleCollect.event_handler.open")
+    @patch("RuleCollect.event_handler.yaml.safe_load")
+    @patch("RuleCollect.event_handler.validate")
+    def test_get_policy_document(
+        self,
+        mock_validate,
+        mock_yaml_load,
+        mock_open,
+        mock_boto3_client,
+        mock_boto3_resource,
+    ):
+        # Mocking data and variables
+        mock_data = {
+            "Config": [
+                {
+                    "VPC": "vpc-12345678",
+                    "Properties": [
+                        {"RuleType1": ["rule1", "rule2"]},
+                        {"RuleType2": ["rule3", "rule4"]},
+                    ],
+                }
+            ],
+            "Version": "1.0",
+        }
+        mock_open.return_value.__enter__.return_value.read.return_value = "mock_schema"
+        mock_yaml_load.return_value = mock_data
+        mock_ec2_resource = MagicMock()
+        mock_ec2_resource.Vpc.return_value.cidr_block = "10.0.0.0/16"
+        mock_boto3_resource.return_value = mock_ec2_resource
+        mock_sts_credentials = {
+            "AccessKeyId": "mock_access_key_id",
+            "SecretAccessKey": "mock_secret_access_key",
+            "SessionToken": "mock_session_token",
+        }
+        mock_sts_client = MagicMock()
+        mock_boto3_client.return_value = mock_sts_client
+        mock_sts_client.assume_role.return_value = {"Credentials": mock_sts_credentials}
+
+        # Initialize EventHandler
+        handler = EventHandler(version="1.0")
+
+        # Call the function
+        policies, skipped_vpc = handler.get_policy_document(
+            "mock_doc", "mock_account", "us-west-2", mock_sts_credentials, "mock_key"
+        )
+
+        # Assertions
+        assert len(policies) == 1
+        assert len(skipped_vpc) == 0
+        assert policies[0].ip_set_space == "10.0.0.0/16"
+        assert policies[0].account == "mock_account"
+        assert policies[0].region == "us-west-2"
+        assert policies[0].version == "1.0"
+        assert policies[0].rules == {
+            "ruletype1": ["rule1", "rule2"],
+            "ruletype2": ["rule3", "rule4"],
+        }
+        mock_open.assert_called_once_with(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.json"),
+            mode="r",
+            encoding="utf-8",
+        )
+        mock_yaml_load.assert_called_once_with("mock_doc")
+        mock_validate.assert_called_once()
+        mock_ec2_resource.Vpc.assert_called_once_with("vpc-12345678")
+        mock_sts_client.assume_role.assert_called_once_with(
+            RoleArn="arn:aws:iam::mock_account:role/mock_role_name",
+            RoleSessionName="CollectLambdaRuleAssumption",
+        )
 
 
 if __name__ == "__main__":
