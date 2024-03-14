@@ -32,7 +32,7 @@
             "properties": {
                 "VPC": {
                     "type": "string",
-                    "pattern": "^vpc-[0-9a-zA-Z]{17}$"
+                    "pattern": "^vpc-[0-9a-zA-Z]{8,17}$"
                 },
                 "Type": {
                     "type": "string"
