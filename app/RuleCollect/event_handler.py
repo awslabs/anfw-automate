@@ -141,15 +141,6 @@ class EventHandler:
         for policy in data["Config"]:
             # Get the vpc CIDR with the assumed role
             try:
-                ec2 = boto3.resource(
-                    "ec2",
-                    region_name=region,
-                    aws_access_key_id=credentials["AccessKeyId"],
-                    aws_secret_access_key=credentials["SecretAccessKey"],
-                    aws_session_token=credentials["SessionToken"],
-                )
-                self.logger.debug(f"Got EC2 boto3 resource")
-
                 ec2_client = boto3.client(
                     "ec2",
                     region_name=region,
@@ -159,10 +150,22 @@ class EventHandler:
                 )
                 self.logger.debug(f"Got EC2 boto3 client")
             except Exception as e:
-                self.logger.critical(f"Unable to get boto3 client or resource: {e}")
-                raise self.InternalError(
-                    f"Internal Error getting ec2 boto3 client or resource"
+                self.logger.critical(f"Unable to get boto3 client: {e}")
+                raise self.InternalError(f"Internal Error getting ec2 boto3 client")
+
+            # Get the vpc CIDR with the assumed role
+            try:
+                ec2 = boto3.resource(
+                    "ec2",
+                    region_name=region,
+                    aws_access_key_id=credentials["AccessKeyId"],
+                    aws_secret_access_key=credentials["SecretAccessKey"],
+                    aws_session_token=credentials["SessionToken"],
                 )
+                self.logger.debug(f"Got EC2 boto3 resource")
+            except Exception as e:
+                self.logger.critical(f"Unable to get boto3 resource: {e}")
+                raise self.InternalError(f"Internal Error getting ec2 boto3 resource")
 
             # Get VPC CIDR Block if VPC ID is valid
             try:
