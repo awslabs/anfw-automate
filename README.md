@@ -15,7 +15,7 @@ NOTE: Application makes cross-region API calls so it is not needed to deploy it 
 
 The Application has one optional module "StackSets". The Stacksets are only required if you want to automate the resource management in spoke accounts, i.e. accounts that hold the configuration files. It uses delegated admin for AWS Cloudformation to deploy those stacksets. You can also deploy the stack manually for testing using the Cloudformation template in `templates/spoke-serverless-stack.yaml`. If you wish to use delegated admin AWS Account with Stacksets please configure necessary parameters in `stackset.json`
 
-NOTE: All the modules above are deployed using dedicated cross-account CICD pipelines (AWS CodePipeline) hosted in Resource Account.
+NOTE: All the modules above are deployed using dedicated cross-account CICD pipelines (AWS CodePipeline) hosted in Resource Account. 
 
 ## PRE-REQUISITES
 
