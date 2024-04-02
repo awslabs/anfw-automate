@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.0.1 (2024-04-02)
+### Added
+- Unit tests for event_handler and log_handler libraries
+
+### Changed
+- Updated build script to fix pytest execution
+- Updated bandit excludes
+
+### Removed
+- Removed dangling VPC Gateway Endpoint from serverless stack
+
 ### 2.0.0 (2024-03-11)
 ### Added
 - Support for both STRICT and ACTION order in AWS Network Firewall
@@ -23,7 +34,6 @@ All notable changes to this project will be documented in this file. See [standa
 ### Removed
 - Pytest tests that failed and need to be rewritten
 - INTERNAL_NET varaible as this is not being used.
-
 
 ### 1.0.0 (2024-01-25)
 
