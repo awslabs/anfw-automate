@@ -1,11 +1,9 @@
 import * as events from 'aws-cdk-lib/aws-events';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from "constructs";
-import { Annotations, CfnOutput, Duration, Fn, Stack, aws_cloudwatch_actions } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Fn, Stack } from 'aws-cdk-lib';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Alarm } from 'aws-cdk-lib/aws-cloudwatch';
-import { Topic } from 'aws-cdk-lib/aws-sns';
-import { CfnVPCEndpoint, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Effect, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
@@ -26,13 +24,6 @@ export class ServerlessStack extends Stack {
             'RuleCollectLambda',
             RuleCollectLambdaArn
         );
-
-        // VPC Endpoint
-        new CfnVPCEndpoint(this, 'VPCES3ndpoint', {
-            serviceName: `com.amazonaws.${this.region}.s3`,
-            vpcEndpointType: 'Gateway',
-            vpcId: `${props.vpcId}`,
-        });
 
         // Create Event Bus
         const s3EventBus = new events.EventBus(this, 'S3EventBus', {
