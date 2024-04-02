@@ -11,8 +11,8 @@
         "eventVersion": "1.08",
         "userIdentity": {
             "type": "AssumedRole",
-            "principalId": "PRINCIPALID:d77qtts",
-            "arn": "arn:aws:sts::123456789012:assumed-role/DemoUser/d77qtts",
+            "principalId": "PRINCIPALID:xxxxx",
+            "arn": "arn:aws:sts::123456789012:assumed-role/DemoUser/xxxxx",
             "accountId": "123456789012",
             "accessKeyId": "ABC12345678",
             "sessionContext": {

@@ -18,6 +18,7 @@ do
     poetry run pip-audit --local --ignore-vuln PYSEC-2022-43012
     poetry run bandit -r . -x "**.venv/*","**test/*","**node_modules/*","**cdk.out/*","**dist/*"
     poetry run pip-licenses --output NOTICE
+    poetry run pytest --ignore=dist,cdk.out || ([ $? -eq 5 ] && exit 0 || exit $?)
     popd
 done
 
