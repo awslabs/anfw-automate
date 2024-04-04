@@ -38,6 +38,7 @@ export class VpcPipelineStack extends Stack {
                 'cd vpc',
                 'make'
             ],
+            primaryOutputDirectory: 'vpc/cdk.out',
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'vpc'

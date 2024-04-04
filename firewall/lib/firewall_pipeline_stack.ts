@@ -39,6 +39,7 @@ export class FirewallPipelineStack extends Stack {
                 'cd firewall',
                 'make'
             ],
+            primaryOutputDirectory: 'firewall/cdk.out',
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'firewall'
