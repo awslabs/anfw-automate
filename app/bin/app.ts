@@ -28,7 +28,6 @@ const STACK_NAME = "app";
 // }
 
 // Load configuration
-console.log(__dirname);
 const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, STACK_NAME);
 const stage = loadedConfig?.stage
 const globalConfig = loadedConfig?.globalConfig

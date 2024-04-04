@@ -49,8 +49,8 @@ function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig
 }
 
 export function loadDeploymentConfig(configBasePath: string, stage: string, stackType: string): StackConfig | null {
-    const globalConfig = loadConfigFromFile(path.join(__dirname, '../conf', `${stage}.json`),
-        path.join(__dirname, '../conf', 'schema.json'));
+    const globalConfig = loadConfigFromFile(path.join(__dirname, '../../conf', `${stage}.json`),
+        path.join(__dirname, '../../conf', 'schema.json'));
 
     if (globalConfig === null) {
         console.error('Error loading global configuration.');

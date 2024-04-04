@@ -1,16 +1,13 @@
-all: pre-synth build
+all: build
 
 help: 
 	@cat Makefile
 
 build: 
-	bash -e scripts/build.sh
+	bash -e ../scripts/build.sh
 	
 update: 
-	bash -e scripts/update-packages.sh
-
-pre-synth:
-	bash -e scripts/pre-synth-script.sh
+	bash -e ../scripts/update-packages.sh
 
 deploy: pre-synth	
 	cdk deploy --all

@@ -1,7 +1,7 @@
 [tool.poetry]
 description = "Lambda Functions for automate rule management in AWS Network Firewall"
 name = "app"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.com>"]
 
 [tool.poetry.dependencies]
