@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { StackConfig, loadAppConfig } from './config_loader';
+import { StackConfig, loadDeploymentConfig } from './config_loader';
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { AppPipelineStack } from '../lib/app/app_pipeline_stack';
 import { FirewallPipelineStack } from "../lib/firewall/firewall_pipeline_stack";
@@ -29,7 +29,7 @@ if (!STACK_NAME) {
 }
 
 // Load configuration
-const loadedConfig: StackConfig | null = loadAppConfig(STAGE, STACK_NAME);
+const loadedConfig: StackConfig | null = loadDeploymentConfig(STAGE, STACK_NAME);
 const stage = loadedConfig?.stage
 const globalConfig = loadedConfig?.globalConfig
 const appConfig = loadedConfig?.appConfig

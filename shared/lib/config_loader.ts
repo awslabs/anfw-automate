@@ -7,9 +7,9 @@ export interface StackConfig {
     [key: string]: any;
 }
 
-function loadAppConfigFromFile(configBasePath: string, stage: string, filename: string): StackConfig | null {
-    const configPath = path.join(configBasePath, '../conf', stage, filename);
-    const schemaPath = path.join(configBasePath, '../conf', 'schemas', filename);
+function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig | null {
+    // const configPath = path.join(configBasePath, '../conf', stage, filename);
+    // const schemaPath = path.join(configBasePath, '../conf', 'schemas', filename);
 
     if (!fs.existsSync(configPath)) {
         console.error(`JSON file does not exist at path '${configPath}'.`);
@@ -48,8 +48,10 @@ function loadAppConfigFromFile(configBasePath: string, stage: string, filename: 
     }
 }
 
-export function loadAppConfig(configBasePath: string, stage: string, stackType: string): StackConfig | null {
-    const globalConfig = loadAppConfigFromFile(configBasePath, stage, 'global.json');
+export function loadDeploymentConfig(configBasePath: string, stage: string, stackType: string): StackConfig | null {
+    const globalConfig = loadConfigFromFile(path.join(__dirname, '../conf', `${stage}.json`),
+        path.join(__dirname, '../conf', 'schema.json'));
+
     if (globalConfig === null) {
         console.error('Error loading global configuration.');
         process.exit(1);
@@ -61,7 +63,8 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
     // Load stack-specific configurations based on stackType
     switch (stackType) {
         case 'app':
-            const appConfig = loadAppConfigFromFile(configBasePath, stage, 'app.json');
+            const appConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'app.json'),
+                path.join(configBasePath, '../conf', 'schemas', 'app.json'));
 
             if (appConfig === null) {
                 console.error('Error loading app configuration.');
@@ -69,7 +72,8 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
             }
 
             if (globalConfig.pipeline.deploy_stacksets) {
-                const stacksetConfig = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
+                const stacksetConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'stackset.json'),
+                    path.join(configBasePath, '../conf', 'schemas', 'stackset.json'));
                 if (stacksetConfig === null) {
                     console.error('Error loading stackset configuration.');
                     process.exit(1);
@@ -87,7 +91,8 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
             };
 
         case 'firewall':
-            const fwConfig = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
+            const fwConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'firewall.json'),
+                path.join(configBasePath, '../conf', 'schemas', 'firewall.json'));
             if (fwConfig === null) {
                 console.error('Error loading firewall configuration.');
                 process.exit(1);
@@ -99,7 +104,8 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
             };
 
         case 'vpc':
-            const vpcConfig = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
+            const vpcConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'vpc.json'),
+                path.join(configBasePath, '../conf', 'schemas', 'vpc.json'));
             if (vpcConfig === null) {
                 console.error('Error loading VPC configuration.');
                 process.exit(1);
@@ -111,9 +117,9 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
             };
 
         // case 'all':
-        //     const appConfigAll = loadAppConfigFromFile(configBasePath, stage, 'app.json');
-        //     const fwConfigAll = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
-        //     const vpcConfigAll = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
+        //     const appConfigAll = loadConfigFromFile(configBasePath, stage, 'app.json');
+        //     const fwConfigAll = loadConfigFromFile(configBasePath, stage, 'firewall.json');
+        //     const vpcConfigAll = loadConfigFromFile(configBasePath, stage, 'vpc.json');
 
         //     if (appConfigAll === null) {
         //         console.error('Error loading app configuration.');
@@ -131,7 +137,7 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
         //     }
 
         //     if (globalConfig.pipeline.deploy_stacksets) {
-        //         const stacksetConfigAll = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
+        //         const stacksetConfigAll = loadConfigFromFile(configBasePath, stage, 'stackset.json');
         //         if (stacksetConfigAll === null) {
         //             console.error('Error loading stackset configuration.');
         //             process.exit(1);

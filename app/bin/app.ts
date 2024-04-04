@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { StackConfig, loadAppConfig } from '../../shared/lib/config_loader'
+import { StackConfig, loadDeploymentConfig } from '../../shared/lib/config_loader'
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { AppPipelineStack } from '../lib/app_pipeline_stack';
 
@@ -29,7 +29,7 @@ const STACK_NAME = "app";
 
 // Load configuration
 console.log(__dirname);
-const loadedConfig: StackConfig | null = loadAppConfig(__dirname, STAGE, STACK_NAME);
+const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, STACK_NAME);
 const stage = loadedConfig?.stage
 const globalConfig = loadedConfig?.globalConfig
 const appConfig = loadedConfig?.appConfig
