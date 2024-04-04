@@ -35,7 +35,10 @@ export class FirewallPipelineStack extends Stack {
 
         const synthStep = new CodeBuildStep("Synth", {
             input: sourceCode,
-            commands: ['make'],
+            commands: [
+                'cd firewall',
+                'make'
+            ],
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'firewall'

@@ -38,7 +38,10 @@ export class AppPipelineStack extends Stack {
 
         const synthStep = new CodeBuildStep("Synth", {
             input: sourceCode,
-            commands: ['make pre-synth build'],
+            commands: [
+                'cd app',
+                'make'
+            ],
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'app'

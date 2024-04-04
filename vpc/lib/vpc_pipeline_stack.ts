@@ -34,7 +34,10 @@ export class VpcPipelineStack extends Stack {
 
         const synthStep = new CodeBuildStep("Synth", {
             input: sourceCode,
-            commands: ['make'],
+            commands: [
+                'cd vpc',
+                'make'
+            ],
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'vpc'
