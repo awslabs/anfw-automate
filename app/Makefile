@@ -10,9 +10,9 @@ update:
 	bash -e ../scripts/update-packages.sh
 
 pre-synth:
-	bash -e scripts/pre-synth-script.sh
+	bash -e scripts/package.sh
 
-deploy: pre-synth build	
+deploy: all
 	cdk deploy --all
 
 clean:
