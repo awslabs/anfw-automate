@@ -4,7 +4,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 export interface StackConfig {
-    [key: string]: any; // Use an index signature to allow dynamic keys and values
+    [key: string]: any;
 }
 
 function loadAppConfigFromFile(configBasePath: string, stage: string, filename: string): StackConfig | null {
@@ -50,11 +50,6 @@ function loadAppConfigFromFile(configBasePath: string, stage: string, filename: 
 
 export function loadAppConfig(configBasePath: string, stage: string, stackType: string): StackConfig | null {
     const globalConfig = loadAppConfigFromFile(configBasePath, stage, 'global.json');
-    const stacksetConfig = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
-    const appConfig = loadAppConfigFromFile(configBasePath, stage, 'app.json')
-    const fwConfig = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
-    const vpcConfig = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
-
     if (globalConfig === null) {
         console.error('Error loading global configuration.');
         process.exit(1);
@@ -66,23 +61,33 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
     // Load stack-specific configurations based on stackType
     switch (stackType) {
         case 'app':
-            if (stacksetConfig === null) {
-                console.error('Error loading stackset configuration.');
-                process.exit(1);
-            }
+            const appConfig = loadAppConfigFromFile(configBasePath, stage, 'app.json');
 
             if (appConfig === null) {
                 console.error('Error loading app configuration.');
                 process.exit(1);
             }
 
+            if (globalConfig.pipeline.deploy_stacksets) {
+                const stacksetConfig = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
+                if (stacksetConfig === null) {
+                    console.error('Error loading stackset configuration.');
+                    process.exit(1);
+                }
+                return {
+                    ...commonConfigs,
+                    stacksetConfig: stacksetConfig,
+                    appConfig: appConfig
+                };
+            }
+
             return {
                 ...commonConfigs,
-                stacksetConfig: stacksetConfig,
                 appConfig: appConfig
             };
 
         case 'firewall':
+            const fwConfig = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
             if (fwConfig === null) {
                 console.error('Error loading firewall configuration.');
                 process.exit(1);
@@ -94,6 +99,7 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
             };
 
         case 'vpc':
+            const vpcConfig = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
             if (vpcConfig === null) {
                 console.error('Error loading VPC configuration.');
                 process.exit(1);
@@ -104,34 +110,47 @@ export function loadAppConfig(configBasePath: string, stage: string, stackType: 
                 vpcConfig
             };
 
-        case 'all':
-            if (stacksetConfig === null) {
-                console.error('Error loading stackset configuration.');
-                process.exit(1);
-            }
+        // case 'all':
+        //     const appConfigAll = loadAppConfigFromFile(configBasePath, stage, 'app.json');
+        //     const fwConfigAll = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
+        //     const vpcConfigAll = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
 
-            if (appConfig === null) {
-                console.error('Error loading app configuration.');
-                process.exit(1);
-            }
+        //     if (appConfigAll === null) {
+        //         console.error('Error loading app configuration.');
+        //         process.exit(1);
+        //     }
 
-            if (fwConfig === null) {
-                console.error('Error loading firewall configuration.');
-                process.exit(1);
-            }
+        //     if (fwConfigAll === null) {
+        //         console.error('Error loading firewall configuration.');
+        //         process.exit(1);
+        //     }
 
-            if (vpcConfig === null) {
-                console.error('Error loading VPC configuration.');
-                process.exit(1);
-            }
+        //     if (vpcConfigAll === null) {
+        //         console.error('Error loading VPC configuration.');
+        //         process.exit(1);
+        //     }
 
-            return {
-                ...commonConfigs,
-                stacksetConfig: stacksetConfig,
-                vpcConfig: vpcConfig,
-                fwConfig: fwConfig,
-                appConfig: appConfig
-            };
+        //     if (globalConfig.pipeline.deploy_stacksets) {
+        //         const stacksetConfigAll = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
+        //         if (stacksetConfigAll === null) {
+        //             console.error('Error loading stackset configuration.');
+        //             process.exit(1);
+        //         }
+        //         return {
+        //             ...commonConfigs,
+        //             stacksetConfig: stacksetConfigAll,
+        //             vpcConfig: vpcConfigAll,
+        //             fwConfig: fwConfigAll,
+        //             appConfig: appConfigAll
+        //         };
+        //     }
+
+        //     return {
+        //         ...commonConfigs,
+        //         vpcConfig: vpcConfigAll,
+        //         fwConfig: fwConfigAll,
+        //         appConfig: appConfigAll
+        //     };
 
         default:
             console.error(`Invalid stack name: '${stackType}'`);
