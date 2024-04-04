@@ -4,10 +4,10 @@ help:
 	@cat Makefile
 
 build: 
-	bash -e scripts/build.sh
+	bash -e ../shared/scripts/build.sh
 	
 update: 
-	bash -e scripts/update-packages.sh
+	bash -e ../shared/scripts/update-packages.sh
 
 pre-synth:
 	bash -e scripts/pre-synth-script.sh

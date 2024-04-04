@@ -7,10 +7,9 @@ export interface StackConfig {
     [key: string]: any; // Use an index signature to allow dynamic keys and values
 }
 
-
-function loadAppConfigFromFile(stage: string, filename: string): StackConfig | null {
-    const configPath = path.join(__dirname, '../conf', stage, filename);
-    const schemaPath = path.join(__dirname, '../conf', 'schemas', filename);
+function loadAppConfigFromFile(configBasePath: string, stage: string, filename: string): StackConfig | null {
+    const configPath = path.join(configBasePath, '../conf', stage, filename);
+    const schemaPath = path.join(configBasePath, '../conf', 'schemas', filename);
 
     if (!fs.existsSync(configPath)) {
         console.error(`JSON file does not exist at path '${configPath}'.`);
@@ -49,12 +48,12 @@ function loadAppConfigFromFile(stage: string, filename: string): StackConfig | n
     }
 }
 
-export function loadAppConfig(stage: string, stackType: string): StackConfig | null {
-    const globalConfig = loadAppConfigFromFile(stage, 'global.json');
-    const stacksetConfig = loadAppConfigFromFile(stage, 'stackset.json');
-    const appConfig = loadAppConfigFromFile(stage, 'app.json')
-    const fwConfig = loadAppConfigFromFile(stage, 'firewall.json');
-    const vpcConfig = loadAppConfigFromFile(stage, 'vpc.json');
+export function loadAppConfig(configBasePath: string, stage: string, stackType: string): StackConfig | null {
+    const globalConfig = loadAppConfigFromFile(configBasePath, stage, 'global.json');
+    const stacksetConfig = loadAppConfigFromFile(configBasePath, stage, 'stackset.json');
+    const appConfig = loadAppConfigFromFile(configBasePath, stage, 'app.json')
+    const fwConfig = loadAppConfigFromFile(configBasePath, stage, 'firewall.json');
+    const vpcConfig = loadAppConfigFromFile(configBasePath, stage, 'vpc.json');
 
     if (globalConfig === null) {
         console.error('Error loading global configuration.');

@@ -60,7 +60,7 @@ export class LambdaStack extends Stack {
         // Create Lambda Functions
         const lambdaLayer = new pylambda.PythonLayerVersion(this, 'LamdaDependencyLayer', {
             layerVersionName: `lyr-${props.namePrefix}-layer-${props.stage}`,
-            entry: 'app',
+            entry: 'src',
             compatibleRuntimes: [lambda.Runtime.PYTHON_3_11],
             bundling: {
                 assetExcludes: ['.*', 'RuleCollect/', 'RuleExecute/', 'tests/', 'data/', 'lib/'],

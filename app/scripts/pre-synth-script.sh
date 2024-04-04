@@ -9,6 +9,6 @@ set -eo pipefail
 echo "executing pre-synth"
 # Package the source code
 rm -r dist/* || mkdir -p dist
-cp -r app/* dist/
+cp -r src/* dist/
 cp -r dist/data dist/RuleCollect/data && cp -r dist/lib dist/RuleCollect/lib
 cp -r dist/data dist/RuleExecute/data && cp -r dist/lib dist/RuleExecute/lib
