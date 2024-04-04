@@ -9,7 +9,7 @@ build:
 update: 
 	bash -e ../scripts/update-packages.sh
 
-deploy: pre-synth	
+deploy: build
 	cdk deploy --all
 
 clean:
