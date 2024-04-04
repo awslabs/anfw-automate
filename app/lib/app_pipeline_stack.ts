@@ -42,6 +42,7 @@ export class AppPipelineStack extends Stack {
                 'cd app',
                 'make'
             ],
+            primaryOutputDirectory: 'app/cdk.out',
             env: {
                 STAGE: props.stage,
                 STACK_NAME: 'app'

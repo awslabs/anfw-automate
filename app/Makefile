@@ -12,7 +12,7 @@ update:
 pre-synth:
 	bash -e scripts/pre-synth-script.sh
 
-deploy: pre-synth	
+deploy: pre-synth build	
 	cdk deploy --all
 
 clean:
