@@ -8,9 +8,6 @@ export interface StackConfig {
 }
 
 function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig | null {
-    // const configPath = path.join(configBasePath, '../conf', stage, filename);
-    // const schemaPath = path.join(configBasePath, '../conf', 'schemas', filename);
-
     if (!fs.existsSync(configPath)) {
         console.error(`JSON file does not exist at path '${configPath}'.`);
         process.exit(1);
@@ -115,48 +112,6 @@ export function loadDeploymentConfig(configBasePath: string, stage: string, stac
                 ...commonConfigs,
                 vpcConfig
             };
-
-        // case 'all':
-        //     const appConfigAll = loadConfigFromFile(configBasePath, stage, 'app.json');
-        //     const fwConfigAll = loadConfigFromFile(configBasePath, stage, 'firewall.json');
-        //     const vpcConfigAll = loadConfigFromFile(configBasePath, stage, 'vpc.json');
-
-        //     if (appConfigAll === null) {
-        //         console.error('Error loading app configuration.');
-        //         process.exit(1);
-        //     }
-
-        //     if (fwConfigAll === null) {
-        //         console.error('Error loading firewall configuration.');
-        //         process.exit(1);
-        //     }
-
-        //     if (vpcConfigAll === null) {
-        //         console.error('Error loading VPC configuration.');
-        //         process.exit(1);
-        //     }
-
-        //     if (globalConfig.pipeline.deploy_stacksets) {
-        //         const stacksetConfigAll = loadConfigFromFile(configBasePath, stage, 'stackset.json');
-        //         if (stacksetConfigAll === null) {
-        //             console.error('Error loading stackset configuration.');
-        //             process.exit(1);
-        //         }
-        //         return {
-        //             ...commonConfigs,
-        //             stacksetConfig: stacksetConfigAll,
-        //             vpcConfig: vpcConfigAll,
-        //             fwConfig: fwConfigAll,
-        //             appConfig: appConfigAll
-        //         };
-        //     }
-
-        //     return {
-        //         ...commonConfigs,
-        //         vpcConfig: vpcConfigAll,
-        //         fwConfig: fwConfigAll,
-        //         appConfig: appConfigAll
-        //     };
 
         default:
             console.error(`Invalid stack name: '${stackType}'`);
