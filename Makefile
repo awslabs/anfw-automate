@@ -1,3 +1,5 @@
+all: build
+
 help: 
 	@cat Makefile
 

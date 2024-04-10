@@ -16,8 +16,6 @@ export class LambdaStage extends Stage {
         new LambdaStack(this, `lambda-${props.namePrefix}-${props.stage}`, {
             namePrefix: props.namePrefix,
             vpcId: props.config.vpc_id,
-            // vpcCidr: props.config.vpc_cidr,
-            // internalNet: props.config.internal_network_cidrs,
             supportedRegions: props.config.supported_regions,
             policyArns: props.config.firewall_policy_arns,
             ruleOrder: props.config.rule_order,

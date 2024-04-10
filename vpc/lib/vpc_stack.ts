@@ -74,7 +74,7 @@ export class VpcStack extends Stack {
 
         // Output the VPC ID and subnet details for reference
         new CfnOutput(this, 'InternetGatewayId', {
-            value: vpc.internetGatewayId!,  //!== undefined ? vpc.internetGatewayId : 'default value',
+            value: vpc.internetGatewayId!,
             description: 'Internet Gateway ID',
             exportName: `igw-id-${props.stage}`,
         });

@@ -13,8 +13,6 @@ export class LambdaStack extends Stack {
     constructor(scope: Construct, id: string, props: {
         namePrefix: string;
         vpcId: string;
-        // vpcCidr: string;
-        // internalNet: string;
         supportedRegions: [string];
         policyArns: { [key: string]: string[] };
         ruleOrder: RuleOrder;
@@ -98,8 +96,6 @@ export class LambdaStack extends Stack {
             environment: {
                 QUEUE_NAME: `${ruleSqsQueue.queueName}`,
                 LOG_LEVEL: "DEBUG",
-                // HOME_NET: `${props.vpcCidr}`,
-                // INTERNAL_NET: `${props.internalNet}`,
                 POWERTOOLS_SERVICE_NAME: "RuleExecuteLambda",
                 XACCOUNT_ROLE: `rle.${namedotprefix}.xaccount.lmb.${this.region}.${props.stage}`,
                 SUPPORTED_REGIONS: `${props.supportedRegions.toString()}`,

@@ -72,15 +72,6 @@ export class NetworkFirewallStack extends Stack {
             firewallPolicyName: `plc-${namePrefix}-fwbase-00-${ordername}-${stage}`,
             firewallPolicy: {
                 ...firewallPolicyJson,
-                // statelessDefaultActions: ['aws:forward_to_sfe'],
-                // statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
-                // policyVariables: {
-                //     ruleVariables: {
-                //         HOME_NET: {
-                //             definition: internal_net_list,
-                //         },
-                //     },
-                // },
             },
         });
 
