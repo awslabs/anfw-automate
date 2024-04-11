@@ -2,18 +2,19 @@ import { Stack, StackProps, Tags, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { BlockPublicAccess, Bucket, BucketEncryption, ObjectOwnership } from "aws-cdk-lib/aws-s3";
+import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
 
-interface VpcStackProps extends StackProps {
+interface VpcStackProps extends TaggedStackProps {
     namePrefix: string;
     vpcCidr: string;
     cidrMasks: Record<string, number>;
     availabilityZones: Record<string, string>;
-    stage: string;
+    // stage: string;
 }
 
-export class VpcStack extends Stack {
+export class VpcStack extends TaggedStack {
     constructor(scope: Construct, id: string, props: VpcStackProps) {
-        super(scope, id);
+        super(scope, id, props);
 
         const namedotprefix = props.namePrefix.replace(/-/g, ".");
 

@@ -1,6 +1,7 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { VPCStage } from "./vpc_stages";
+import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
 import {
     CodeBuildStep,
     CodePipeline,
@@ -8,14 +9,13 @@ import {
 } from "aws-cdk-lib/pipelines";
 import { NagSuppressions } from 'cdk-nag';
 
-interface VpcPipelineStackProps extends StackProps {
+interface VpcPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
-    stage: string;
     config: { [key: string]: any };
     globalConfig: { [key: string]: any };
 }
 
-export class VpcPipelineStack extends Stack {
+export class VpcPipelineStack extends TaggedStack {
     constructor(scope: Construct, id: string, props: VpcPipelineStackProps) {
         super(scope, id, props);
 
@@ -67,7 +67,8 @@ export class VpcPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-vpc`
+                    stageName: `${region}-vpc`,
+                    globalTags: props.globalTags
                 })
             )
 
