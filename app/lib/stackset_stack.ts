@@ -39,6 +39,20 @@ export class StacksetStack extends TaggedStack {
             stackSetProps.organizationalUnitIds = props.organizationalUnitIds;
         }
 
+        let globalTagsArray: { key: string; value: string; }[] = [];
+        if (Object.keys(props.globalTags).length > 0) {
+            globalTagsArray = Object.entries(props.globalTags).map(([key, value]) => ({
+                key,
+                value
+            }));
+        }
+
+        // Adding Environment entry to globalTagsArray
+        globalTagsArray.push({
+            key: "Environment",
+            value: "$props.stage"
+        });
+
         // Define Stacket Set
         new cloudformation.CfnStackSet(this, 'SpokeStackSet', {
             permissionModel: props.permissionModel,
@@ -84,10 +98,7 @@ export class StacksetStack extends TaggedStack {
                 deploymentTargets: Object.keys(stackSetProps).length === 0 ? undefined : stackSetProps,
                 regions: props.deployRegions,
             }],
-            tags: [{
-                key: 'component',
-                value: 'anfw',
-            }],
+            tags: globalTagsArray,
             templateBody: yamlTemplate
         });
     }
