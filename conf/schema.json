@@ -123,6 +123,12 @@
                 },
                 "deploy_stacksets": {
                     "type": "boolean"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [
