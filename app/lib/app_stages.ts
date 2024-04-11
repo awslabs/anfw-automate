@@ -13,7 +13,7 @@ interface LambdaStageProps extends StageProps {
 export class LambdaStage extends Stage {
     constructor(scope: Construct, id: string, props: LambdaStageProps) {
         super(scope, id, props);
-        const lstack = new LambdaStack(this, `lambda-${props.namePrefix}-${props.stage}`, {
+        new LambdaStack(this, `lambda-${props.namePrefix}-${props.stage}`, {
             namePrefix: props.namePrefix,
             vpcId: props.config.vpc_id,
             supportedRegions: props.config.supported_regions,
@@ -21,7 +21,6 @@ export class LambdaStage extends Stage {
             ruleOrder: props.config.rule_order,
             stage: props.stage,
         });
-        Tags.of(lstack).add('Environment', `${props.stage}`);
     }
 }
 
