@@ -3,22 +3,34 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 import { Construct } from "constructs";
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as pylambda from "@aws-cdk/aws-lambda-python-alpha";
 
 type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
 
-export class LambdaStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        vpcId: string;
-        supportedRegions: [string];
-        policyArns: { [key: string]: string[] };
-        ruleOrder: RuleOrder;
-        stage: string;
-    }) {
-        super(scope, id);
+// Define LambdaStackProps to include stage property
+export interface LambdaStackProps extends TaggedStackProps {
+    namePrefix: string;
+    vpcId: string;
+    supportedRegions: string[];
+    policyArns: string[];
+    ruleOrder: number;
+}
+
+export class LambdaStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: LambdaStackProps
+        //     {
+        //     namePrefix: string;
+        //     vpcId: string;
+        //     supportedRegions: [string];
+        //     policyArns: { [key: string]: string[] };
+        //     ruleOrder: RuleOrder;
+        //     stage: string;
+        // }
+    ) {
+        super(scope, id, props);
 
         const namedotprefix = props.namePrefix.replace(/-/g, ".");
 
