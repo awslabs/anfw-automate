@@ -16,7 +16,7 @@
         ]
     },
     "pipeline": {
-        "codestar_connection_arn": "arn:aws:codestar-connections:eu-west-1:200517998814:connection/049cb04e-182b-487b-9415-d8017b6d7a27",
+        "codestar_connection_arn": "arn:aws:codestar-connections:eu-west-1:200517998814:connection/9a062395-b443-4120-9239-31e35bf8a819",
         "repo_name": "ajusec/anfw-automate-internal",
         "repo_branch_name": "release/v3",
         "auto_promote_pipeline": true,
