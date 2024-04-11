@@ -5,7 +5,7 @@ import { StackConfig, loadDeploymentConfig } from '../../shared/lib/config_loade
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { VpcPipelineStack } from '../lib/vpc_pipeline_stack';
 
-const app = new cdk.App()
+const app = new cdk.App();
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 const STAGE = process.env.STAGE;
