@@ -6,14 +6,14 @@ An event-based serverless application that automatically performs CRUD operation
 Creates VPC based on `vpc.json` config using AWS CodePipeline. Not required if you already have existing VPC in AWS Network Firewall and Application deployment. VPC for Application is only required if you want to run AWS Lambda Functions inside a VPC.
 
 2. Firewall (Optional)
-Creates AWS Network Firewall endpoints, and updates the routing tables VPCs as configured in `firewall.json`. This requires Transit Gateway to be configured for the account and already attached to the AWS Network Firewall VPC. Not required, if you have existing AWS Network Firewall Setup.
+Creates AWS Network Firewall endpoints, and updates the routing tables of VPCs as configured in `firewall.json`. This requires Transit Gateway to be configured for the account and already attached to the AWS Network Firewall VPC. Not required, if you have existing AWS Network Firewall Setup.
 
 3. Application
 Creates a event-based serverless application that updates the rules and rule-groups attached to the AWS Network Firewall managed by the application. The rules are must be maintained in application managed S3 buckets. There is no limit on number of distributed configurations. The deployment is based on the configurations defined in `app.json`.
 
-NOTE: Application makes cross-region API calls so it is not needed to deploy it in all the regions used by AWS Network Firewall. 
+NOTE: Application makes cross-region API calls so it is not needed to deploy it in all the regions used by AWS Network Firewall. Pick a primary region to deploy the Application and save costs.
 
-The Application has one optional module "StackSets". The Stacksets are only required if you want to automate the resource management in spoke accounts, i.e. accounts that hold the configuration files. It uses delegated admin for AWS Cloudformation to deploy those stacksets. You can also deploy the stack manually for testing using the Cloudformation template in `templates/spoke-serverless-stack.yaml`. If you wish to use delegated admin AWS Account with Stacksets please configure necessary parameters in `stackset.json`
+The Application module has one optional sub-module "StackSets". The Stacksets are only required if you want to automate the resource management in spoke accounts, i.e. accounts that hold the configuration files. It uses delegated admin for AWS Cloudformation to deploy those stacksets. You can also deploy the stack manually for testing using the Cloudformation template in `templates/spoke-serverless-stack.yaml`. If you wish to use delegated admin AWS Account with Stacksets please configure necessary parameters in `stackset.json`
 
 NOTE: All the modules above are deployed using dedicated cross-account CICD pipelines (AWS CodePipeline) hosted in Resource Account. 
 
@@ -30,8 +30,10 @@ NOTE: All the modules above are deployed using dedicated cross-account CICD pipe
 
 ### PREPARE
 
-* Install npm and run `npm install`
-* Create deploy_vars.sh in root of repository using following template. Not all paramters are required, please add/delete parameters based on you AWS Account Setup.
+* Install npm
+* Create `deploy_vars.sh` in root of repository using following template. Not all paramters are required, please add/delete parameters based on you AWS Account Setup. 
+
+NOTE: **STAGE** and **AWS_REGION** parameters are mandatory. The deployment loads configuration and names resources created by CDK all stacks using the `STAGE` variable. Consider the `STAGE` variable as representing your application environment i.e. dev, pre-prod, prod, etc. 
 
 ```
 #!/bin/bash
@@ -49,12 +51,21 @@ export DELEGATED_ADMIN_ACCOUNT_AWS_PROFILE=admin+dadmin;
 
 # Configure deployment
 export AWS_PROFILE=${RES_ACCOUNT_AWS_PROFILE}
+export STAGE=xxx
+export AWS_REGION=xx-yyyy-1
 ```
+* Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`
 
+### CONFIGURE
+
+* Create a file named `<STAGE>.json`  in `conf` folder matching the name of the `STAGE` variable. This configuration is the global configuration used by all the stacks.
+* For every module you want to deploy, perform following steps:
+    * change to module directory e.g. `cd app`
+    * create a folder named `STAGE` in `conf` folder in-line with the explaination `STAGE` variable above.
+    * Follow appropriate `schema.json` in respective `conf` folders to create the configuration files. Refer to Glossary to understand each parameters. e.g. create `vpc.json` in `<STAGE>` folder based on `conf/schemas/vpc.json`.
 * Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`
 
 ### BOOTSTRAP
-
 * Login to all AWS Account of AWS profiles configured in deploy_vars.sh
 * CDK Bootstrap Resource Account:
 
@@ -77,24 +88,10 @@ cdk bootstrap --profile $APP_ACCOUNT_AWS_PROFILE  \
 
 NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Network Firewall or Application or both modules.
 
-### CONFIGURE
-
-* The application loads configuration and names resources created by CDK using the variable `STAGE` defined later. As such create a folder in `conf` matching the name of the `STAGE`. Consider the `STAGE` variable as representing your application environment i.e. dev, int, prod, etc.
-* create `vpc.json` in `<STAGE>` folder if you want to deploy VPCs. Follow the schema defined in `conf/schemas/vpc.json`. Refer to Glossary to understand each parameter.
-* create `firewall.json` in `<STAGE>` folder if you want to deploy AWS Network Firewall. Follow the schema defined in `conf/schemas/firewall.json`. Refer to Glossary to understand each parameter.
-* create `app.json` in `<STAGE>` folder. Follow the schema defined in `conf/schemas/app.json`. Refer to Glossary to understand each parameter.
-* create `stackset.json` in `<STAGE>` folder. Follow the schema defined in `conf/schemas/stackset.json`. Refer to Glossary to understand each parameter.
-
 ### DEPLOY
-
-* Run `export STAGE=xxx` to configure the STAGE value matching the folder you created.
-* Run `export AWS_REGION=xx-yyyy-1` to configure the default AWS Region used for CodePipeline deployment.
-* Run `export STACK_NAME=vpc && make deploy` to deploy VPC module (optional)
-* Run `export STACK_NAME=firewall && make deploy` to deploy AWS Network Firewall module (optional)
-* Run `export STACK_NAME=app && make deploy` to deploy Application module
+* Run `make deploy` in module folder
 
 #### Other Useful commands
-
 * `npm run build`   compile typescript to js
 * `npm run watch`   watch for changes and compile
 * `npm run test`    perform the jest unit tests
