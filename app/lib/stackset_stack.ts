@@ -2,24 +2,26 @@ import { Stack } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as cloudformation from "aws-cdk-lib/aws-cloudformation";
 import * as fs from "fs";
+import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
 
-export class StacksetStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        targetAccountId: string;
-        deployRegions: [string];
-        permissionModel: string;
-        autoDeployment: boolean;
-        accountFilterType: string;
-        accounts?: [string];
-        organizationalUnitIds?: [string];
-        failureTolerancePercentage: number;
-        maxConcurrentPercentage: number;
-        regionConcurrencyType: string;
-        callAs: string;
-        stage: string;
-    }) {
-        super(scope, id);
+export interface StacksetProps extends TaggedStackProps {
+    namePrefix: string;
+    targetAccountId: string;
+    deployRegions: [string];
+    permissionModel: string;
+    autoDeployment: boolean;
+    accountFilterType: string;
+    accounts?: [string];
+    organizationalUnitIds?: [string];
+    failureTolerancePercentage: number;
+    maxConcurrentPercentage: number;
+    regionConcurrencyType: string;
+    callAs: string;
+}
+
+export class StacksetStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: StacksetProps) {
+        super(scope, id, props);
 
         // Load YAML Stack Template
         const yamlTemplate = fs.readFileSync('templates/spoke-serverless-stack.yaml', 'utf8');

@@ -6,15 +6,17 @@ import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Alarm } from 'aws-cdk-lib/aws-cloudwatch';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Effect, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 
-export class ServerlessStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        vpcId: string;
-        organizationIds: [string];
-        stage: string;
-    }) {
-        super(scope, id);
+export interface ServerlessProps extends TaggedStackProps {
+    namePrefix: string;
+    vpcId: string;
+    organizationIds: [string];
+}
+
+export class ServerlessStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: ServerlessProps) {
+        super(scope, id, props);
 
         const RuleCollectLambdaArn = Fn.importValue(`rulecollect-lambda-arn-${props.stage}`);
 

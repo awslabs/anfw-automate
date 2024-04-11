@@ -31,6 +31,7 @@ interface ServerlessStageProps extends StageProps {
     stage: string;
     config: { [key: string]: any };
     globalConfig: { [key: string]: any };
+    globalTags: { [key: string]: string };
 }
 
 export class ServerlessStage extends Stage {
@@ -42,6 +43,7 @@ export class ServerlessStage extends Stage {
             vpcId: props.config.vpc_id,
             organizationIds: props.globalConfig.base.organziation_ids,
             stage: props.stage,
+            globalTags: props.globalTags,
         });
 
     }

@@ -7,6 +7,7 @@ interface StacksetStageProps extends StageProps {
     stage: string;
     config: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
+    globalTags: { [key: string]: string; };
 }
 
 export class StacksetStage extends Stage {
@@ -27,6 +28,7 @@ export class StacksetStage extends Stage {
             callAs: props.config.call_as,
             ...(props.config.accounts ? { accounts: props.config.accounts } : {}),
             ...(props.config.organizational_unit_ids ? { organizationalUnitIds: props.config.organizational_unit_ids } : {}),
+            globalTags: props.globalTags,
         });
     }
 }

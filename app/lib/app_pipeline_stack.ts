@@ -12,7 +12,6 @@ import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 
 interface AppPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
-    // stage: string;
     config: { [key: string]: any; };
     stacksetConfig: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
@@ -90,7 +89,7 @@ export class AppPipelineStack extends TaggedStack {
                         account: `${target_account}`
                     },
                     stageName: `${region}-serverless`,
-                    // globalTags: props.globalTags
+                    globalTags: props.globalTags
                 })
             );
 
@@ -105,7 +104,7 @@ export class AppPipelineStack extends TaggedStack {
                         account: `${delegated_admin_account}`
                     },
                     stageName: `${region}-stackset`,
-                    // globalTags: props.globalTags
+                    globalTags: props.globalTags
                 })
             );
         });
