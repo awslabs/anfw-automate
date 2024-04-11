@@ -18,11 +18,6 @@ if (!vpcRegion) {
 }
 
 // const STACK_NAME = "app";
-// Define your tagging configuration
-const globalTags = {
-  Environment: 'Dev',
-  Owner: 'John Doe'
-};
 
 // Load configuration
 const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, "app");
@@ -30,15 +25,17 @@ const stage = loadedConfig?.stage
 const globalConfig = loadedConfig?.globalConfig
 const appConfig = loadedConfig?.appConfig
 const stacksetConfig = loadedConfig?.stacksetConfig
+const globalTags = loadedConfig?.globalConfig?.tags ?? {};
 
 const namePrefix = `${(globalConfig as any).project?.aws_organziation_scope}-${(globalConfig as any).project?.project_name}-${(globalConfig as any).project.module_name}`
 
 const app = new cdk.App();
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+
 //Apply all tags
-Object.entries(globalTags).forEach(([key, value]) => {
-  cdk.Tags.of(app).add(`${key}`, `${value}`);
-});
+// Object.entries(globalTags).forEach(([key, value]) => {
+//   cdk.Tags.of(app).add(`${key}`, `${value}`);
+// });
 
 // if (STACK_NAME === 'app' || STACK_NAME === 'all') {
 new AppPipelineStack(app, `app-pipeline-anfw-${stage}`, {
@@ -52,6 +49,7 @@ new AppPipelineStack(app, `app-pipeline-anfw-${stage}`, {
   stacksetConfig: stacksetConfig,
   config: appConfig,
   globalConfig: globalConfig,
+  globalTags: globalTags,
 });
 // }
 

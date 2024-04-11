@@ -31,5 +31,9 @@
             "eu-west-1"
         ],
         "deploy_stacksets": true
+    },
+    "tags": {
+        "OrgScope": "pp",
+        "FunctionalScope": "sharedservices"
     }
 }

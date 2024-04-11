@@ -8,6 +8,7 @@ interface LambdaStageProps extends StageProps {
     stage: string;
     config: { [key: string]: any };
     globalConfig: { [key: string]: any };
+    globalTags: { [key: string]: string };
 }
 
 export class LambdaStage extends Stage {
@@ -20,6 +21,7 @@ export class LambdaStage extends Stage {
             policyArns: props.config.firewall_policy_arns,
             ruleOrder: props.config.rule_order,
             stage: props.stage,
+            globalTags: props.globalTags,
         });
     }
 }

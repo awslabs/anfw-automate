@@ -8,16 +8,17 @@ import {
 } from "aws-cdk-lib/pipelines";
 import { StacksetStage } from './stackset_stage';
 import { NagSuppressions } from 'cdk-nag';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 
-interface AppPipelineStackProps extends StackProps {
+interface AppPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
-    stage: string;
+    // stage: string;
     config: { [key: string]: any; };
     stacksetConfig: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
 }
 
-export class AppPipelineStack extends Stack {
+export class AppPipelineStack extends TaggedStack {
     constructor(scope: Construct, id: string, props: AppPipelineStackProps) {
         super(scope, id, props);
 
@@ -73,7 +74,8 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-lambda`
+                    stageName: `${region}-lambda`,
+                    globalTags: props.globalTags
                 })
             );
 
@@ -87,7 +89,8 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-serverless`
+                    stageName: `${region}-serverless`,
+                    // globalTags: props.globalTags
                 })
             );
 
@@ -101,7 +104,8 @@ export class AppPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${delegated_admin_account}`
                     },
-                    stageName: `${region}-stackset`
+                    stageName: `${region}-stackset`,
+                    // globalTags: props.globalTags
                 })
             );
         });

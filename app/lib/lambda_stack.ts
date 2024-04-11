@@ -21,14 +21,6 @@ export interface LambdaStackProps extends TaggedStackProps {
 
 export class LambdaStack extends TaggedStack {
     constructor(scope: Construct, id: string, props: LambdaStackProps
-        //     {
-        //     namePrefix: string;
-        //     vpcId: string;
-        //     supportedRegions: [string];
-        //     policyArns: { [key: string]: string[] };
-        //     ruleOrder: RuleOrder;
-        //     stage: string;
-        // }
     ) {
         super(scope, id, props);
 
