@@ -10,6 +10,7 @@ interface FirewallStageProps extends StageProps {
     stage: string;
     config: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
+    globalTags: { [key: string]: string };
 }
 
 export class FirewallStage extends Stage {
@@ -24,6 +25,7 @@ export class FirewallStage extends Stage {
             stage: props.stage,
             internalNet: props.config.internal_network_cidrs,
             ruleOrder: props.config.rule_order,
+            globalTags: props.globalTags,
         });
     }
 }
@@ -47,7 +49,8 @@ export class BaseRoutingStage extends Stage {
             vpcCidr: props.config.vpc_cidr,
             multiAz: props.config.multi_az,
             transitGateway: props.config.transit_gateway,
-            internalNet: props.config.internal_network_cidrs
+            internalNet: props.config.internal_network_cidrs,
+            globalTags: props.globalTags,
         });
     }
 }
@@ -57,6 +60,7 @@ interface RoutingProps extends StageProps {
     stage: string;
     config: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
+    globalTags: { [key: string]: string; };
 }
 
 export class RoutingStage extends Stage {
@@ -72,7 +76,8 @@ export class RoutingStage extends Stage {
             multiAz: props.config.multi_az,
             transitGateway: props.config.transit_gateway,
             internalNet: props.config.internal_network_cidrs,
-            internetGateway: props.config.internet_gateway_id
+            internetGateway: props.config.internet_gateway_id,
+            globalTags: props.globalTags,
         });
 
     }

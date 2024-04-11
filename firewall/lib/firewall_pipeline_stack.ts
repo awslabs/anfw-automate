@@ -1,6 +1,6 @@
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
+import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
 import { FirewallStage, BaseRoutingStage, RoutingStage } from "./firewall_stages";
 import {
     CodeBuildStep,
@@ -9,14 +9,13 @@ import {
 } from "aws-cdk-lib/pipelines";
 import { NagSuppressions } from 'cdk-nag';
 
-interface FirewallPipelineStackProps extends StackProps {
+interface FirewallPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
-    stage: string;
     config: { [key: string]: any };
     globalConfig: { [key: string]: any };
 }
 
-export class FirewallPipelineStack extends Stack {
+export class FirewallPipelineStack extends TaggedStack {
     constructor(scope: Construct, id: string, props: FirewallPipelineStackProps) {
         super(scope, id, props);
 
@@ -70,7 +69,8 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-firewall`
+                    stageName: `${region}-firewall`,
+                    globalTags: props.globalTags,
                 })
             )
 
@@ -84,7 +84,8 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-baserouting`
+                    stageName: `${region}-baserouting`,
+                    globalTags: props.globalTags,
                 })
             )
 
@@ -98,7 +99,8 @@ export class FirewallPipelineStack extends Stack {
                         region: `${region}`,
                         account: `${target_account}`
                     },
-                    stageName: `${region}-routing`
+                    stageName: `${region}-routing`,
+                    globalTags: props.globalTags,
                 })
             )
         });

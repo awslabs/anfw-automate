@@ -1,25 +1,25 @@
-import { RemovalPolicy, Stack } from 'aws-cdk-lib';
 import { Construct } from "constructs";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { aws_networkfirewall as anfw } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as fs from "fs";
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 
 type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
 
-export class NetworkFirewallStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        vpcId: string;
-        subnetIds: { [key: string]: string };
-        azIds: { [key: string]: string };
-        stage: string;
-        internalNet: string;
-        ruleOrder: RuleOrder;
-    }) {
-        super(scope, id);
+export interface NetworkFirewallProps extends TaggedStackProps {
+    namePrefix: string;
+    vpcId: string;
+    subnetIds: { [key: string]: string };
+    azIds: { [key: string]: string };
+    internalNet: string;
+    ruleOrder: RuleOrder;
+}
+
+export class NetworkFirewallStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: NetworkFirewallProps) {
+        super(scope, id, props);
 
         const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
         const namedotprefix = namePrefix.replace(/-/g, ".");

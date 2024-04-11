@@ -10,7 +10,6 @@ import * as pylambda from "@aws-cdk/aws-lambda-python-alpha";
 
 type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
 
-// Define LambdaStackProps to include stage property
 export interface LambdaStackProps extends TaggedStackProps {
     namePrefix: string;
     vpcId: string;

@@ -5,24 +5,25 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { CustomResource, Duration, Fn, Stack } from 'aws-cdk-lib';
 import * as pylambda from "@aws-cdk/aws-lambda-python-alpha";
-import { execSync } from 'child_process';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
+
+export interface RoutingStackProps extends TaggedStackProps {
+    namePrefix: string;
+    vpcId: string;
+    vpcCidr: string;
+    subnetIds: { [key: string]: string };
+    azIds: { [key: string]: string };
+    multiAz: boolean;
+    transitGateway: string;
+    internalNet: string;
+    internetGateway: string;
+}
 
 // Adds all required routes to the route tables
-export class RoutingStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        stage: string;
-        vpcId: string;
-        vpcCidr: string;
-        subnetIds: { [key: string]: string };
-        azIds: { [key: string]: string };
-        multiAz: boolean;
-        transitGateway: string;
-        internalNet: string;
-        internetGateway: string;
-    }) {
-        super(scope, id);
+export class RoutingStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: RoutingStackProps) {
+        super(scope, id, props);
 
         // Import values from FirewallStack using Fn::ImportValue
         const firewallArn = Fn.importValue(`nfw-arn-${props.stage}`)

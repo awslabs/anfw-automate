@@ -1,21 +1,23 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Stack, Duration, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
+
+export interface BaseRoutingProps extends TaggedStackProps {
+    namePrefix: string;
+    vpcId: string;
+    vpcCidr: string;
+    subnetIds: Record<string, string>;
+    azIds: Record<string, string>;
+    multiAz: boolean;
+    transitGateway: string;
+    internalNet: string;
+}
 
 // Creates required route tables for egress VPC routing
-export class BaseRoutingStack extends Stack {
-    constructor(scope: Construct, id: string, props: {
-        namePrefix: string;
-        stage: string;
-        vpcId: string;
-        vpcCidr: string;
-        subnetIds: Record<string, string>;
-        azIds: Record<string, string>;
-        multiAz: boolean;
-        transitGateway: string;
-        internalNet: string;
-    }) {
-        super(scope, id);
+export class BaseRoutingStack extends TaggedStack {
+    constructor(scope: Construct, id: string, props: BaseRoutingProps) {
+        super(scope, id, props);
 
         for (const az of Object.values(props.azIds)) {
             const azSuffix = az[az.length - 1];
