@@ -13,7 +13,7 @@ import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 interface AppPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
     config: { [key: string]: any; };
-    stacksetConfig: { [key: string]: any; };
+    // stacksetConfig: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
 }
 
@@ -60,7 +60,7 @@ export class AppPipelineStack extends TaggedStack {
 
         const lambdaWave = pipeline.addWave("LambdaStack");
         const serverlessWave = pipeline.addWave("ServerlessStack");
-        const stacksetWave = props.globalConfig.pipeline.deploy_stacksets ? pipeline.addWave("StacksetStack") : undefined;
+        // const stacksetWave = props.globalConfig.pipeline.deploy_stacksets ? pipeline.addWave("StacksetStack") : undefined;
 
         props.globalConfig.pipeline.app_regions.forEach((region: string) => {
             lambdaWave.addStage(
@@ -93,20 +93,23 @@ export class AppPipelineStack extends TaggedStack {
                 })
             );
 
-            stacksetWave!.addStage(
-                new StacksetStage(this, `stackset-${region}`, {
-                    namePrefix: props.namePrefix,
-                    config: props.stacksetConfig[region],
-                    globalConfig: props.globalConfig,
-                    stage: props.stage,
-                    env: {
-                        region: `${region}`,
-                        account: `${delegated_admin_account}`
-                    },
-                    stageName: `${region}-stackset`,
-                    globalTags: props.globalTags
-                })
-            );
+            if ("stackset" in props.config[region]) {
+                const stacksetWave = pipeline.addWave("StacksetStack");
+                stacksetWave.addStage(
+                    new StacksetStage(this, `stackset-${region}`, {
+                        namePrefix: props.namePrefix,
+                        config: props.config[region]["stackset"],
+                        globalConfig: props.globalConfig,
+                        stage: props.stage,
+                        env: {
+                            region: `${region}`,
+                            account: `${delegated_admin_account}`
+                        },
+                        stageName: `${region}-stackset`,
+                        globalTags: props.globalTags
+                    })
+                );
+            }
         });
 
         pipeline.buildPipeline();

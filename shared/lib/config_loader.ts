@@ -57,60 +57,71 @@ export function loadDeploymentConfig(configBasePath: string, stage: string, stac
     // Declare commonConfigs with default values
     let commonConfigs: StackConfig = { stage, globalConfig };
 
+    const loadedConfig = loadConfigFromFile(path.join(configBasePath, '../conf', `${stage}.json`),
+        path.join(configBasePath, '../conf', 'schema.json'));
+
+    if (loadedConfig === null) {
+        console.error(`Error loading ${stackType} configuration.`);
+        process.exit(1);
+    }
+
     // Load stack-specific configurations based on stackType
     switch (stackType) {
         case 'app':
-            const appConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'app.json'),
-                path.join(configBasePath, '../conf', 'schemas', 'app.json'));
+            // const appConfig = loadConfigFromFile(path.join(configBasePath, '../conf', `${stage}.json`),
+            //     path.join(configBasePath, '../conf', 'schemas', 'app.json'));
 
-            if (appConfig === null) {
-                console.error('Error loading app configuration.');
-                process.exit(1);
-            }
+            // if (appConfig === null) {
+            //     console.error('Error loading app configuration.');
+            //     process.exit(1);
+            // }
 
-            if (globalConfig.pipeline.deploy_stacksets) {
-                const stacksetConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'stackset.json'),
-                    path.join(configBasePath, '../conf', 'schemas', 'stackset.json'));
-                if (stacksetConfig === null) {
-                    console.error('Error loading stackset configuration.');
-                    process.exit(1);
-                }
-                return {
-                    ...commonConfigs,
-                    stacksetConfig: stacksetConfig,
-                    appConfig: appConfig
-                };
-            }
+            // if ("stackset" in loadedConfig) {
+            //     const stacksetConfig = loadedConfig["stackset"]
+            // }
+            // if (globalConfig.pipeline.deploy_stacksets) {
+            // const stacksetConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'stackset.json'),
+            //     path.join(configBasePath, '../conf', 'schemas', 'stackset.json'));
+            // if (stacksetConfig === null) {
+            //     console.error('Error loading stackset configuration.');
+            //     process.exit(1);
+            // }
+            //     return {
+            //         ...commonConfigs,
+            //         stacksetConfig: stacksetConfig,
+            //         appConfig: loadedConfig
+            //     };
+            // }
 
             return {
                 ...commonConfigs,
-                appConfig: appConfig
+                appConfig: loadedConfig
             };
 
         case 'firewall':
-            const fwConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'firewall.json'),
-                path.join(configBasePath, '../conf', 'schemas', 'firewall.json'));
-            if (fwConfig === null) {
-                console.error('Error loading firewall configuration.');
-                process.exit(1);
-            }
+            // const fwConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'firewall.json'),
+            //     path.join(configBasePath, '../conf', 'schemas', 'firewall.json'));
+            // if (fwConfig === null) {
+            //     console.error('Error loading firewall configuration.');
+            //     process.exit(1);
+            // }
 
             return {
                 ...commonConfigs,
-                fwConfig
+                fwConfig: loadedConfig
             };
 
         case 'vpc':
-            const vpcConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'vpc.json'),
-                path.join(configBasePath, '../conf', 'schemas', 'vpc.json'));
-            if (vpcConfig === null) {
-                console.error('Error loading VPC configuration.');
-                process.exit(1);
-            }
+            // const vpcConfig = loadConfigFromFile(path.join(configBasePath, '../conf', stage, 'vpc.json'),
+            //     path.join(configBasePath, '../conf', 'schemas', 'vpc.json'));
+            // if (vpcConfig === null) {
+            //     console.error('Error loading VPC configuration.');
+            //     process.exit(1);
+            // }
 
             return {
                 ...commonConfigs,
-                vpcConfig
+                vpcConfig: loadedConfig
             };
 
         default:

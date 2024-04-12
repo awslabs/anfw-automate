@@ -5,13 +5,13 @@
  bandit                   1.7.8     Apache Software License              
  boolean.py               4.0       BSD-2-Clause                         
  certifi                  2024.2.2  Mozilla Public License 2.0 (MPL 2.0) 
- cfnresponse              1.1.2     Apache Software License              
+ cfnresponse              1.1.4     Apache Software License              
  charset-normalizer       3.3.2     MIT License                          
  cyclonedx-python-lib     6.4.4     Apache Software License              
  defusedxml               0.7.1     Python Software Foundation License   
- filelock                 3.13.3    The Unlicense (Unlicense)            
+ filelock                 3.13.4    The Unlicense (Unlicense)            
  html5lib                 1.1       MIT License                          
- idna                     3.6       BSD License                          
+ idna                     3.7       BSD License                          
  iniconfig                2.0.0     MIT License                          
  license-expression       30.3.0    Apache-2.0                           
  markdown-it-py           3.0.0     MIT License                          

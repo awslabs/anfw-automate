@@ -7,15 +7,15 @@
  aws-xray-sdk               2.13.0       Apache Software License                         
  bandit                     1.7.8        Apache Software License                         
  boolean.py                 4.0          BSD-2-Clause                                    
- boto3                      1.34.77      Apache Software License                         
- botocore                   1.34.77      Apache Software License                         
+ boto3                      1.34.83      Apache Software License                         
+ botocore                   1.34.83      Apache Software License                         
  certifi                    2024.2.2     Mozilla Public License 2.0 (MPL 2.0)            
  charset-normalizer         3.3.2        MIT License                                     
  cyclonedx-python-lib       6.4.4        Apache Software License                         
  defusedxml                 0.7.1        Python Software Foundation License              
- filelock                   3.13.3       The Unlicense (Unlicense)                       
+ filelock                   3.13.4       The Unlicense (Unlicense)                       
  html5lib                   1.1          MIT License                                     
- idna                       3.6          BSD License                                     
+ idna                       3.7          BSD License                                     
  iniconfig                  2.0.0        MIT License                                     
  jmespath                   1.0.1        MIT License                                     
  jsonschema                 4.21.1       MIT License                                     
@@ -44,7 +44,7 @@
  sortedcontainers           2.4.0        Apache Software License                         
  stevedore                  5.2.0        Apache Software License                         
  toml                       0.10.2       MIT License                                     
- typing_extensions          4.10.0       Python Software Foundation License              
+ typing_extensions          4.11.0       Python Software Foundation License              
  urllib3                    2.2.1        MIT License                                     
  webencodings               0.5.1        BSD License                                     
  wrapt                      1.16.0       BSD License                                     
