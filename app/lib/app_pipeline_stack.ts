@@ -27,6 +27,19 @@ export class AppPipelineStack extends TaggedStack {
         const primary_region = props.globalConfig.base.primary_region;
         const name_dot_prefix = props.namePrefix.replace(/-/g, ".");
 
+        // Checks if the config object contains a "stackset" key in any region.
+        function hasStacksetInAnyRegion(config: any): boolean {
+            for (const regionKey in config) {
+                if (config.hasOwnProperty(regionKey)) {
+                    const region = config[regionKey];
+                    if ("stackset" in region) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         // Source repo
         const sourceCode = CodePipelineSource.connection(
             props.globalConfig.pipeline.repo_name,
@@ -60,7 +73,7 @@ export class AppPipelineStack extends TaggedStack {
 
         const lambdaWave = pipeline.addWave("LambdaStack");
         const serverlessWave = pipeline.addWave("ServerlessStack");
-        // const stacksetWave = props.globalConfig.pipeline.deploy_stacksets ? pipeline.addWave("StacksetStack") : undefined;
+        const stacksetWave = hasStacksetInAnyRegion(props.config) ? pipeline.addWave("ServerlessStack") : undefined;
 
         props.globalConfig.pipeline.app_regions.forEach((region: string) => {
             lambdaWave.addStage(
@@ -94,8 +107,7 @@ export class AppPipelineStack extends TaggedStack {
             );
 
             if ("stackset" in props.config[region]) {
-                const stacksetWave = pipeline.addWave("StacksetStack");
-                stacksetWave.addStage(
+                stacksetWave!.addStage(
                     new StacksetStage(this, `stackset-${region}`, {
                         namePrefix: props.namePrefix,
                         config: props.config[region]["stackset"],

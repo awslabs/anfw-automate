@@ -25,7 +25,6 @@ const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, 
 const stage = loadedConfig?.stage
 const globalConfig = loadedConfig?.globalConfig
 const appConfig = loadedConfig?.appConfig
-// const stacksetConfig = loadedConfig?.stacksetConfig
 const globalTags = loadedConfig?.globalConfig?.pipeline?.tags ?? {};
 
 const namePrefix = `${(globalConfig as any).project?.aws_organziation_scope}-${(globalConfig as any).project?.project_name}-${(globalConfig as any).project.module_name}`
@@ -38,7 +37,6 @@ new AppPipelineStack(app, `app-pipeline-anfw-${stage}`, {
   },
   namePrefix: namePrefix,
   stage: stage,
-  // stacksetConfig: stacksetConfig,
   config: appConfig,
   globalConfig: globalConfig,
   globalTags: globalTags,
