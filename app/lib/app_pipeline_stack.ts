@@ -1,4 +1,3 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { LambdaStage, ServerlessStage } from "./app_stages";
 import {
@@ -13,7 +12,6 @@ import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 interface AppPipelineStackProps extends TaggedStackProps {
     namePrefix: string;
     config: { [key: string]: any; };
-    // stacksetConfig: { [key: string]: any; };
     globalConfig: { [key: string]: any; };
 }
 

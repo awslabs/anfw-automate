@@ -15,7 +15,7 @@ export class TaggedStack extends cdk.Stack {
             cdk.Tags.of(this).add(`${key}`, `${value}`);
         });
 
-        // Add Environent tag to the stack
+        // Add default Environent tag to the stack
         cdk.Tags.of(this).add('Environment', props.stage);
     }
 }
