@@ -73,7 +73,9 @@ export class AppPipelineStack extends TaggedStack {
         const serverlessWave = pipeline.addWave("ServerlessStack");
         const stacksetWave = hasStacksetInAnyRegion(props.config) ? pipeline.addWave("ServerlessStack") : undefined;
 
-        props.globalConfig.pipeline.app_regions.forEach((region: string) => {
+
+        Object.keys(props.config).forEach((region: string) => {
+            // props.globalConfig.pipeline.app_regions.forEach((region: string) => {
             lambdaWave.addStage(
                 new LambdaStage(this, `lambda-${region}`, {
                     namePrefix: props.namePrefix,

@@ -20,19 +20,6 @@
         "repo_name": "org/repo",
         "repo_branch_name": "branchx",
         "auto_promote_pipeline": true,
-        "auto_detect_changes": true,
-        "vpc_regions": [
-            "eu-west-1",
-            "eu-central-1"
-        ],
-        "firewall_regions": [
-            "eu-west-1",
-            "eu-central-1"
-        ],
-        "app_regions": [
-            "eu-west-1",
-            "eu-central-1"
-        ],
-        "deploy_stacksets": true
+        "auto_detect_changes": true
     }
 }

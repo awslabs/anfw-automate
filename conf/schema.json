@@ -97,33 +97,6 @@
                 "auto_detect_changes": {
                     "type": "boolean"
                 },
-                "vpc_regions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
-                    },
-                    "minItems": 1
-                },
-                "firewall_regions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
-                    },
-                    "minItems": 1
-                },
-                "app_regions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
-                    },
-                    "minItems": 1
-                },
-                "deploy_stacksets": {
-                    "type": "boolean"
-                },
                 "tags": {
                     "type": "object",
                     "additionalProperties": {
@@ -136,8 +109,7 @@
                 "repo_name",
                 "repo_branch_name",
                 "auto_promote_pipeline",
-                "auto_detect_changes",
-                "deploy_stacksets"
+                "auto_detect_changes"
             ]
         }
     },

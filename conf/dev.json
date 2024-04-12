@@ -20,16 +20,6 @@
         "repo_name": "ajusec/anfw-automate-internal",
         "repo_branch_name": "release/v3",
         "auto_promote_pipeline": true,
-        "auto_detect_changes": true,
-        "vpc_regions": [
-            "eu-west-1"
-        ],
-        "firewall_regions": [
-            "eu-west-1"
-        ],
-        "app_regions": [
-            "eu-west-1"
-        ],
-        "deploy_stacksets": true
+        "auto_detect_changes": true
     }
 }

@@ -56,7 +56,8 @@ export class VpcPipelineStack extends TaggedStack {
 
         const vpcWave = pipeline.addWave("VpcStack");
 
-        props.globalConfig.pipeline.vpc_regions.forEach((region: string) => {
+        Object.keys(props.config).forEach((region: string) => {
+            // props.globalConfig.pipeline.vpc_regions.forEach((region: string) => {
             vpcWave.addStage(
                 new VPCStage(this, `vpc-${region}`, {
                     namePrefix: props.namePrefix,
