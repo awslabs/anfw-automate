@@ -59,7 +59,6 @@ export class FirewallPipelineStack extends TaggedStack {
         const routingWave = pipeline.addWave("RoutingStack");
 
         Object.keys(props.config).forEach((region: string) => {
-            // props.globalConfig.pipeline.firewall_regions.forEach((region: string) => {
             firewallWave.addStage(
                 new FirewallStage(this, `firewall-${region}`, {
                     namePrefix: props.namePrefix,

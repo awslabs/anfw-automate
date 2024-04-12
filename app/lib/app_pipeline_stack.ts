@@ -75,7 +75,6 @@ export class AppPipelineStack extends TaggedStack {
 
 
         Object.keys(props.config).forEach((region: string) => {
-            // props.globalConfig.pipeline.app_regions.forEach((region: string) => {
             lambdaWave.addStage(
                 new LambdaStage(this, `lambda-${region}`, {
                     namePrefix: props.namePrefix,

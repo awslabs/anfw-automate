@@ -1,5 +1,5 @@
-## `global.json`
-Global configuration is used by all stacks and to control the deployment of optional stacks. Create a configuration file by referring the [JSON schema](conf/schemas/global.json), the [sample config](conf/sample/global.json) and, parameter glossary below.
+## Global configuration (root directory)
+Global configuration is used by all stacks and to control the deployment of stacks. Create a configuration file by referring the [JSON schema](conf/schema.json), the [sample config](conf/sample.json) and, parameter glossary below.
 
 | Parameter                       | Datatype         | Description                                               |
 |---------------------------------|------------------|-----------------------------------------------------------|
@@ -18,13 +18,10 @@ Global configuration is used by all stacks and to control the deployment of opti
 | `repo_branch_name`              | String           | Name of the repository branch (e.g., "branchx").          |
 | `auto_promote_pipeline`         | Boolean          | Indicates whether the pipeline should auto-promote.       |
 | `auto_detect_changes`           | Boolean          | Indicates whether the pipeline should auto-detect changes. |
-| `vpc_regions`                   | List of Strings  | List of regions where VPC stacks are deployed.     |
-| `firewall_regions`              | List of Strings  | List of regions where firewall stacks are deployed.     |
-| `app_regions`                   | List of Strings  | List of regions where application stacks are deployed.  |
-| `deploy_stacksets`              | Boolean          | Indicates whether to deploy AWS CloudFormation StackSets in application stack  |
+| `tags`                   | Dictionary of Strings  | Dictionary contains tag key and tag value combinations that will used to tag all thee resources in the stack |
 
-## `app.json`
-Application configuration is used to deploy application stacks. Create a configuration file by referring the [JSON schema](conf/schemas/app.json), the [sample config](conf/sample/app.json) and, parameter glossary below.
+## Application Module
+Application configuration is used to deploy application stacks. Create a configuration file by referring the [JSON schema](app/conf/schema.json), the [sample config](app/conf/sample.json) and, parameter glossary below.
 
 > You must define configuration for each region you want to deploy the application. Region name must be double-quoted for safe YAML parsing. e.g. `"eu-west-1"`
 
@@ -35,11 +32,10 @@ Application configuration is used to deploy application stacks. Create a configu
 | `supported_regions`     | List of Strings       | List of AWS regions supported by the solution for rule updates. The region should existing AWS Network Firewall and policy            |
 | `firewall_policy_arns`     | Dictionary      | List of firewall policy arns that can be used to attach the firewall rule groups. Dictionary with valid AWS Region as key and List of valid firewall policy arns as value. The region should existing AWS Network Firewall and policy should already be in place. Please check the [sample config](conf/sample/app.json)  |
 
+#### optional Stackset configuration
+Stackset configuration is used to contol stackset deployment in the Delegated Administrator Account. Create a configuration application config file by referring the [JSON schema](app/conf/schema.json), the [sample config](app/conf/sample.json) and, parameter glossary below. 
 
-## `stackset.json`
-Stackset configuration is used to contol stackset deployment in the Delegated Administrator Account. Create a configuration file by referring the [JSON schema](conf/schemas/firewall.json), the [sample config](conf/sample/firewall.json) and, parameter glossary below.
-
-> You must define configuration for each region you want to deploy the stackset. The regions should match the regions configured in `app.json` and region name must be double-quoted for safe YAML parsing. e.g. `"eu-west-1"`
+> Although stackset confiuguration is optional, all the parameters in stackset configuration are required.
 
 | Parameter                          | Datatype          | Description                                               |
 |------------------------------------|-------------------|-----------------------------------------------------------|
@@ -53,19 +49,8 @@ Stackset configuration is used to contol stackset deployment in the Delegated Ad
 | `call_as`                          | String            | Indicates the role used to make the stack calls (e.g., "DELEGATED_ADMIN"). |
 | `stack_regions`                    | List of Strings   | List of regions where stacks can be deployed.              |
 
-## `vpc.json`
-VPC configuration is used to deploy VPC setup required for AWS Network Firewall in a [Centralized AWS Network Firewall deployment model](https://aws.amazon.com/blogs/networking-and-content-delivery/deployment-models-for-aws-network-firewall/). Create a configuration file by referring the [JSON schema](conf/schemas/vpc.json), the [sample config](conf/sample/vpc.json) and, parameter glossary below.
-
-> You must define configuration for each region you want to deploy the AWS Network Firewall. Region name must be double-quoted for safe YAML parsing. e.g. `"eu-west-1"`
-
-| Parameter                   | Datatype          | Description                                               |
-|-----------------------------|-------------------|-----------------------------------------------------------|
-| `vpc_cidr`                  | String            | CIDR block assigned to the VPC.                            |
-| `availability_zones`        | Map of Strings    | Mapping of Availability Zone names to their identifiers.   |
-| `cidr_masks`                | Map of Integers   | Mapping of CIDR masks for different components.            |
-
-## `firewall.json`
-Firewall configuration is used to deploy AWS Network Firewall stacks. Create a configuration file by referring the [JSON schema](conf/schemas/firewall.json), the [sample config](conf/sample/firewall.json) and, parameter glossary below.
+## Firewall Module
+Firewall configuration is used to deploy AWS Network Firewall stacks. Create a configuration file by referring the [JSON schema](firewall/conf/schemas.json), the [sample config](firewall/conf/sample.json) and, parameter glossary below.
 
 > You must define configuration for each region you want to deploy the AWS Network Firewall. Region name must be double-quoted for safe YAML parsing. e.g. `"eu-west-1"`
 
@@ -79,8 +64,18 @@ Firewall configuration is used to deploy AWS Network Firewall stacks. Create a c
 | `transit_gateway`          | String            | Identifier for the Transit Gateway.                        |
 | `availability_zones`       | Map of Strings    | Mapping of Availability Zone names to their identifiers.   |
 | `subnet_ids`               | Map of Strings    | Mapping of subnet names to their identifiers.              |
-| `rule_order`              | String                | Rule evaluation order for AWS Network Firewall rule groups created by solution. i.e. "STRICT_ORDER" or "DEFAULT_ACTION_ORDER". Please refer [StatefulRuleOptions](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_StatefulRuleOptions.html)    |
+| `rule_order`               | String             | Rule evaluation order for AWS Network Firewall rule groups created by solution. i.e. "STRICT_ORDER" or "DEFAULT_ACTION_ORDER". Please refer [StatefulRuleOptions](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_StatefulRuleOptions.html)    |
 
+## VPC Module
+VPC configuration is used to deploy VPC setup required for AWS Network Firewall in a [Centralized AWS Network Firewall deployment model](https://aws.amazon.com/blogs/networking-and-content-delivery/deployment-models-for-aws-network-firewall/). Create a configuration file by referring the [JSON schema](vpc/conf/schema.json), the [sample config](vpc/conf/sample.json) and, parameter glossary below.
+
+> You must define configuration for each region you want to deploy the AWS Network Firewall. Region name must be double-quoted for safe YAML parsing. e.g. `"eu-west-1"`
+
+| Parameter                   | Datatype          | Description                                               |
+|-----------------------------|-------------------|-----------------------------------------------------------|
+| `vpc_cidr`                  | String            | CIDR block assigned to the VPC.                            |
+| `availability_zones`        | Map of Strings    | Mapping of Availability Zone names to their identifiers.   |
+| `cidr_masks`                | Map of Integers   | Mapping of CIDR masks for different components.            |
 
 
 
