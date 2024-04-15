@@ -7,8 +7,6 @@ PYTHON_DIRS=$(find . -name pyproject.toml -print0 | xargs -0 -n1 dirname)
 
 echo $PYTHON_DIRS
 
-# pip install "poetry>=1.5"
-
 # Define a list of blacklist patterns
 BLACKLIST=("cdk.out" "node_modules" "./dist")
 

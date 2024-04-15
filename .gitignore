@@ -1,10 +1,11 @@
 *.js
 !jest.config.js
 *.d.ts
-node_modules
+
+**/node_modules
 archives
 dist
-.venv
+**/.venv
 .cdk.staging
 cdk.out
 .hypothesis

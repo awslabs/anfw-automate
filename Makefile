@@ -1,18 +1,19 @@
-all: pre-synth build
+all: build
 
 help: 
 	@cat Makefile
 
 build: 
-	bash -e scripts/build.sh
+	cd app && make all
+	cd firewall && make all
+	cd vpc && make all
 	
 update: 
-	bash -e scripts/update-packages.sh
+	cd app && make update
+	cd firewall && make update
+	cd vpc && make update
 
-pre-synth:
-	bash -e scripts/pre-synth-script.sh
-
-deploy: pre-synth	
+deploy: build	
 	cdk deploy --all
 
 clean:

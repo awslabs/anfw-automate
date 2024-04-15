@@ -1,0 +1,31 @@
+Version: 0.1.0
+Description: Configure Network Firewall / SAMPLE FILE
+Config:
+  - VPC: vpc-1234abcd6789efg
+    Type: ANFW::VPC
+    Properties:
+      - HTTPS:
+          - .amazonaws.com
+          - .google.com
+          - .example.com
+      - HTTP:
+          - amazonaws.com
+          - google.com
+          - HelpDomain.org
+      - CUSTOM:
+          # NOTE: the rule variable name must match the format a{aws_account_id}{vpc-id-without-prefix}
+          - 'pass http $a1122334455661234abcd6789efg any -> $EXTERNAL_NET any (http.host; content:"amazon.com"; startswith; endswith; flow:to_server, established;)'
+          - 'pass tls $a1122334455661234abcd6789efg any -> $EXTERNAL_NET any (tls.sni; dotprefix; content:".facebook.com"; endswith; flow:to_server, established;)'
+  - VPC: vpc-1234abcd6789abc
+    Type: ANFW::VPC
+    Properties:
+      - HTTPS:
+          - amazonaws.com
+          - google.com
+          - HelpDomain.org
+      - HTTP:
+          - amazonaws.com
+          - google.com
+      - TLS:
+          - ".amazon.com:443"
+          - ".example.com:443"
