@@ -25,8 +25,8 @@ Deployment of the application module utilizes a cross-account CI/CD pipeline (AW
 ### CONFIGURE
 
 * Change to module directory e.g. `cd app`
-* Create a file named `<STAGE>.json` in `conf` folder in-line with the explaination `STAGE` variable so far.
-* Follow appropriate `schema.json` in `conf` folder to create the configuration files. Refer the [GLOSSARY](../GLOSSARY.md) to understand each parameter. e.g. create `dev.json` in `conf` folder based on `conf/schema.json`.
+* Create a file named `<STAGE>.json` in [conf](conf/) folder in-line with the explaination `STAGE` variable so far.
+* Follow appropriate `schema.json` in **conf** folder to create the configuration files. Refer the [GLOSSARY](../GLOSSARY.md) to understand each parameter. e.g. create `dev.json` in `conf` folder based on `conf/schema.json`.
 * Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`
 
 ### BOOTSTRAP
