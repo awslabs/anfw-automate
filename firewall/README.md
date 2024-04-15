@@ -20,8 +20,7 @@ Deployment of the firewall module utilizes a cross-account CI/CD pipeline (AWS C
 
 ### CONFIGURE
 
-* Create a file named `<STAGE>.json`  in [conf](../conf/) folder matching the name of the `STAGE` variable. This configuration is the global configuration used by all the stacks.
-* change to module directory e.g. `cd firewall`
+* Change to module directory e.g. `cd firewall`
 * Create a file named `<STAGE>.json` in `conf` folder in-line with the explaination `STAGE` variable so far.
 * Follow appropriate `schema.json` in `conf` folder to create the configuration files. Refer the [GLOSSARY](../GLOSSARY.md) to understand each parameter. e.g. create `dev.json` in `conf` folder based on `conf/schema.json`.
 * Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`

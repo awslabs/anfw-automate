@@ -50,12 +50,13 @@ export AWS_PROFILE=${RES_ACCOUNT_AWS_PROFILE}
 export STAGE=xxx
 export AWS_REGION=xx-yyyy-1
 ```
+* Create a file named `<STAGE>.json`  in [conf](../conf/) folder matching the name of the `STAGE` variable. This configuration is the global configuration used by all the stacks.
 
 ### DEPLOY
-* Deploy the necessary modules by following their respecitve README sections:
-    * [app](app/README.md)
-    * [firewall](firewall/README.md)
-    * [vpc](vpc/README.md)
+Proceed to deploy the necessary modules by following their respecitve README sections:
+* [app](app/README.md)
+* [firewall](firewall/README.md)
+* [vpc](vpc/README.md)
 
 #### Other Useful commands
 * `npm run build`   compile typescript to js
