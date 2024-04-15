@@ -12,9 +12,13 @@ All notable changes to this project will be documented in this file. See [standa
 - Moved the configuration files for each module in their respective `conf`folders.
 - Moved the `global.json` configuration files to a central shared configuration folder `conf`
 - Removed the configuration folders for each stage and instead renamed the files to use stage name e.g. `dev.json`
+- Changed README section to point to dedicated module README for deployments
 
 ### Fixed
 - Updated vulnerable `idna` libraries.
+
+### Removed
+- Removed `STACKNAME` requirement from `deploy_vars.sh` as it was redundant with independent modules.
 
 ### 2.0.1 (2024-04-02)
 ### Added

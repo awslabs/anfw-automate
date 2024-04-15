@@ -29,7 +29,7 @@ Creates a event-based serverless application that updates the rules and rule-gro
 * Install npm
 * Create `deploy_vars.sh` in root of repository using following template. Not all paramters are required, please add/delete parameters based on your AWS Account Setup. 
 
-> **NOTE:** *STAGE* and *AWS_REGION* parameters are mandatory. The deployment loads configuration and names resources created by CDK all stacks using these variable. Consider the `STAGE` variable as representing your application environment i.e. dev, pre-prod, prod, etc. 
+> **NOTE:** *STAGE* and *AWS_REGION* parameters are mandatory. The deployment loads configuration and names resources created by all CDK stacks using these variable. Consider the `STAGE` variable as representing your application environment i.e. dev, pre-prod, prod, etc. 
 
 ```
 #!/bin/bash
@@ -51,37 +51,11 @@ export STAGE=xxx
 export AWS_REGION=xx-yyyy-1
 ```
 
-### CONFIGURE
-* Configure the necessary modules by following their respecitve README sections:
+### DEPLOY
+* Deploy the necessary modules by following their respecitve README sections:
     * [app](app/README.md)
     * [firewall](firewall/README.md)
     * [vpc](vpc/README.md)
-
-### BOOTSTRAP
-* Login to all AWS Account of AWS profiles configured in `deploy_vars.sh`
-* CDK Bootstrap Resource Account:
-
-```
-cdk bootstrap --profile $RES_ACCOUNT_AWS_PROFILE \
-aws://${ACCOUNT_RES}/${AWS_REGION} \
---stack-name CDKToolkit-anfw  \
---qualifier anfw
-```
-
-* Bootstrap all other accounts to trust resource account (ACCOUNT_RES) as follows:
-
-```
-cdk bootstrap --profile $APP_ACCOUNT_AWS_PROFILE  \
---cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess \
---trust ${ACCOUNT_RES} aws://${ACCOUNT_APP}/${AWS_REGION} \
---stack-name CDKToolkit-anfw  \
---qualifier anfw
-```
-
-NOTE: Bootstrap all the regions you wish to deploy the solution, either AWS Network Firewall or Application or both modules.
-
-### DEPLOY
-* Run `make deploy` in module folder
 
 #### Other Useful commands
 * `npm run build`   compile typescript to js
