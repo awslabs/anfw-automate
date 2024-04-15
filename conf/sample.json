@@ -20,6 +20,9 @@
         "repo_name": "org/repo",
         "repo_branch_name": "branchx",
         "auto_promote_pipeline": true,
-        "auto_detect_changes": true
+        "auto_detect_changes": true,
+        "tags": {
+            "name": "value"
+        }
     }
 }
