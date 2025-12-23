@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint . --ext .js --fix",
+    "clean": "rm -rf lib node_modules/.cache"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

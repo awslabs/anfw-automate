@@ -8,6 +8,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
+    "lint": "eslint . --ext .js --fix",
+    "clean": "rm -rf lib cdk.out node_modules/.cache",
     "cdk": "cdk",
     "postinstall": "cd ../shared && npm install"
   },
