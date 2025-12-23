@@ -111,21 +111,22 @@ test_setup() {
     print_header "Testing commit standards setup..."
     
     # Test commitlint configuration
-    echo "test: validate setup" | npx commitlint || {
-        print_error "Commitlint test failed"
+    echo "test: validate setup" | npx commitlint && {
+        print_status "✅ Commitlint validation works"
+    } || {
+        print_error "❌ Commitlint test failed"
         return 1
     }
     
-    # Test branch name validation (if not on main/dev)
-    current_branch=$(git rev-parse --abbrev-ref HEAD)
-    if [[ "$current_branch" != "main" && "$current_branch" != "dev" ]]; then
-        npm run validate:branch || {
-            print_warning "Branch name validation failed for current branch: $current_branch"
-            print_warning "This is expected if you're not on a feature/hotfix/release branch"
-        }
+    # Test commitizen
+    if npx cz --help &> /dev/null; then
+        print_status "✅ Commitizen is available"
+    else
+        print_error "❌ Commitizen test failed"
+        return 1
     fi
     
-    print_status "Setup test completed"
+    print_status "Setup test completed successfully"
 }
 
 # Create GitHub repository settings recommendations

@@ -37,9 +37,9 @@
         "deploy:local": "source deploy_vars.local.sh && make deploy",
         "synth": "npm run synth:modules",
         "synth:modules": "cd app && npx cdk synth && cd ../firewall && npx cdk synth && cd ../vpc && npx cdk synth",
-        "prepare": "husky install",
-        "commit": "git-cz",
-        "commit:retry": "git-cz --retry",
+        "prepare": "husky install && chmod +x .husky/* || true",
+        "commit": "npx cz",
+        "commit:retry": "npx cz --retry",
         "validate:commit": "commitlint --edit",
         "validate:branch": "validate-branch-name"
     },

@@ -11,29 +11,29 @@ We enforce commit standards at multiple levels:
 
 ## 🚀 Quick Setup
 
-### One-Command Setup
+### **Automatic Setup (Recommended)**
+```bash
+npm install
+```
+
+This automatically:
+- Installs all dependencies including commitizen and commitlint
+- Sets up husky git hooks via the `prepare` script
+- Makes hook files executable
+- Configures git commit template
+
+### **Manual Setup (if needed)**
 ```bash
 make setup-commits
 ```
 
-This will:
-- Install all required dependencies
-- Configure Husky git hooks
-- Set up commit message templates
-- Configure git settings
-- Test the setup
-
-### Manual Setup
+### **Verify Setup**
 ```bash
-# Install dependencies
-npm install
+# Test commitizen
+npx cz --help
 
-# Setup Husky hooks
-npx husky install
-
-# Configure git
-git config commit.template .gitmessage
-git config --local core.hooksPath .husky
+# Test commitlint
+echo "feat: test message" | npx commitlint
 ```
 
 ## 📝 Commit Message Format
@@ -248,22 +248,29 @@ git rebase -i HEAD~3
 
 ### Feature Development
 ```bash
-# 1. Create feature branch
+# 1. Clone and setup (first time only)
+git clone <repository-url>
+cd anfw-automate
+npm install  # Automatically sets up commit standards
+
+# 2. Create feature branch
 git checkout dev
 git pull origin dev
 git checkout -b feature/add-validation
 
-# 2. Make changes and commit
+# 3. Make changes and commit
 git add .
-npm run commit  # Interactive commit
+make commit  # Interactive conventional commit
+# or
+npm run commit
 
-# 3. Push and create PR
+# 4. Push and create PR
 git push origin feature/add-validation
 # Create PR on GitHub
 
-# 4. Address review feedback
+# 5. Address review feedback
 git add .
-git commit -m "fix(app): address review feedback"
+make commit  # Use interactive commit for consistency
 git push origin feature/add-validation
 ```
 

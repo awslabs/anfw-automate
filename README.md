@@ -17,19 +17,19 @@ An event-based serverless application that automatically performs CRUD operation
 git clone <repository-url>
 cd anfw-automate
 
-# Setup commit standards (one-time setup)
-make setup-commits
-
-# Run automated setup
-chmod +x scripts/local-dev-setup.sh
-./scripts/local-dev-setup.sh
-
-# Start local development environment
+# Complete local setup (one command does everything!)
 make local
 
 # Deploy to LocalStack
 make local-deploy
 ```
+
+The `make local` command automatically:
+- Installs all dependencies (including commit standards setup)
+- Sets up LocalStack for local AWS simulation
+- Creates local configuration files
+- Starts LocalStack containers
+- Provides helpful next steps
 
 ### Production Deployment
 
@@ -78,14 +78,19 @@ anfw-automate/
 
 ### Commit Standards
 
-We enforce strict commit standards both locally and on GitHub:
+Commit standards are automatically enforced both locally and on GitHub:
 
 ```bash
-# Setup commit standards (one-time)
-make setup-commits
+# Install dependencies (sets up commit hooks automatically)
+npm install
+
+# Stage your changes
+git add .
 
 # Create conventional commits interactively
 make commit
+# or
+npm run commit
 
 # Validate commit messages
 make validate-commit
@@ -97,6 +102,8 @@ make validate-commit
 - `docs: update deployment guide`
 
 **Branch Names**: `feature/*`, `hotfix/*`, `release/*`
+
+**Automatic Setup**: Git hooks and commit validation are configured automatically when you run `npm install`.
 
 See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 
@@ -110,23 +117,19 @@ See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 ### Local Development
 
 ```bash
-# Start LocalStack
-make local-start
+# Complete setup (first time)
+make local
 
-# Build all modules
-make build
+# Or individual steps:
+make local-setup      # Setup environment only
+make local-start      # Start LocalStack only
+make local-stop       # Stop LocalStack
 
-# Run tests
-make test
-
-# Deploy locally
-make local-deploy
-
-# Run integration tests
-make integration-test
-
-# Stop LocalStack
-make local-stop
+# Development workflow
+make build            # Build all modules
+make test             # Run all tests
+make local-deploy     # Deploy to LocalStack
+make integration-test # Run integration tests
 ```
 
 ## 🧪 Testing Strategy
@@ -242,13 +245,24 @@ Create `<STAGE>.json` in the `conf/` folder:
 ### Root Level Commands
 
 ```bash
+make local                 # Complete local development setup
 make build                 # Build all modules
 make test                  # Run all tests  
 make deploy                # Deploy all modules
 make clean                 # Clean build artifacts
 make update                # Update dependencies
-make local                 # Setup and start local environment
 make integration-test      # Run integration tests
+make commit                # Create conventional commits
+```
+
+### Local Development Commands
+
+```bash
+make local                 # Complete setup (install + setup + start)
+make local-setup           # Setup environment only
+make local-start           # Start LocalStack only
+make local-stop            # Stop LocalStack only
+make local-deploy          # Deploy to LocalStack
 ```
 
 ### NPM Scripts
@@ -291,11 +305,14 @@ npm run clean              # Clean artifacts
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Follow commit standards: Use conventional commits
-4. Write tests for new functionality
-5. Ensure all tests pass: `make test`
-6. Submit a pull request
+2. Clone and install dependencies: `git clone <repo> && cd <repo> && npm install`
+3. Create a feature branch: `git checkout -b feature/your-feature`
+4. Make changes and commit using: `make commit` (follows conventional commits automatically)
+5. Write tests for new functionality
+6. Ensure all tests pass: `make test`
+7. Submit a pull request
+
+**Note**: Commit standards are automatically enforced via git hooks installed during `npm install`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 

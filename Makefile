@@ -7,7 +7,11 @@ help:
 	@echo "  deploy           - Deploy all modules"
 	@echo "  clean            - Clean all build artifacts"
 	@echo "  update           - Update all dependencies"
-	@echo "  local            - Setup and start local development environment"
+	@echo "  local            - Complete local development setup (install + setup + start)"
+	@echo "  local-setup      - Setup local development environment only"
+	@echo "  local-start      - Start LocalStack containers"
+	@echo "  local-stop       - Stop LocalStack containers"
+	@echo "  local-deploy     - Deploy to LocalStack"
 	@echo "  lint             - Run linting on all modules"
 	@echo "  integration-test - Run integration tests"
 	@echo "  setup-commits    - Setup commit standards enforcement"
@@ -38,18 +42,33 @@ lint:
 	@echo "Running linting..."
 	npm run lint
 
-local: local-setup local-start
+local: 
+	@echo "Setting up and starting local development environment..."
+	@echo "This will install dependencies, setup LocalStack, and configure everything needed for local development."
+	npm install
+	npm run local:setup
+	npm run local:start
+	@echo ""
+	@echo "✅ Local development environment is ready!"
+	@echo "   - LocalStack is running at http://localhost:4566"
+	@echo "   - DynamoDB Admin at http://localhost:8001"
+	@echo "   - Commit standards are configured"
+	@echo ""
+	@echo "Next steps:"
+	@echo "   make local-deploy    # Deploy to LocalStack"
+	@echo "   make commit          # Create conventional commits"
 
 local-setup:
 	@echo "Setting up local development environment..."
+	npm install
 	npm run local:setup
 
 local-start:
-	@echo "Starting local development environment..."
+	@echo "Starting LocalStack..."
 	npm run local:start
 
 local-stop:
-	@echo "Stopping local development environment..."
+	@echo "Stopping LocalStack..."
 	npm run local:stop
 
 local-deploy:
