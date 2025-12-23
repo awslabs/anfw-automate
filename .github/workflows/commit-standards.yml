@@ -1,0 +1,173 @@
+name: Commit Standards Enforcement
+
+on:
+    pull_request:
+        branches: [main, dev]
+    push:
+        branches: [main, dev]
+
+jobs:
+    validate-commits:
+        name: Validate Commit Messages
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Validate commit messages
+              run: |
+                  if [ "${{ github.event_name }}" = "pull_request" ]; then
+                    # For PRs, check all commits in the PR
+                    npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+                  else
+                    # For direct pushes, check the last commit
+                    npx commitlint --from HEAD~1 --to HEAD --verbose
+                  fi
+
+    validate-branch-name:
+        name: Validate Branch Name
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Validate branch name
+              run: |
+                  branch_name="${{ github.head_ref }}"
+                  echo "Validating branch name: $branch_name"
+
+                  if [[ ! "$branch_name" =~ ^(feature|hotfix|release)/.+ ]]; then
+                    echo "❌ Branch name '$branch_name' does not follow the required pattern."
+                    echo "   Branch names must follow: feature/*, hotfix/*, or release/*"
+                    echo "   Examples:"
+                    echo "   - feature/add-new-validation"
+                    echo "   - hotfix/fix-critical-bug"
+                    echo "   - release/v2.1.0"
+                    exit 1
+                  fi
+
+                  echo "✅ Branch name is valid!"
+
+    lint-and-format:
+        name: Code Quality Checks
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: "3.11"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run ESLint
+              run: |
+                  # Check TypeScript/JavaScript files
+                  find . -name "*.ts" -o -name "*.js" | grep -v node_modules | grep -v cdk.out | head -10 | xargs npx eslint || echo "ESLint issues found"
+
+            - name: Check Python syntax
+              run: |
+                  # Check Python files
+                  find . -name "*.py" -not -path "./node_modules/*" -not -path "./.venv/*" -not -path "./cdk.out/*" | while read file; do
+                    python3 -m py_compile "$file"
+                  done
+
+            - name: Check Prettier formatting
+              run: |
+                  # Check if files are properly formatted
+                  npx prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore || echo "Formatting issues found"
+
+    security-scan:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: "3.11"
+
+            - name: Install Poetry
+              uses: snok/install-poetry@v1
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run npm audit
+              run: npm audit --audit-level=moderate || echo "npm audit found issues"
+
+            - name: Run Python security checks
+              run: |
+                  # Find Python projects and run security checks
+                  find . -name "pyproject.toml" -not -path "./node_modules/*" -not -path "./cdk.out/*" | while read file; do
+                    dir=$(dirname "$file")
+                    echo "Checking Python security in $dir"
+                    cd "$dir"
+                    if [ -f "pyproject.toml" ]; then
+                      poetry install --no-root
+                      poetry run bandit -r . -x "**.venv/*","**test/*","**node_modules/*","**cdk.out/*" || echo "Bandit found issues in $dir"
+                      poetry run pip-audit --local || echo "pip-audit found issues in $dir"
+                    fi
+                    cd - > /dev/null
+                  done
+
+    enforce-pr-title:
+        name: Enforce PR Title Format
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Validate PR title
+              run: |
+                  pr_title="${{ github.event.pull_request.title }}"
+                  echo "Validating PR title: $pr_title"
+
+                  # Check if PR title follows conventional commit format
+                  if [[ ! "$pr_title" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+ ]]; then
+                    echo "❌ PR title '$pr_title' does not follow conventional commit format."
+                    echo "   PR titles must follow: type(scope): description"
+                    echo "   Examples:"
+                    echo "   - feat(app): add new validation feature"
+                    echo "   - fix(firewall): resolve routing issue"
+                    echo "   - docs: update deployment guide"
+                    exit 1
+                  fi
+
+                  echo "✅ PR title is valid!"

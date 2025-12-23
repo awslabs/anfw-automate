@@ -63,6 +63,23 @@ export class AppPipelineStack extends TaggedStack {
             },
         });
 
+        // Add integration test step
+        const integrationTestStep = new CodeBuildStep("IntegrationTest", {
+            input: sourceCode,
+            commands: [
+                'chmod +x scripts/integration-test.sh',
+                'scripts/integration-test.sh'
+            ],
+            env: {
+                STAGE: props.stage,
+                STACK_NAME: 'app',
+                AWS_REGION: primary_region
+            },
+            buildEnvironment: {
+                privileged: false,
+            },
+        });
+
         const pipeline = new CodePipeline(this, "app-pipeline", {
             synth: synthStep,
             crossAccountKeys: true,
@@ -71,7 +88,8 @@ export class AppPipelineStack extends TaggedStack {
 
         const lambdaWave = pipeline.addWave("LambdaStack");
         const serverlessWave = pipeline.addWave("ServerlessStack");
-        const stacksetWave = hasStacksetInAnyRegion(props.config) ? pipeline.addWave("ServerlessStack") : undefined;
+        const integrationTestWave = pipeline.addWave("IntegrationTests");
+        const stacksetWave = hasStacksetInAnyRegion(props.config) ? pipeline.addWave("StacksetStack") : undefined;
 
 
         Object.keys(props.config).forEach((region: string) => {
@@ -122,6 +140,9 @@ export class AppPipelineStack extends TaggedStack {
                 );
             }
         });
+
+        // Add integration tests after deployment
+        integrationTestWave.addStep(integrationTestStep);
 
         pipeline.buildPipeline();
 
