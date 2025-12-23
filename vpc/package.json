@@ -5,8 +5,8 @@
     "vpc": "bin/vpc.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "./node_modules/.bin/tsc",
+    "watch": "./node_modules/.bin/tsc -w",
     "test": "jest",
     "lint": "eslint . --ext .js --fix",
     "clean": "rm -rf lib cdk.out node_modules/.cache",
@@ -14,7 +14,7 @@
     "postinstall": "cd ../shared && npm install"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/node": "20.11.30",
     "aws-cdk": "2.135.0",
     "jest": "^29.7.0",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.206.0",
-    "cdk-nag": "^2.28.82",
+    "cdk-nag": "^2.37.55",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }
