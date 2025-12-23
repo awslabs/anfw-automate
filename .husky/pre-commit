@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Validate branch name
+npm run validate:branch
+
+# Run lint-staged
+npx lint-staged
+
+# Run TypeScript compilation check
+echo "🔧 Checking TypeScript compilation..."
+for module in app firewall vpc shared; do
+    if [ -d "$module" ] && [ -f "$module/tsconfig.json" ]; then
+        echo "  Checking $module..."
+        cd "$module"
+        npx tsc --noEmit || exit 1
+        cd ..
+    fi
+done
+
+# Run Python syntax check
+echo "🐍 Checking Python syntax..."
+find . -name "*.py" -not -path "./node_modules/*" -not -path "./.venv/*" -not -path "./cdk.out/*" -not -path "./dist/*" | while read -r file; do
+    python3 -m py_compile "$file" || exit 1
+done
+
+echo "✅ Pre-commit checks passed!"

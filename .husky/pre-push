@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Skip checks for main and dev branches (they should go through PR)
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
+    echo "⚠️  Direct push to $current_branch detected. Please use Pull Requests for main/dev branches."
+    echo "   If this is intentional (e.g., hotfix), use --no-verify to bypass this check."
+    exit 1
+fi
+
+# Run tests before push
+echo "🧪 Running tests..."
+npm test || exit 1
+
+echo "✅ Pre-push checks passed!"

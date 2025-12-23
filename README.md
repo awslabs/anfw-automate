@@ -2,69 +2,331 @@
 
 An event-based serverless application that automatically performs CRUD operations on AWS Network Firewall rule-groups and rules based on distributed configuration files. The application consist of three modules:
 
-1. VPC (Optional)
-Creates VPC based on configuration using AWS CodePipeline. Not required if you already have existing VPC in AWS Network Firewall and Application account.
+1. **VPC (Optional)** - Creates VPC based on configuration using AWS CodePipeline. Not required if you already have existing VPC in AWS Network Firewall and Application account.
 
-2. Firewall (Optional)
-Creates AWS Network Firewall endpoints, and updates the routing tables of VPCs as configured. This requires Transit Gateway to be configured for the account and already attached to the AWS Network Firewall VPC. Not required, if you have existing AWS Network Firewall Setup.
+2. **Firewall (Optional)** - Creates AWS Network Firewall endpoints, and updates the routing tables of VPCs as configured. This requires Transit Gateway to be configured for the account and already attached to the AWS Network Firewall VPC. Not required, if you have existing AWS Network Firewall Setup.
 
-3. Application
-Creates a event-based serverless application that updates the rules and rule-groups attached to the AWS Network Firewall managed by the application. The rules are must be maintained in application managed S3 buckets. There is no limit on number of distributed configurations. The deployment is based on the configurations.
+3. **Application** - Creates a event-based serverless application that updates the rules and rule-groups attached to the AWS Network Firewall managed by the application. The rules are must be maintained in application managed S3 buckets. There is no limit on number of distributed configurations. The deployment is based on the configurations.
 
-## PRE-REQUISITES
-* Atleast two AWS Accounts are required as follows: 
-    * Application Account (Dev)- to deploy any of the modules above in development environment. 
-    * Resource Account - to deploy CICD pipeline for application deployment
+## 🚀 Quick Start
 
-> **NOTE:** Please add more Application accounts per environment to ensure appropriate resource isolation
+### Local Development Setup
 
-* Other optional AWS Accounts are required depending upon your setup:
-    * Delegated Admin Account - to managed spoke account using StackSets
-    * Spoke Account - to test the application by mocking customer with distributed AWS Network Firewall configuration.
+```bash
+# Clone the repository
+git clone <repository-url>
+cd anfw-automate
 
-## DEPLOYMENT
+# Setup commit standards (one-time setup)
+make setup-commits
 
-### PREPARE
+# Run automated setup
+chmod +x scripts/local-dev-setup.sh
+./scripts/local-dev-setup.sh
 
-* Install npm
-* Create `deploy_vars.sh` in root of repository using following template. Not all paramters are required, please add/delete parameters based on your AWS Account Setup. 
+# Start local development environment
+make local
 
-> **NOTE:** *STAGE* and *AWS_REGION* parameters are mandatory. The deployment loads configuration and names resources created by all CDK stacks using these variable. Consider the `STAGE` variable as representing your application environment i.e. dev, pre-prod, prod, etc. 
+# Deploy to LocalStack
+make local-deploy
+```
+
+### Production Deployment
+
+```bash
+# Create deployment configuration
+cp deploy_vars.sh.template deploy_vars.sh
+# Edit deploy_vars.sh with your AWS account details
+
+# Deploy via CodePipeline
+make deploy
+```
+
+## 📋 Prerequisites
+
+### Required Accounts
+* **Application Account (Dev)** - Deploy modules in development environment
+* **Resource Account** - Deploy CI/CD pipeline for application deployment
+
+### Optional Accounts
+* **Delegated Admin Account** - Manage spoke accounts using StackSets
+* **Spoke Account** - Test application by mocking customer with distributed AWS Network Firewall configuration
+
+### Required Tools
+* Node.js 18+
+* Python 3.11+
+* Poetry (Python package manager)
+* Docker & Docker Compose (for local development)
+* AWS CLI (optional, for cloud operations)
+
+## 🏗️ Project Structure
 
 ```
+anfw-automate/
+├── app/                    # Application module (Lambda functions)
+├── firewall/              # Firewall module (Network Firewall resources)
+├── vpc/                   # VPC module (VPC and networking)
+├── shared/                # Shared libraries and utilities
+├── scripts/               # Build and deployment scripts
+├── tests/integration/     # Integration tests
+├── conf/                  # Configuration files
+├── docker-compose.local.yml # LocalStack configuration
+└── DEVELOPMENT.md         # Detailed development guide
+```
+
+## 🔧 Development Workflow
+
+### Commit Standards
+
+We enforce strict commit standards both locally and on GitHub:
+
+```bash
+# Setup commit standards (one-time)
+make setup-commits
+
+# Create conventional commits interactively
+make commit
+
+# Validate commit messages
+make validate-commit
+```
+
+**Commit Format**: `type(scope): description`
+- `feat(app): add rule validation feature`
+- `fix(firewall): resolve routing issue`
+- `docs: update deployment guide`
+
+**Branch Names**: `feature/*`, `hotfix/*`, `release/*`
+
+See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
+
+### Branch Strategy
+
+- `main` - Production-ready code
+- `dev` - Development integration branch  
+- `feature/*` - Feature development branches
+- `hotfix/*` - Critical bug fixes
+
+### Local Development
+
+```bash
+# Start LocalStack
+make local-start
+
+# Build all modules
+make build
+
+# Run tests
+make test
+
+# Deploy locally
+make local-deploy
+
+# Run integration tests
+make integration-test
+
+# Stop LocalStack
+make local-stop
+```
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+- **Python**: pytest with coverage reporting
+- **TypeScript**: Jest for CDK constructs
+- **Location**: `test/` directories in each module
+
+### Integration Tests
+- **Purpose**: Validate deployed resources functionality
+- **Environment**: Runs against deployed stacks
+- **Location**: `tests/integration/`
+
+### Running Tests
+
+```bash
+# All tests
+npm test
+
+# Module-specific tests
+cd app && npm test
+
+# Integration tests (requires deployment)
+npm run test:integration
+
+# Specific stack integration tests
+STACK_NAME=app npm run test:integration
+```
+
+## 🚀 Deployment Process
+
+### Environment Progression
+
+1. **Local** (`local`) - LocalStack development
+2. **Development** (`dev`) - AWS development account
+3. **Integration** (`int`) - AWS integration testing account  
+4. **Production** (`prod`) - AWS production account
+
+### Pipeline Architecture
+
+Each module has its own AWS CodePipeline:
+
+```
+Source → Build → Deploy → Integration Tests → [Manual Approval] → Production
+```
+
+#### Pipeline Features
+- **Enhanced Build Process**: Comprehensive validation and testing
+- **Security Scanning**: Automated security checks with bandit and pip-audit
+- **Integration Testing**: Automated post-deployment validation
+- **Multi-Region Support**: Deploy across multiple AWS regions
+- **Rollback Capability**: Automatic rollback on deployment failures
+
+## 📁 Configuration
+
+### Environment Configuration
+
+Create `deploy_vars.sh` in the root directory:
+
+```bash
 #!/bin/bash
 # Resource Account configuration
-export ACCOUNT_RES=111122223333;
-export RES_ACCOUNT_AWS_PROFILE=deployer+res;
+export ACCOUNT_RES=111122223333
+export RES_ACCOUNT_AWS_PROFILE=deployer+res
 
-# Prod Application Account configuration
-export ACCOUNT_PROD=222233334444;
-export PROD_ACCOUNT_AWS_PROFILE=deployer+app;
+# Application Account configuration  
+export ACCOUNT_PROD=222233334444
+export PROD_ACCOUNT_AWS_PROFILE=deployer+app
 
-# Delegated Admin Account configuration
-export ACCOUNT_DELEGATED_ADMIN=333344445555;
-export DELEGATED_ADMIN_ACCOUNT_AWS_PROFILE=admin+dadmin;
-
-# Configure deployment
+# Deployment configuration
 export AWS_PROFILE=${RES_ACCOUNT_AWS_PROFILE}
-export STAGE=xxx
-export AWS_REGION=xx-yyyy-1
+export STAGE=dev
+export AWS_REGION=us-east-1
 ```
-* Create a file named `<STAGE>.json`  in [conf](conf/) folder matching the name of the `STAGE` variable. This configuration is the global configuration used by all the stacks.
 
-### DEPLOY
-Proceed to deploy the necessary modules by following their respecitve README sections:
-* [app](app/README.md)
-* [firewall](firewall/README.md)
-* [vpc](vpc/README.md)
+### Stage Configuration
 
-#### Other Useful commands
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+Create `<STAGE>.json` in the `conf/` folder:
+
+```json
+{
+  "account": {
+    "res": "111122223333",
+    "prod": "222233334444"
+  },
+  "region": "us-east-1",
+  "stage": "dev",
+  "vpc": {
+    "cidr": "10.0.0.0/16"
+  },
+  "firewall": {
+    "name": "anfw-dev"
+  }
+}
+```
+
+## 🔍 Monitoring and Observability
+
+### Built-in Monitoring
+- **CloudWatch Logs**: Centralized logging for all Lambda functions
+- **X-Ray Tracing**: Distributed tracing for performance monitoring
+- **CloudWatch Metrics**: Custom metrics for application performance
+- **AWS Config**: Configuration compliance monitoring
+
+### Integration Test Reports
+- **Test Results**: JSON reports with detailed test outcomes
+- **Performance Metrics**: Lambda execution times and resource utilization
+- **Security Scan Results**: Vulnerability assessments and compliance checks
+
+## 🛠️ Available Commands
+
+### Root Level Commands
+
+```bash
+make build                 # Build all modules
+make test                  # Run all tests  
+make deploy                # Deploy all modules
+make clean                 # Clean build artifacts
+make update                # Update dependencies
+make local                 # Setup and start local environment
+make integration-test      # Run integration tests
+```
+
+### NPM Scripts
+
+```bash
+npm run build              # Build all modules
+npm test                   # Run all tests
+npm run test:integration   # Run integration tests
+npm run local:setup        # Setup local development
+npm run local:start        # Start LocalStack
+npm run local:stop         # Stop LocalStack
+npm run clean              # Clean artifacts
+```
+
+## 📚 Documentation
+
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Comprehensive development guide
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[GLOSSARY.md](GLOSSARY.md)** - Project terminology
+- **Module READMEs**: Detailed documentation for each module
+  - [app/README.md](app/README.md)
+  - [firewall/README.md](firewall/README.md)
+  - [vpc/README.md](vpc/README.md)
+
+## 🔒 Security
+
+### Security Features
+- **Automated Security Scanning**: Bandit for Python, npm audit for Node.js
+- **Dependency Vulnerability Checks**: pip-audit and npm audit
+- **IAM Least Privilege**: Minimal required permissions
+- **Encryption**: All data encrypted in transit and at rest
+- **Network Security**: VPC isolation and security groups
+
+### Security Best Practices
+- Never commit secrets or credentials
+- Use IAM roles instead of access keys
+- Regular dependency updates
+- Security scanning in CI/CD pipeline
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Follow commit standards: Use conventional commits
+4. Write tests for new functionality
+5. Ensure all tests pass: `make test`
+6. Submit a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## 📄 License
+
+This project is licensed under the Apache-2.0 License. See [LICENSE](LICENSE) for details.
+
+## 🆘 Support
+
+### Troubleshooting
+
+1. **LocalStack Issues**: Check Docker daemon and port availability
+2. **Build Failures**: Verify dependencies and environment variables
+3. **Deployment Issues**: Check AWS credentials and CloudFormation logs
+
+### Getting Help
+
+1. Check existing documentation
+2. Review CloudFormation stack events  
+3. Check pipeline execution logs
+4. Create an issue in the repository
+
+## 🔄 Migration from Previous Versions
+
+If upgrading from a previous version:
+
+1. **Backup existing configurations**
+2. **Run the new setup script**: `./scripts/local-dev-setup.sh`
+3. **Update configuration files** to match new schema
+4. **Test locally** before deploying to production
+5. **Follow the new commit standards** for future changes
 
 
 ## DEPENDENCIES
