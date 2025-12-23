@@ -447,13 +447,12 @@ not part of the solution.
 | jsonschema            | ^4.19.1  |
 | python                | ^3.11    |
 | pyyaml                | ^6.0.1   |
-| requests              | ^2.31.0  |
+| requests              | ^2.32.4  |
 | pytest                | ^8.0.2   |
 | bandit                | ^1.7.7   |
 | pip-audit             | ^2.7.2   |
 | pip-licenses          | ^4.3.4   |
 | boto3                 | ^1.34.52 |
-| cfnresponse           | ^1.1.2   |
 
 ### Typescript dependencies
 
@@ -467,8 +466,8 @@ not part of the solution.
 | ts-node                          | ^10.9.2          |
 | typescript                       | ~5.4.3           |
 | @aws-cdk/aws-lambda-python-alpha | ^2.135.0-alpha.0 |
-| aws-cdk-lib                      | 2.135.0          |
-| cdk-nag                          | ^2.28.82         |
+| aws-cdk-lib                      | 2.206.0          |
+| cdk-nag                          | ^2.37.55         |
 | constructs                       | ^10.0.0          |
 | source-map-support               | ^0.5.21          |
 | ajv                              | ^8.12.0          |
