@@ -12,7 +12,7 @@
     "postinstall": "cd ../shared && npm install"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/node": "20.11.30",
     "aws-cdk": "2.135.0",
     "jest": "^29.7.0",
