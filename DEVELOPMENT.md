@@ -80,19 +80,33 @@ npm install -g @commitlint/cli @commitlint/config-conventional
 
 ### Quick Setup
 
-Run the automated setup script:
-
 ```bash
-chmod +x scripts/local-dev-setup.sh
-./scripts/local-dev-setup.sh
+# Complete local development setup (one command!)
+make local
 ```
 
-This script will:
-- Check and install prerequisites
-- Set up LocalStack for local AWS simulation
-- Create local configuration files
-- Install all dependencies
-- Configure git hooks
+This single command:
+- Installs all project dependencies
+- Sets up commit standards and git hooks automatically
+- Configures LocalStack for local AWS simulation
+- Creates local configuration files
+- Starts LocalStack containers
+- Provides helpful next steps
+
+### Manual Setup (if needed)
+
+If you prefer step-by-step setup:
+
+```bash
+# 1. Install dependencies (sets up commit standards)
+npm install
+
+# 2. Setup local environment
+make local-setup
+
+# 3. Start LocalStack
+make local-start
+```
 
 ### Manual Setup
 
@@ -164,32 +178,39 @@ export AWS_SECRET_ACCESS_KEY=test
 
 ### Development Process
 
-1. **Create feature branch**:
+1. **Initial setup** (first time only):
+```bash
+git clone <repository-url>
+cd anfw-automate
+make local  # Complete setup: dependencies + LocalStack + commit standards
+```
+
+2. **Create feature branch**:
 ```bash
 git checkout dev
 git pull origin dev
 git checkout -b feature/your-feature-name
 ```
 
-2. **Make changes and test locally**:
+3. **Make changes and test locally**:
 ```bash
 # Build and test
 make build
 
 # Deploy to LocalStack
-make deploy
+make local-deploy
 
 # Run integration tests
-npm run test:integration
+make integration-test
 ```
 
-3. **Commit with proper format**:
+4. **Commit with proper format**:
 ```bash
 git add .
-git commit  # Uses .gitmessage template
+make commit  # Interactive conventional commit helper
 ```
 
-4. **Push and create PR**:
+5. **Push and create PR**:
 ```bash
 git push origin feature/your-feature-name
 # Create PR to dev branch
@@ -198,9 +219,11 @@ git push origin feature/your-feature-name
 ### Code Quality Checks
 
 Pre-commit hooks automatically run:
+- Branch name validation
 - Python syntax validation
 - TypeScript compilation check
-- Basic linting
+- ESLint and Prettier formatting
+- Commit message validation
 
 ## Testing Strategy
 
