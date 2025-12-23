@@ -20,52 +20,9 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check prerequisites
-check_prerequisites() {
-    print_status "Checking prerequisites..."
-    
-    # Check Docker
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed. Please install Docker first."
-        exit 1
-    fi
-    
-    # Check Docker Compose
-    if ! command -v docker-compose &> /dev/null; then
-        print_error "Docker Compose is not installed. Please install Docker Compose first."
-        exit 1
-    fi
-    
-    # Check Node.js
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js is not installed. Please install Node.js 18+ first."
-        exit 1
-    fi
-    
-    # Check Python
-    if ! command -v python3 &> /dev/null; then
-        print_error "Python 3 is not installed. Please install Python 3.11+ first."
-        exit 1
-    fi
-    
-    # Check Poetry
-    if ! command -v poetry &> /dev/null; then
-        print_warning "Poetry is not installed. Installing Poetry..."
-        curl -sSL https://install.python-poetry.org | python3 -
-        export PATH="$HOME/.local/bin:$PATH"
-    fi
-    
-    # Check AWS CLI
-    if ! command -v aws &> /dev/null; then
-        print_warning "AWS CLI is not installed. Please install AWS CLI for full functionality."
-    fi
-    
-    print_status "Prerequisites check completed."
-}
-
-# Setup local environment
+# Setup local environment files
 setup_local_env() {
-    print_status "Setting up local development environment..."
+    print_status "Setting up local development configuration..."
     
     # Create local environment file if it doesn't exist
     if [ ! -f "deploy_vars.local.sh" ]; then
@@ -128,137 +85,19 @@ EOF
     fi
 }
 
-# Start LocalStack
-start_localstack() {
-    print_status "Starting LocalStack..."
-    
-    # Stop any existing containers
-    docker-compose -f docker-compose.local.yml down
-    
-    # Start LocalStack
-    docker-compose -f docker-compose.local.yml up -d
-    
-    # Wait for LocalStack to be ready
-    print_status "Waiting for LocalStack to be ready..."
-    timeout=60
-    while [ $timeout -gt 0 ]; do
-        if curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
-            print_status "LocalStack is ready!"
-            break
-        fi
-        sleep 2
-        timeout=$((timeout - 2))
-    done
-    
-    if [ $timeout -le 0 ]; then
-        print_error "LocalStack failed to start within 60 seconds."
-        exit 1
-    fi
-}
-
-# Install dependencies
-install_dependencies() {
-    print_status "Installing dependencies..."
-    
-    # Install root dependencies if package.json exists
-    if [ -f "package.json" ]; then
-        npm install
-    fi
-    
-    # Install shared module dependencies
-    if [ -d "shared" ]; then
-        print_status "Installing shared module dependencies..."
-        cd shared
-        npm install
-        npm run build
-        cd ..
-    fi
-    
-    # Install module dependencies
-    for module in app firewall vpc; do
-        if [ -d "$module" ]; then
-            print_status "Installing $module dependencies..."
-            cd "$module"
-            npm install
-            
-            # Install Python dependencies if they exist
-            if [ -d "src" ] && [ -f "src/pyproject.toml" ]; then
-                cd src
-                poetry install --no-root
-                cd ..
-            fi
-            
-            # Install lambda dependencies
-            if [ -d "lambda" ]; then
-                find lambda -name "pyproject.toml" -exec dirname {} \; | while read dir; do
-                    print_status "Installing Python dependencies in $module/$dir..."
-                    cd "$dir"
-                    poetry install --no-root
-                    cd - > /dev/null
-                done
-            fi
-            
-            cd ..
-        fi
-    done
-}
-
-# Setup git hooks
-setup_git_hooks() {
-    print_status "Setting up git hooks..."
-    
-    # Set commit message template
-    git config commit.template .gitmessage
-    
-    # Install pre-commit hook
-    cat > .git/hooks/pre-commit << 'EOF'
-#!/bin/bash
-# Run linting and tests before commit
-set -e
-
-echo "Running pre-commit checks..."
-
-# Check for Python syntax errors
-find . -name "*.py" -not -path "./node_modules/*" -not -path "./.venv/*" -not -path "./cdk.out/*" | xargs python3 -m py_compile
-
-# Check for TypeScript compilation errors
-if command -v npx &> /dev/null; then
-    for module in app firewall vpc shared; do
-        if [ -d "$module" ] && [ -f "$module/tsconfig.json" ]; then
-            echo "Checking TypeScript in $module..."
-            cd "$module"
-            npx tsc --noEmit
-            cd ..
-        fi
-    done
-fi
-
-echo "Pre-commit checks passed!"
-EOF
-    chmod +x .git/hooks/pre-commit
-    
-    print_status "Git hooks configured."
-}
-
 # Main execution
 main() {
-    print_status "Starting local development environment setup..."
+    print_status "Setting up LocalStack configuration files..."
+    echo ""
     
-    check_prerequisites
     setup_local_env
-    start_localstack
-    install_dependencies
-    setup_git_hooks
     
-    print_status "Local development environment setup completed!"
+    echo ""
+    print_status "✅ LocalStack configuration completed!"
     print_status ""
-    print_status "Next steps:"
-    print_status "1. Source the local environment: source deploy_vars.local.sh"
-    print_status "2. Customize conf/local.json as needed"
-    print_status "3. Run 'make build' to build all modules"
-    print_status "4. Run 'make deploy' to deploy to LocalStack"
-    print_status "5. Access LocalStack at http://localhost:4566"
-    print_status "6. Access DynamoDB Admin at http://localhost:8001"
+    print_status "Configuration files created:"
+    print_status "- deploy_vars.local.sh (environment variables)"
+    print_status "- conf/local.json (application configuration)"
 }
 
 # Run main function

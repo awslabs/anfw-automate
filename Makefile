@@ -2,21 +2,33 @@ all: build
 
 help: 
 	@echo "Available targets:"
+	@echo ""
+	@echo "🔧 Setup Commands:"
+	@echo "  local            - Setup and start LocalStack (requires Docker)"
+	@echo ""
+	@echo "🏗️  Build & Test Commands:"
 	@echo "  build            - Build all modules"
 	@echo "  test             - Run all tests"
-	@echo "  deploy           - Deploy all modules"
-	@echo "  clean            - Clean all build artifacts"
-	@echo "  update           - Update all dependencies"
-	@echo "  local            - Complete local development setup (install + setup + start)"
+	@echo "  lint             - Run linting on all modules"
+	@echo "  integration-test - Run integration tests"
+	@echo ""
+	@echo "🚀 Deployment Commands:"
+	@echo "  deploy           - Deploy all modules to AWS"
+	@echo "  local-deploy     - Deploy to LocalStack"
+	@echo ""
+	@echo "🐳 LocalStack Commands (requires Docker):"
 	@echo "  local-setup      - Setup local development environment only"
 	@echo "  local-start      - Start LocalStack containers"
 	@echo "  local-stop       - Stop LocalStack containers"
-	@echo "  local-deploy     - Deploy to LocalStack"
-	@echo "  lint             - Run linting on all modules"
-	@echo "  integration-test - Run integration tests"
-	@echo "  setup-commits    - Setup commit standards enforcement"
+	@echo ""
+	@echo "📝 Git & Commit Commands:"
 	@echo "  commit           - Create a conventional commit interactively"
 	@echo "  validate-commit  - Validate the last commit message"
+	@echo "  setup-commits    - Setup commit standards enforcement"
+	@echo ""
+	@echo "🧹 Utility Commands:"
+	@echo "  clean            - Clean all build artifacts"
+	@echo "  update           - Update all dependencies"
 
 build: 
 	@echo "Building all modules..."
@@ -43,20 +55,26 @@ lint:
 	npm run lint
 
 local: 
-	@echo "Setting up and starting local development environment..."
-	@echo "This will install dependencies, setup LocalStack, and configure everything needed for local development."
-	npm install
+	@echo "🚀 Setting up LocalStack environment..."
+	@echo ""
+	@echo "⚠️  This requires Docker and Docker Compose to be installed!"
+	@echo ""
+	@echo "Checking Docker availability..."
+	@docker --version || (echo "❌ Docker not found. Please install Docker first." && exit 1)
+	@docker-compose --version || (echo "❌ Docker Compose not found. Please install Docker Compose first." && exit 1)
+	@echo "✅ Docker requirements satisfied"
+	@echo ""
+	@echo "Setting up LocalStack configuration and starting containers..."
 	npm run local:setup
 	npm run local:start
 	@echo ""
-	@echo "✅ Local development environment is ready!"
+	@echo "✅ LocalStack environment is ready!"
 	@echo "   - LocalStack is running at http://localhost:4566"
 	@echo "   - DynamoDB Admin at http://localhost:8001"
-	@echo "   - Commit standards are configured"
 	@echo ""
 	@echo "Next steps:"
 	@echo "   make local-deploy    # Deploy to LocalStack"
-	@echo "   make commit          # Create conventional commits"
+	@echo "   make local-stop      # Stop LocalStack when done"
 
 local-setup:
 	@echo "Setting up local development environment..."

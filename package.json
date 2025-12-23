@@ -1,99 +1,99 @@
 {
-    "name": "anfw-automate",
-    "version": "2.1.0",
-    "description": "Automate AWS Network Firewall Rule Management",
-    "private": true,
-    "workspaces": [
-        "app",
-        "firewall",
-        "vpc",
-        "shared"
+  "name": "anfw-automate",
+  "version": "2.1.0",
+  "description": "Automate AWS Network Firewall Rule Management",
+  "private": true,
+  "workspaces": [
+    "app",
+    "firewall",
+    "vpc",
+    "shared"
+  ],
+  "scripts": {
+    "build": "npm run build:shared && npm run build:modules",
+    "build:shared": "cd shared && npm run build",
+    "build:modules": "npm run build:app && npm run build:firewall && npm run build:vpc",
+    "build:app": "cd app && npm run build",
+    "build:firewall": "cd firewall && npm run build",
+    "build:vpc": "cd vpc && npm run build",
+    "test": "npm run test:shared && npm run test:modules",
+    "test:shared": "cd shared && npm test",
+    "test:modules": "npm run test:app && npm run test:firewall && npm run test:vpc",
+    "test:app": "cd app && npm test",
+    "test:firewall": "cd firewall && npm test",
+    "test:vpc": "cd vpc && npm test",
+    "test:integration": "chmod +x scripts/integration-test.sh && scripts/integration-test.sh",
+    "clean": "npm run clean:modules && npm run clean:artifacts",
+    "clean:modules": "cd app && npm run clean || true && cd ../firewall && npm run clean || true && cd ../vpc && npm run clean || true && cd ../shared && npm run clean || true",
+    "clean:artifacts": "rm -rf cdk.out dist *.log build-report.json integration-test-report.json",
+    "lint": "npm run lint:modules",
+    "lint:modules": "cd app && npm run lint || true && cd ../firewall && npm run lint || true && cd ../vpc && npm run lint || true && cd ../shared && npm run lint || true",
+    "update": "npm run update:modules",
+    "update:modules": "cd app && npm update && cd ../firewall && npm update && cd ../vpc && npm update && cd ../shared && npm update",
+    "local:setup": "chmod +x scripts/local-dev-setup.sh && scripts/local-dev-setup.sh",
+    "local:start": "docker-compose -f docker-compose.local.yml up -d",
+    "local:stop": "docker-compose -f docker-compose.local.yml down",
+    "local:logs": "docker-compose -f docker-compose.local.yml logs -f",
+    "deploy:local": "source deploy_vars.local.sh && make deploy",
+    "synth": "npm run synth:modules",
+    "synth:modules": "cd app && npx cdk synth && cd ../firewall && npx cdk synth && cd ../vpc && npx cdk synth",
+    "prepare": "husky install && chmod +x .husky/* || true",
+    "commit": "npx cz",
+    "commit:retry": "npx cz --retry",
+    "validate:commit": "commitlint --edit",
+    "validate:branch": "validate-branch-name"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "commitizen": "^4.3.0",
+    "@commitlint/cz-commitlint": "^18.4.3",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "validate-branch-name": "^1.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/anfw-automate.git"
+  },
+  "keywords": [
+    "aws",
+    "network-firewall",
+    "cdk",
+    "serverless",
+    "automation"
+  ],
+  "author": "AWS Network Firewall Team",
+  "license": "Apache-2.0",
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
     ],
-    "scripts": {
-        "build": "npm run build:shared && npm run build:modules",
-        "build:shared": "cd shared && npm run build",
-        "build:modules": "npm run build:app && npm run build:firewall && npm run build:vpc",
-        "build:app": "cd app && npm run build",
-        "build:firewall": "cd firewall && npm run build",
-        "build:vpc": "cd vpc && npm run build",
-        "test": "npm run test:shared && npm run test:modules",
-        "test:shared": "cd shared && npm test",
-        "test:modules": "npm run test:app && npm run test:firewall && npm run test:vpc",
-        "test:app": "cd app && npm test",
-        "test:firewall": "cd firewall && npm test",
-        "test:vpc": "cd vpc && npm test",
-        "test:integration": "chmod +x scripts/integration-test.sh && scripts/integration-test.sh",
-        "clean": "npm run clean:modules && npm run clean:artifacts",
-        "clean:modules": "cd app && npm run clean || true && cd ../firewall && npm run clean || true && cd ../vpc && npm run clean || true && cd ../shared && npm run clean || true",
-        "clean:artifacts": "rm -rf cdk.out dist *.log build-report.json integration-test-report.json",
-        "lint": "npm run lint:modules",
-        "lint:modules": "cd app && npm run lint || true && cd ../firewall && npm run lint || true && cd ../vpc && npm run lint || true && cd ../shared && npm run lint || true",
-        "update": "npm run update:modules",
-        "update:modules": "cd app && npm update && cd ../firewall && npm update && cd ../vpc && npm update && cd ../shared && npm update",
-        "local:setup": "chmod +x scripts/local-dev-setup.sh && scripts/local-dev-setup.sh",
-        "local:start": "docker-compose -f docker-compose.local.yml up -d",
-        "local:stop": "docker-compose -f docker-compose.local.yml down",
-        "local:logs": "docker-compose -f docker-compose.local.yml logs -f",
-        "deploy:local": "source deploy_vars.local.sh && make deploy",
-        "synth": "npm run synth:modules",
-        "synth:modules": "cd app && npx cdk synth && cd ../firewall && npx cdk synth && cd ../vpc && npx cdk synth",
-        "prepare": "husky install && chmod +x .husky/* || true",
-        "commit": "npx cz",
-        "commit:retry": "npx cz --retry",
-        "validate:commit": "commitlint --edit",
-        "validate:branch": "validate-branch-name"
-    },
-    "devDependencies": {
-        "@commitlint/cli": "^18.4.3",
-        "@commitlint/config-conventional": "^18.4.3",
-        "husky": "^8.0.3",
-        "lint-staged": "^15.2.0",
-        "commitizen": "^4.3.0",
-        "cz-conventional-changelog": "^3.3.0",
-        "validate-branch-name": "^1.3.0",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@typescript-eslint/parser": "^6.0.0",
-        "eslint": "^8.0.0",
-        "eslint-config-prettier": "^9.0.0",
-        "eslint-plugin-prettier": "^5.0.0",
-        "prettier": "^3.0.0"
-    },
-    "engines": {
-        "node": ">=18.0.0",
-        "npm": ">=8.0.0"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/your-org/anfw-automate.git"
-    },
-    "keywords": [
-        "aws",
-        "network-firewall",
-        "cdk",
-        "serverless",
-        "automation"
+    "*.py": [
+      "python -m py_compile"
     ],
-    "author": "AWS Network Firewall Team",
-    "license": "Apache-2.0",
-    "lint-staged": {
-        "*.{ts,js}": [
-            "eslint --fix",
-            "prettier --write"
-        ],
-        "*.py": [
-            "python -m py_compile"
-        ],
-        "*.{json,md,yml,yaml}": [
-            "prettier --write"
-        ]
-    },
-    "config": {
-        "commitizen": {
-            "path": "cz-conventional-changelog"
-        }
-    },
-    "validate-branch-name": {
-        "pattern": "^(main|dev|feature/.+|hotfix/.+|release/.+)$",
-        "errorMsg": "Branch name must follow the pattern: main, dev, feature/*, hotfix/*, or release/*"
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
     }
+  },
+  "validate-branch-name": {
+    "pattern": "^(main|dev|feature/.+|hotfix/.+|release/.+)$",
+    "errorMsg": "Branch name must follow the pattern: main, dev, feature/*, hotfix/*, or release/*"
+  }
 }

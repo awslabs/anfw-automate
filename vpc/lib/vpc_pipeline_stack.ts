@@ -1,102 +1,122 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { VPCStage } from "./vpc_stages";
-import { TaggedStack, TaggedStackProps } from "../../shared/lib/tagged_stack";
-import {
-    CodeBuildStep,
-    CodePipeline,
-    CodePipelineSource,
-} from "aws-cdk-lib/pipelines";
+import { VPCStage } from './vpc_stages';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
+import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { NagSuppressions } from 'cdk-nag';
+import * as cdk from 'aws-cdk-lib';
 
 interface VpcPipelineStackProps extends TaggedStackProps {
-    namePrefix: string;
-    config: { [key: string]: any };
-    globalConfig: { [key: string]: any };
+  namePrefix: string;
+  config: { [key: string]: any };
+  globalConfig: { [key: string]: any };
 }
 
 export class VpcPipelineStack extends TaggedStack {
-    constructor(scope: Construct, id: string, props: VpcPipelineStackProps) {
-        super(scope, id, props);
+  constructor(scope: Construct, id: string, props: VpcPipelineStackProps) {
+    super(scope, id, props);
 
-        const target_account = props.globalConfig.base.target_account_id
-        const primary_region = props.globalConfig.base.primary_region
-        const name_dot_prefix = props.namePrefix.replace(/-/g, ".");
+    const target_account = props.globalConfig.base.target_account_id;
+    const primary_region = props.globalConfig.base.primary_region;
+    const name_dot_prefix = props.namePrefix.replace(/-/g, '.');
 
-        // Source repo
-        const sourceCode = CodePipelineSource.connection(
-            props.globalConfig.pipeline.repo_name,
-            props.globalConfig.pipeline.repo_branch_name,
-            {
-                connectionArn: props.globalConfig.pipeline.codestar_connection_arn,
-            },
-        );
+    // Source repo
+    const sourceCode = CodePipelineSource.connection(
+      props.globalConfig.pipeline.repo_name,
+      props.globalConfig.pipeline.repo_branch_name,
+      {
+        connectionArn: props.globalConfig.pipeline.codestar_connection_arn,
+      }
+    );
 
-        const synthStep = new CodeBuildStep("Synth", {
-            input: sourceCode,
-            commands: [
-                'cd vpc',
-                'make'
-            ],
-            primaryOutputDirectory: 'vpc/cdk.out',
-            env: {
-                STAGE: props.stage,
-                STACK_NAME: 'vpc'
-            },
-            buildEnvironment: {
-                privileged: true,
-            }
-        });
+    const synthStep = new CodeBuildStep('Synth', {
+      input: sourceCode,
+      commands: ['cd vpc', 'make'],
+      primaryOutputDirectory: 'vpc/cdk.out',
+      env: {
+        STAGE: props.stage,
+        STACK_NAME: 'vpc',
+      },
+      buildEnvironment: {
+        privileged: true,
+      },
+    });
 
-        const pipeline = new CodePipeline(this, "vpc-pipeline", {
-            synth: synthStep,
-            crossAccountKeys: true,
-            pipelineName: `cpp-${props.namePrefix}-vpc-${props.stage}`,
-        });
+    // Add integration test step
+    const integrationTestStep = new CodeBuildStep('IntegrationTest', {
+      input: sourceCode,
+      commands: ['chmod +x scripts/integration-test.sh', 'scripts/integration-test.sh'],
+      env: {
+        STAGE: props.stage,
+        STACK_NAME: 'vpc',
+        AWS_REGION: primary_region,
+      },
+      buildEnvironment: {
+        privileged: false,
+      },
+    });
 
-        const vpcWave = pipeline.addWave("VpcStack");
+    const pipeline = new CodePipeline(this, 'vpc-pipeline', {
+      synth: synthStep,
+      crossAccountKeys: true,
+      pipelineName: `cpp-${props.namePrefix}-vpc-${props.stage}`,
+    });
 
-        Object.keys(props.config).forEach((region: string) => {
-            vpcWave.addStage(
-                new VPCStage(this, `vpc-${region}`, {
-                    namePrefix: props.namePrefix,
-                    config: props.config[region],
-                    globalConfig: props.globalConfig,
-                    stage: props.stage,
-                    env: {
-                        region: `${region}`,
-                        account: `${target_account}`
-                    },
-                    stageName: `${region}-vpc`,
-                    globalTags: props.globalTags
-                })
-            )
+    const vpcWave = pipeline.addWave('VpcStack');
 
-        });
+    const vpcStages: any[] = [];
 
-        pipeline.buildPipeline();
+    Object.keys(props.config).forEach((region: string) => {
+      const vpcStage = new VPCStage(this, `vpc-${region}`, {
+        namePrefix: props.namePrefix,
+        config: props.config[region],
+        globalConfig: props.globalConfig,
+        stage: props.stage,
+        env: {
+          region: `${region}`,
+          account: `${target_account}`,
+        },
+        stageName: `${region}-vpc`,
+        globalTags: props.globalTags,
+      });
 
-        NagSuppressions.addStackSuppressions(this, [{
-            id: 'AwsSolutions-S1',
-            reason: 'The Bucket is CDK managed and used for artifact storage',
-        }]);
+      vpcWave.addStage(vpcStage);
+      vpcStages.push(vpcStage);
+    });
 
-        NagSuppressions.addStackSuppressions(this, [{
-            id: 'AwsSolutions-KMS5',
-            reason: 'The Key is used for pipeline artifacts and need not be rotated.',
-        }]);
-
-        NagSuppressions.addStackSuppressions(this, [{
-            id: 'AwsSolutions-IAM5',
-            reason: 'Known wildcards coming from CDK Pipeline construct',
-        }]);
-
-        NagSuppressions.addStackSuppressions(this, [{
-            id: 'AwsSolutions-CB3',
-            reason: 'Privileged mode required to package Lambda',
-        }]);
-
+    // Add integration tests as post-deployment steps to the last VPC stage
+    if (vpcStages.length > 0) {
+      vpcStages[vpcStages.length - 1].addPost(integrationTestStep);
     }
+
+    pipeline.buildPipeline();
+
+    NagSuppressions.addStackSuppressions(this as unknown as cdk.Stack, [
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'The Bucket is CDK managed and used for artifact storage',
+      },
+    ]);
+
+    NagSuppressions.addStackSuppressions(this as unknown as cdk.Stack, [
+      {
+        id: 'AwsSolutions-KMS5',
+        reason: 'The Key is used for pipeline artifacts and need not be rotated.',
+      },
+    ]);
+
+    NagSuppressions.addStackSuppressions(this as unknown as cdk.Stack, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Known wildcards coming from CDK Pipeline construct',
+      },
+    ]);
+
+    NagSuppressions.addStackSuppressions(this as unknown as cdk.Stack, [
+      {
+        id: 'AwsSolutions-CB3',
+        reason: 'Privileged mode required to package Lambda',
+      },
+    ]);
+  }
 }
-
-

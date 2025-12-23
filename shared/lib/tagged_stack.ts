@@ -1,21 +1,38 @@
-import * as cdk from 'aws-cdk-lib';
+import { Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export interface TaggedStackProps extends cdk.StackProps {
-    stage: string;
-    globalTags: { [key: string]: string };
+export interface TaggedStackProps extends StackProps {
+  stage: string;
+  globalTags: Record<string, string>;
 }
 
-export class TaggedStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props: TaggedStackProps) {
-        super(scope, id, props);
+export abstract class TaggedStack extends Stack {
+  protected readonly stage: string;
+  protected readonly globalTags: Record<string, string>;
 
-        //Apply user tags
-        Object.entries(props.globalTags).forEach(([key, value]) => {
-            cdk.Tags.of(this).add(`${key}`, `${value}`);
-        });
+  constructor(scope: Construct, id: string, props: TaggedStackProps) {
+    super(scope, id, props);
 
-        // Add default Environent tag to the stack
-        cdk.Tags.of(this).add('Environment', props.stage);
+    this.stage = props.stage;
+    this.globalTags = props.globalTags;
+
+    this.applyGlobalTags();
+  }
+
+  private applyGlobalTags(): void {
+    for (const [key, value] of Object.entries(this.globalTags)) {
+      this.addStackTag(key, value); // Use public method
     }
+
+    this.addStackTag('Environment', this.stage);
+  }
+
+  // ✅ Public methods required by CDK Nag
+  public addStackTag(key: string, value: string): void {
+    Tags.of(this).add(key, value);
+  }
+
+  public removeStackTag(key: string): void {
+    Tags.of(this).remove(key);
+  }
 }

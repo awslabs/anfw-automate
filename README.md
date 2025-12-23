@@ -1,63 +1,124 @@
 # Automate AWS Network Firewall Rule Management
 
-An event-based serverless application that automatically performs CRUD operations on AWS Network Firewall rule-groups and rules based on distributed configuration files. The application consist of three modules:
+An event-based serverless application that automatically performs CRUD
+operations on AWS Network Firewall rule-groups and rules based on distributed
+configuration files. The application consist of three modules:
 
-1. **VPC (Optional)** - Creates VPC based on configuration using AWS CodePipeline. Not required if you already have existing VPC in AWS Network Firewall and Application account.
+1. **VPC (Optional)** - Creates VPC based on configuration using AWS
+   CodePipeline. Not required if you already have existing VPC in AWS Network
+   Firewall and Application account.
 
-2. **Firewall (Optional)** - Creates AWS Network Firewall endpoints, and updates the routing tables of VPCs as configured. This requires Transit Gateway to be configured for the account and already attached to the AWS Network Firewall VPC. Not required, if you have existing AWS Network Firewall Setup.
+2. **Firewall (Optional)** - Creates AWS Network Firewall endpoints, and updates
+   the routing tables of VPCs as configured. This requires Transit Gateway to be
+   configured for the account and already attached to the AWS Network Firewall
+   VPC. Not required, if you have existing AWS Network Firewall Setup.
 
-3. **Application** - Creates a event-based serverless application that updates the rules and rule-groups attached to the AWS Network Firewall managed by the application. The rules are must be maintained in application managed S3 buckets. There is no limit on number of distributed configurations. The deployment is based on the configurations.
+3. **Application** - Creates a event-based serverless application that updates
+   the rules and rule-groups attached to the AWS Network Firewall managed by the
+   application. The rules are must be maintained in application managed S3
+   buckets. There is no limit on number of distributed configurations. The
+   deployment is based on the configurations.
 
 ## 🚀 Quick Start
 
-### Local Development Setup
+### Step 1: Install Prerequisites
+
+**Required (install these first):**
+
+```bash
+# Check if you have the required tools
+node --version    # Should be 18+
+python3 --version # Should be 3.11+
+git --version     # Any recent version
+```
+
+**Optional (for LocalStack development):**
+
+```bash
+# Check if you have Docker (optional)
+docker --version
+docker-compose --version
+```
+
+**Optional (for AWS deployment):**
+
+```bash
+# Check if you have AWS CLI (optional)
+aws --version
+```
+
+### Step 2: Setup Project
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd anfw-automate
 
-# Complete local setup (one command does everything!)
+# Install dependencies and setup commit standards
+npm install
+```
+
+### Step 3: Choose Your Development Path
+
+### Option A: Local Development with LocalStack
+
+**Requirements:** Docker + Docker Compose
+
+```bash
+# Start LocalStack
 make local
 
 # Deploy to LocalStack
 make local-deploy
 ```
 
-The `make local` command automatically:
-- Installs all dependencies (including commit standards setup)
-- Sets up LocalStack for local AWS simulation
-- Creates local configuration files
-- Starts LocalStack containers
-- Provides helpful next steps
+### Option B: Development without LocalStack
 
-### Production Deployment
+**Requirements:** Just Node.js + Python
 
 ```bash
-# Create deployment configuration
-cp deploy_vars.sh.template deploy_vars.sh
-# Edit deploy_vars.sh with your AWS account details
+# Build and test
+make build
+make test
 
-# Deploy via CodePipeline
+# Deploy to AWS (requires AWS CLI + credentials)
 make deploy
 ```
 
 ## 📋 Prerequisites
 
-### Required Accounts
-* **Application Account (Dev)** - Deploy modules in development environment
-* **Resource Account** - Deploy CI/CD pipeline for application deployment
-
-### Optional Accounts
-* **Delegated Admin Account** - Manage spoke accounts using StackSets
-* **Spoke Account** - Test application by mocking customer with distributed AWS Network Firewall configuration
-
 ### Required Tools
-* Node.js 18+
-* Python 3.11+
-* Poetry (Python package manager)
-* Docker & Docker Compose (for local development)
-* AWS CLI (optional, for cloud operations)
+
+Install these tools before starting:
+
+#### Core Requirements (Always Needed)
+
+- **[Node.js 18+](https://nodejs.org/)** - JavaScript runtime
+- **[Python 3.11+](https://www.python.org/)** - For Lambda functions
+- **[Git](https://git-scm.com/)** - Version control
+
+#### Optional Tools
+
+- **[Docker](https://docs.docker.com/get-docker/)** +
+  **[Docker Compose](https://docs.docker.com/compose/install/)** - For
+  LocalStack development
+- **[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)** -
+  For cloud deployment
+
+### Auto-Installed Dependencies
+
+These are installed automatically via `npm install`:
+
+- **Poetry** - Python package manager
+- **Husky** - Git hooks for commit standards
+- **Commitizen** - Interactive commit creation
+
+### AWS Accounts (for Cloud Deployment)
+
+- **Application Account (Dev)** - Deploy modules in development environment
+- **Resource Account** - Deploy CI/CD pipeline for application deployment
+- **Delegated Admin Account** (Optional) - Manage spoke accounts using StackSets
+- **Spoke Account** (Optional) - Test application by mocking customer setup
 
 ## 🏗️ Project Structure
 
@@ -97,49 +158,57 @@ make validate-commit
 ```
 
 **Commit Format**: `type(scope): description`
+
 - `feat(app): add rule validation feature`
 - `fix(firewall): resolve routing issue`
 - `docs: update deployment guide`
 
 **Branch Names**: `feature/*`, `hotfix/*`, `release/*`
 
-**Automatic Setup**: Git hooks and commit validation are configured automatically when you run `npm install`.
+**Automatic Setup**: Git hooks and commit validation are configured
+automatically when you run `npm install`.
 
 See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 
 ### Branch Strategy
 
 - `main` - Production-ready code
-- `dev` - Development integration branch  
+- `dev` - Development integration branch
 - `feature/*` - Feature development branches
 - `hotfix/*` - Critical bug fixes
 
 ### Local Development
 
 ```bash
-# Complete setup (first time)
-make local
+# Install dependencies first
+npm install
 
-# Or individual steps:
-make local-setup      # Setup environment only
-make local-start      # Start LocalStack only
-make local-stop       # Stop LocalStack
+# Option 1: With LocalStack (requires Docker)
+make local            # Setup and start LocalStack
+make local-deploy     # Deploy to LocalStack
+make local-stop       # Stop LocalStack when done
 
-# Development workflow
+# Option 2: Without LocalStack
 make build            # Build all modules
 make test             # Run all tests
-make local-deploy     # Deploy to LocalStack
-make integration-test # Run integration tests
+make deploy           # Deploy to AWS (requires credentials)
+
+# Development workflow (both options)
+make commit           # Create conventional commits
+make lint             # Run code linting
+make clean            # Clean build artifacts
 ```
 
 ## 🧪 Testing Strategy
 
 ### Unit Tests
+
 - **Python**: pytest with coverage reporting
 - **TypeScript**: Jest for CDK constructs
 - **Location**: `test/` directories in each module
 
 ### Integration Tests
+
 - **Purpose**: Validate deployed resources functionality
 - **Environment**: Runs against deployed stacks
 - **Location**: `tests/integration/`
@@ -166,7 +235,7 @@ STACK_NAME=app npm run test:integration
 
 1. **Local** (`local`) - LocalStack development
 2. **Development** (`dev`) - AWS development account
-3. **Integration** (`int`) - AWS integration testing account  
+3. **Integration** (`int`) - AWS integration testing account
 4. **Production** (`prod`) - AWS production account
 
 ### Pipeline Architecture
@@ -178,6 +247,7 @@ Source → Build → Deploy → Integration Tests → [Manual Approval] → Prod
 ```
 
 #### Pipeline Features
+
 - **Enhanced Build Process**: Comprehensive validation and testing
 - **Security Scanning**: Automated security checks with bandit and pip-audit
 - **Integration Testing**: Automated post-deployment validation
@@ -196,7 +266,7 @@ Create `deploy_vars.sh` in the root directory:
 export ACCOUNT_RES=111122223333
 export RES_ACCOUNT_AWS_PROFILE=deployer+res
 
-# Application Account configuration  
+# Application Account configuration
 export ACCOUNT_PROD=222233334444
 export PROD_ACCOUNT_AWS_PROFILE=deployer+app
 
@@ -230,39 +300,51 @@ Create `<STAGE>.json` in the `conf/` folder:
 ## 🔍 Monitoring and Observability
 
 ### Built-in Monitoring
+
 - **CloudWatch Logs**: Centralized logging for all Lambda functions
 - **X-Ray Tracing**: Distributed tracing for performance monitoring
 - **CloudWatch Metrics**: Custom metrics for application performance
 - **AWS Config**: Configuration compliance monitoring
 
 ### Integration Test Reports
+
 - **Test Results**: JSON reports with detailed test outcomes
 - **Performance Metrics**: Lambda execution times and resource utilization
 - **Security Scan Results**: Vulnerability assessments and compliance checks
 
 ## 🛠️ Available Commands
 
-### Root Level Commands
+### Setup Commands
 
 ```bash
-make local                 # Complete local development setup
-make build                 # Build all modules
-make test                  # Run all tests  
-make deploy                # Deploy all modules
-make clean                 # Clean build artifacts
-make update                # Update dependencies
-make integration-test      # Run integration tests
-make commit                # Create conventional commits
+make local                 # Setup LocalStack (requires Docker)
+make help                  # Show all available commands
 ```
 
-### Local Development Commands
+### Development Commands
 
 ```bash
-make local                 # Complete setup (install + setup + start)
-make local-setup           # Setup environment only
-make local-start           # Start LocalStack only
-make local-stop            # Stop LocalStack only
+npm install                # Install dependencies and setup commit standards
+make build                 # Build all modules
+make test                  # Run all tests
+make lint                  # Run linting
+make commit                # Create conventional commits
+make clean                 # Clean build artifacts
+```
+
+### Deployment Commands
+
+```bash
+make deploy                # Deploy to AWS
 make local-deploy          # Deploy to LocalStack
+make integration-test      # Run integration tests
+```
+
+### LocalStack Commands (Docker Required)
+
+```bash
+make local-start           # Start LocalStack containers
+make local-stop            # Stop LocalStack containers
 ```
 
 ### NPM Scripts
@@ -290,6 +372,7 @@ npm run clean              # Clean artifacts
 ## 🔒 Security
 
 ### Security Features
+
 - **Automated Security Scanning**: Bandit for Python, npm audit for Node.js
 - **Dependency Vulnerability Checks**: pip-audit and npm audit
 - **IAM Least Privilege**: Minimal required permissions
@@ -297,6 +380,7 @@ npm run clean              # Clean artifacts
 - **Network Security**: VPC isolation and security groups
 
 ### Security Best Practices
+
 - Never commit secrets or credentials
 - Use IAM roles instead of access keys
 - Regular dependency updates
@@ -305,20 +389,24 @@ npm run clean              # Clean artifacts
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Clone and install dependencies: `git clone <repo> && cd <repo> && npm install`
+2. Clone and install dependencies:
+   `git clone <repo> && cd <repo> && npm install`
 3. Create a feature branch: `git checkout -b feature/your-feature`
-4. Make changes and commit using: `make commit` (follows conventional commits automatically)
+4. Make changes and commit using: `make commit` (follows conventional commits
+   automatically)
 5. Write tests for new functionality
 6. Ensure all tests pass: `make test`
 7. Submit a pull request
 
-**Note**: Commit standards are automatically enforced via git hooks installed during `npm install`.
+**Note**: Commit standards are automatically enforced via git hooks installed
+during `npm install`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📄 License
 
-This project is licensed under the Apache-2.0 License. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache-2.0 License. See [LICENSE](LICENSE)
+for details.
 
 ## 🆘 Support
 
@@ -331,7 +419,7 @@ This project is licensed under the Apache-2.0 License. See [LICENSE](LICENSE) fo
 ### Getting Help
 
 1. Check existing documentation
-2. Review CloudFormation stack events  
+2. Review CloudFormation stack events
 3. Check pipeline execution logs
 4. Create an issue in the repository
 
@@ -345,47 +433,46 @@ If upgrading from a previous version:
 4. **Test locally** before deploying to production
 5. **Follow the new commit standards** for future changes
 
-
 ## DEPENDENCIES
 
-This list of dependencies are needed to build the project.
-These packages are not part of the solution.
+This list of dependencies are needed to build the project. These packages are
+not part of the solution.
 
 ### Python dependencies
 
-| Package                | Version  |
-|------------------------|----------|
+| Package               | Version  |
+| --------------------- | -------- |
 | aws-lambda-powertools | ^2.25.1  |
-| aws-xray-sdk           | ^2.12.0  |
-| jsonschema             | ^4.19.1  |
-| python                 | ^3.11    |
-| pyyaml                 | ^6.0.1   |
-| requests               | ^2.31.0  |
-| pytest                 | ^8.0.2   |
-| bandit                 | ^1.7.7   |
-| pip-audit              | ^2.7.2   |
-| pip-licenses           | ^4.3.4   |
-| boto3                  | ^1.34.52 |
-| cfnresponse            | ^1.1.2   |
+| aws-xray-sdk          | ^2.12.0  |
+| jsonschema            | ^4.19.1  |
+| python                | ^3.11    |
+| pyyaml                | ^6.0.1   |
+| requests              | ^2.31.0  |
+| pytest                | ^8.0.2   |
+| bandit                | ^1.7.7   |
+| pip-audit             | ^2.7.2   |
+| pip-licenses          | ^4.3.4   |
+| boto3                 | ^1.34.52 |
+| cfnresponse           | ^1.1.2   |
 
 ### Typescript dependencies
 
-| Package                           | Version       |
-|-----------------------------------|---------------|
-| @types/jest                       | ^29.5.12      |
-| @types/node                       | 20.11.30      |
-| aws-cdk                           | 2.135.0       |
-| jest                              | ^29.7.0       |
-| ts-jest                           | ^29.1.2       |
-| ts-node                           | ^10.9.2       |
-| typescript                        | ~5.4.3        |
+| Package                          | Version          |
+| -------------------------------- | ---------------- |
+| @types/jest                      | ^29.5.12         |
+| @types/node                      | 20.11.30         |
+| aws-cdk                          | 2.135.0          |
+| jest                             | ^29.7.0          |
+| ts-jest                          | ^29.1.2          |
+| ts-node                          | ^10.9.2          |
+| typescript                       | ~5.4.3           |
 | @aws-cdk/aws-lambda-python-alpha | ^2.135.0-alpha.0 |
-| aws-cdk-lib                       | 2.135.0       |
-| cdk-nag                           | ^2.28.82      |
-| constructs                        | ^10.0.0       |
-| source-map-support                | ^0.5.21       |
-| ajv                               | ^8.12.0       |
-| ajv-formats                       | ^3.0.1        |
+| aws-cdk-lib                      | 2.135.0          |
+| cdk-nag                          | ^2.28.82         |
+| constructs                       | ^10.0.0          |
+| source-map-support               | ^0.5.21          |
+| ajv                              | ^8.12.0          |
+| ajv-formats                      | ^3.0.1           |
 
 ## APPENDIX
 
@@ -393,7 +480,8 @@ Please refer the [GLOSSARY](GLOSSARY.md) before creating any configuration files
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more
+information.
 
 ## License
 
