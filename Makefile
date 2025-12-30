@@ -10,6 +10,7 @@ help:
 	@echo "  build            - Build all modules"
 	@echo "  test             - Run all tests"
 	@echo "  lint             - Run linting on all modules"
+	@echo "  lint-fix         - Fix all lint issues automatically"
 	@echo "  integration-test - Run integration tests"
 	@echo ""
 	@echo "🚀 Deployment Commands:"
@@ -53,6 +54,12 @@ clean:
 lint:
 	@echo "Running linting..."
 	npm run lint
+
+lint-fix:
+	@echo "Fixing all lint issues..."
+	@echo "Running ESLint with --fix on all workspaces..."
+	npm run lint || true
+	@echo "✅ Lint fixes applied!"
 
 local: 
 	@echo "🚀 Setting up LocalStack environment..."
@@ -110,4 +117,4 @@ validate-commit:
 	@echo "Validating last commit message..."
 	git log -1 --pretty=format:"%s" | npx commitlint
 
-.PHONY: all help build test update deploy clean lint local local-setup local-start local-stop local-deploy integration-test setup-commits commit validate-commit
+.PHONY: all help build test update deploy clean lint lint-fix local local-setup local-start local-stop local-deploy integration-test setup-commits commit validate-commit

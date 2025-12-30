@@ -1,4 +1,3 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { VPCStage } from './vpc_stages';
 import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
@@ -18,7 +17,6 @@ export class VpcPipelineStack extends TaggedStack {
 
     const target_account = props.globalConfig.base.target_account_id;
     const primary_region = props.globalConfig.base.primary_region;
-    const name_dot_prefix = props.namePrefix.replace(/-/g, '.');
 
     // Source repo
     const sourceCode = CodePipelineSource.connection(

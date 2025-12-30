@@ -1,10 +1,8 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 import { FirewallStage, BaseRoutingStage, RoutingStage } from './firewall_stages';
 import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { NagSuppressions } from 'cdk-nag';
-import * as cdk from 'aws-cdk-lib';
 
 interface FirewallPipelineStackProps extends TaggedStackProps {
   namePrefix: string;
@@ -18,7 +16,6 @@ export class FirewallPipelineStack extends TaggedStack {
 
     const target_account = props.globalConfig.base.target_account_id;
     const primary_region = props.globalConfig.base.primary_region;
-    const name_dot_prefix = props.namePrefix.replace(/-/g, '.');
 
     // Source repo
     const sourceCode = CodePipelineSource.connection(
@@ -123,28 +120,28 @@ export class FirewallPipelineStack extends TaggedStack {
 
     pipeline.buildPipeline();
 
-    NagSuppressions.addStackSuppressions(this as any, [
+    NagSuppressions.addStackSuppressions(this, [
       {
         id: 'AwsSolutions-S1',
         reason: 'The Bucket is CDK managed and used for artifact storage',
       },
     ]);
 
-    NagSuppressions.addStackSuppressions(this as any, [
+    NagSuppressions.addStackSuppressions(this, [
       {
         id: 'AwsSolutions-KMS5',
         reason: 'The Key is used for pipeline artifacts and need not be rotated.',
       },
     ]);
 
-    NagSuppressions.addStackSuppressions(this as any, [
+    NagSuppressions.addStackSuppressions(this, [
       {
         id: 'AwsSolutions-IAM5',
         reason: 'Known wildcards coming from CDK Pipeline construct',
       },
     ]);
 
-    NagSuppressions.addStackSuppressions(this as any, [
+    NagSuppressions.addStackSuppressions(this, [
       {
         id: 'AwsSolutions-CB3',
         reason: 'Privileged mode required to package Lambda',

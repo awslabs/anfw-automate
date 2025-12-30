@@ -18,14 +18,12 @@ export class AppPipelineStack extends TaggedStack {
 
     const target_account = props.globalConfig.base.target_account_id;
     const delegated_admin_account = props.globalConfig.base.delegated_admin_account_id;
-
     const primary_region = props.globalConfig.base.primary_region;
-    const name_dot_prefix = props.namePrefix.replace(/-/g, '.');
 
     // Checks if the config object contains a "stackset" key in any region.
     function hasStacksetInAnyRegion(config: any): boolean {
       for (const regionKey in config) {
-        if (config.hasOwnProperty(regionKey)) {
+        if (Object.prototype.hasOwnProperty.call(config, regionKey)) {
           const region = config[regionKey];
           if ('stackset' in region) {
             return true;

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { StackConfig, loadDeploymentConfig } from '../../shared/lib/config_loader'
-import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
+import { StackConfig, loadDeploymentConfig } from '../../shared/lib/config_loader';
+import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { VpcPipelineStack } from '../lib/vpc_pipeline_stack';
 
 const app = new cdk.App();
@@ -10,30 +10,32 @@ cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 const STAGE = process.env.STAGE;
 if (!STAGE) {
+  // eslint-disable-next-line no-console
   console.error('Required STAGE environment variable is not defined');
   process.exit(1);
 }
 
-const vpcRegion = process.env.AWS_REGION
+const vpcRegion = process.env.AWS_REGION;
 if (!vpcRegion) {
+  // eslint-disable-next-line no-console
   console.error('Required AWS_REGION environment variable is not defined');
   process.exit(1);
 }
 
 // Load configuration
-const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, "vpc");
-const stage = loadedConfig?.stage
-const globalConfig = loadedConfig?.globalConfig
-const vpcConfig = loadedConfig?.vpcConfig
+const loadedConfig: StackConfig | null = loadDeploymentConfig(__dirname, STAGE, 'vpc');
+const stage = loadedConfig?.stage;
+const globalConfig = loadedConfig?.globalConfig;
+const vpcConfig = loadedConfig?.vpcConfig;
 const globalTags = loadedConfig?.globalConfig?.pipeline?.tags ?? {};
 
-const namePrefix = `${(globalConfig as any).project?.aws_organziation_scope}-${(globalConfig as any).project?.project_name}-${(globalConfig as any).project.module_name}`
+const namePrefix = `${(globalConfig as any).project?.aws_organziation_scope}-${(globalConfig as any).project?.project_name}-${(globalConfig as any).project.module_name}`;
 
 new VpcPipelineStack(app, `vpc-pipeline-anfw-${stage}`, {
   stackName: `cpp-vpc-${namePrefix}-${stage}`,
   env: {
-    region: (globalConfig as any).base?.primary_region || "",
-    account: (globalConfig as any).base?.resource_account_id || ""
+    region: (globalConfig as any).base?.primary_region || '',
+    account: (globalConfig as any).base?.resource_account_id || '',
   },
   namePrefix: namePrefix,
   stage: stage,
@@ -50,16 +52,19 @@ const exclusionList: string[] = [
 
 app.node.findAll().forEach(element => {
   if (exclusionList.some(ele => element.node.path.includes(ele))) {
-    NagSuppressions.addResourceSuppressions(element, [{
-      id: 'AwsSolutions-KMS5',
-      reason: 'The Key is used for pipeline artifacts and need not be rotated.',
-    }]);
+    NagSuppressions.addResourceSuppressions(element, [
+      {
+        id: 'AwsSolutions-KMS5',
+        reason: 'The Key is used for pipeline artifacts and need not be rotated.',
+      },
+    ]);
 
-    NagSuppressions.addResourceSuppressions(element, [{
-      id: 'AwsSolutions-S1',
-      reason: 'The Bucket is CDK managed and used for artifact storage',
-    }]);
-
+    NagSuppressions.addResourceSuppressions(element, [
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'The Bucket is CDK managed and used for artifact storage',
+      },
+    ]);
   }
 });
 

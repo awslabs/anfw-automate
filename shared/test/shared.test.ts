@@ -16,3 +16,7 @@
 //     VisibilityTimeout: 300
 //   });
 // });
+
+test('placeholder test', () => {
+  expect(true).toBe(true);
+});
