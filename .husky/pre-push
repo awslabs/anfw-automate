@@ -1,7 +1,12 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 echo "🚀 Running pre-push checks..."
+
+# Skip all checks in CI environment (GitHub Actions)
+if [ "$CI" = "true" ] || [ "$GITHUB_ACTIONS" = "true" ]; then
+    echo "ℹ️  Running in CI environment, skipping pre-push checks"
+    exit 0
+fi
 
 # Get the current branch
 current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -13,7 +18,7 @@ if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
     exit 1
 fi
 
-# Run tests before push
+# Run tests before push (only for non-protected branches)
 echo "🧪 Running tests..."
 npm test || exit 1
 
