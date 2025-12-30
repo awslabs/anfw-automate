@@ -2,6 +2,7 @@
   "name": "anfw-automate",
   "version": "2.1.0",
   "description": "Automate AWS Network Firewall Rule Management",
+  "type": "module",
   "private": true,
   "workspaces": [
     "app",
@@ -27,6 +28,7 @@
     "clean:modules": "npm run clean --workspaces",
     "clean:artifacts": "rm -rf cdk.out dist *.log build-report.json integration-test-report.json",
     "lint": "npm run lint --workspaces",
+    "lint-fix": "npm run lint-fix --workspaces",
     "lint:modules": "npm run lint --workspaces",
     "update": "npm update --workspaces",
     "update:modules": "npm update --workspace=app --workspace=firewall --workspace=vpc --workspace=shared",

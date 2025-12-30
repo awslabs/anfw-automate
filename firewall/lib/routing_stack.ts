@@ -3,7 +3,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
-import { CustomResource, Duration, Fn, Stack } from 'aws-cdk-lib';
+import { CustomResource, Duration, Fn } from 'aws-cdk-lib';
 import * as pylambda from '@aws-cdk/aws-lambda-python-alpha';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
@@ -106,11 +106,10 @@ export class RoutingStack extends TaggedStack {
       const publicRouteTable = Fn.importValue(`nat-routetable-${props.stage}-${azSuffix}`);
       const natGatewayId = Fn.importValue(`nat-id-${props.stage}-${azSuffix}`);
 
-      let internalNetArray: string[] = props.internalNet.split(',');
+      const internalNetArray: string[] = props.internalNet.split(',');
       for (let i = 0; i < internalNetArray.length; i++) {
-        let currentValue: string = internalNetArray[i];
         // Create Firewall Internal Route
-        let firewallInternalRoute = new ec2.CfnRoute(
+        const firewallInternalRoute = new ec2.CfnRoute(
           this,
           `FirewallInternalRoute${i}${azSuffix.toUpperCase()}`,
           {
@@ -123,7 +122,7 @@ export class RoutingStack extends TaggedStack {
         firewallInternalRoute.node.addDependency(deleteRoutesCustomResource);
 
         // Create PublicInternalRoute
-        let publicInternalRoute = new ec2.CfnRoute(
+        const publicInternalRoute = new ec2.CfnRoute(
           this,
           `PublicAInternalRoute${i}${azSuffix.toUpperCase()}`,
           {
