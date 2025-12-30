@@ -1,6 +1,6 @@
 {
   "name": "anfw-automate",
-  "version": "2.1.0",
+  "version": "2.2.0-beta.1",
   "description": "Automate AWS Network Firewall Rule Management",
   "type": "module",
   "private": true,

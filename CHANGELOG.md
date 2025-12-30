@@ -1,3 +1,21 @@
+## 2.2.0-beta.1 (2025-12-30)
+
+* fix: eslint in every module ([3faa2f3](https://github.com/awslabs/anfw-automate/commit/3faa2f3))
+* fix: fix cdk version mismatch ([62bf780](https://github.com/awslabs/anfw-automate/commit/62bf780))
+* fix: fix github actions errors ([51d4a42](https://github.com/awslabs/anfw-automate/commit/51d4a42))
+* fix(ci): node version mismatch errors ([0662ce0](https://github.com/awslabs/anfw-automate/commit/0662ce0))
+* fix(ci): semantic release git commit ([4cf827e](https://github.com/awslabs/anfw-automate/commit/4cf827e))
+* fix(ci): semantic release ([392d278](https://github.com/awslabs/anfw-automate/commit/392d278))
+* fix(ci): update husky restrictions for ci ([e4d3bde](https://github.com/awslabs/anfw-automate/commit/e4d3bde))
+* build(app): poetry lock ([f4579a8](https://github.com/awslabs/anfw-automate/commit/f4579a8))
+* build(firewall): poetry lock ([9e23e2e](https://github.com/awslabs/anfw-automate/commit/9e23e2e))
+* build: update packages ([2bbc0b2](https://github.com/awslabs/anfw-automate/commit/2bbc0b2))
+* feat(ci): add automatic semantic versioning ([2c9cf5b](https://github.com/awslabs/anfw-automate/commit/2c9cf5b))
+* feat: commit standards ([decb217](https://github.com/awslabs/anfw-automate/commit/decb217))
+* feat: improve dev workflow ([1c1ee6c](https://github.com/awslabs/anfw-automate/commit/1c1ee6c))
+* docs: update all MD files ([3eb6755](https://github.com/awslabs/anfw-automate/commit/3eb6755))
+* refactor: use workspaces and push central package-lock ([929df6f](https://github.com/awslabs/anfw-automate/commit/929df6f))
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
