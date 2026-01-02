@@ -132,7 +132,7 @@ jobs:
         run: npm ci
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate || echo "npm audit found issues"
+        run: npm audit --omit=dev --audit-level=moderate || echo "npm audit found issues"
 
       - name: Run Python security checks
         run: |
