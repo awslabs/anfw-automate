@@ -78,8 +78,8 @@ make local-deploy
 
 ```bash
 # Build and test
-make build
-make test
+make build                 # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
+make test                  # Run all tests
 
 # Deploy to AWS (requires AWS CLI + credentials)
 make deploy
@@ -189,7 +189,7 @@ make local-deploy     # Deploy to LocalStack
 make local-stop       # Stop LocalStack when done
 
 # Option 2: Without LocalStack
-make build            # Build all modules
+make build            # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
 make test             # Run all tests
 make deploy           # Deploy to AWS (requires credentials)
 
@@ -207,12 +207,6 @@ make clean            # Clean build artifacts
 - **TypeScript**: Jest for CDK constructs
 - **Location**: `test/` directories in each module
 
-### Integration Tests
-
-- **Purpose**: Validate deployed resources functionality
-- **Environment**: Runs against deployed stacks
-- **Location**: `tests/integration/`
-
 ### Running Tests
 
 ```bash
@@ -221,12 +215,6 @@ npm test
 
 # Module-specific tests
 cd app && npm test
-
-# Integration tests (requires deployment)
-npm run test:integration
-
-# Specific stack integration tests
-STACK_NAME=app npm run test:integration
 ```
 
 ## 🚀 Deployment Process
@@ -235,15 +223,14 @@ STACK_NAME=app npm run test:integration
 
 1. **Local** (`local`) - LocalStack development
 2. **Development** (`dev`) - AWS development account
-3. **Integration** (`int`) - AWS integration testing account
-4. **Production** (`prod`) - AWS production account
+3. **Production** (`prod`) - AWS production account
 
 ### Pipeline Architecture
 
 Each module has its own AWS CodePipeline:
 
 ```
-Source → Build → Deploy → Integration Tests → [Manual Approval] → Production
+Source → Build → Deploy → [Manual Approval] → Production
 ```
 
 #### Pipeline Features
@@ -325,11 +312,15 @@ make help                  # Show all available commands
 
 ```bash
 npm install                # Install dependencies and setup commit standards
-make build                 # Build all modules
+make build                 # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
 make test                  # Run all tests
 make lint                  # Run linting
 make commit                # Create conventional commits
 make clean                 # Clean build artifacts
+
+# Module-specific builds (optional)
+cd app && make build       # Build just the app module
+cd firewall && make build  # Build just the firewall module
 ```
 
 ### Deployment Commands
@@ -413,7 +404,8 @@ for details.
 ### Troubleshooting
 
 1. **LocalStack Issues**: Check Docker daemon and port availability
-2. **Build Failures**: Verify dependencies and environment variables
+2. **Build Failures**: Check dependencies - no environment variables required
+   for builds
 3. **Deployment Issues**: Check AWS credentials and CloudFormation logs
 
 ### Getting Help

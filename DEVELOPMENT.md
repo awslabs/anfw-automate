@@ -1,6 +1,8 @@
 # Development Workflow Guide
 
-This document outlines the improved development workflow for the AWS Network Firewall automation project, including commit standards, local development setup, and deployment processes.
+This document outlines the improved development workflow for the AWS Network
+Firewall automation project, including commit standards, local development
+setup, and deployment processes.
 
 ## Table of Contents
 
@@ -15,7 +17,8 @@ This document outlines the improved development workflow for the AWS Network Fir
 
 ### Commit Message Format
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+We follow the [Conventional Commits](https://www.conventionalcommits.org/)
+specification:
 
 ```
 <type>(<scope>): <subject>
@@ -26,6 +29,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ```
 
 #### Types
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
@@ -39,6 +43,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 - `revert`: Reverts a previous commit
 
 #### Scopes
+
 - `app`: Application module changes
 - `firewall`: Firewall module changes
 - `vpc`: VPC module changes
@@ -49,6 +54,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 - `ci`: CI/CD pipeline changes
 
 #### Examples
+
 ```bash
 feat(app): add rule validation for network firewall policies
 fix(firewall): resolve routing table update race condition
@@ -59,11 +65,13 @@ test(app): add integration tests for lambda functions
 ### Setting Up Commit Standards
 
 1. Configure git to use the commit message template:
+
 ```bash
 git config commit.template .gitmessage
 ```
 
 2. Install commitlint (optional but recommended):
+
 ```bash
 npm install -g @commitlint/cli @commitlint/config-conventional
 ```
@@ -86,6 +94,7 @@ make local
 ```
 
 This single command:
+
 - Installs all project dependencies
 - Sets up commit standards and git hooks automatically
 - Configures LocalStack for local AWS simulation
@@ -111,16 +120,19 @@ make local-start
 ### Manual Setup
 
 1. **Start LocalStack**:
+
 ```bash
 docker-compose -f docker-compose.local.yml up -d
 ```
 
 2. **Source local environment**:
+
 ```bash
 source deploy_vars.local.sh
 ```
 
 3. **Install dependencies**:
+
 ```bash
 # Install shared module
 cd shared && npm install && npm run build && cd ..
@@ -140,6 +152,7 @@ done
 ### Local Configuration
 
 #### Environment Variables (`deploy_vars.local.sh`)
+
 ```bash
 export AWS_PROFILE=localstack
 export STAGE=local
@@ -150,6 +163,7 @@ export AWS_SECRET_ACCESS_KEY=test
 ```
 
 #### Application Configuration (`conf/local.json`)
+
 ```json
 {
   "account": {
@@ -179,6 +193,7 @@ export AWS_SECRET_ACCESS_KEY=test
 ### Development Process
 
 1. **Initial setup** (first time only):
+
 ```bash
 git clone <repository-url>
 cd anfw-automate
@@ -186,6 +201,7 @@ make local  # Complete setup: dependencies + LocalStack + commit standards
 ```
 
 2. **Create feature branch**:
+
 ```bash
 git checkout dev
 git pull origin dev
@@ -193,9 +209,11 @@ git checkout -b feature/your-feature-name
 ```
 
 3. **Make changes and test locally**:
+
 ```bash
 # Build and test
-make build
+make build                 # Build all modules using npm workspaces
+make build-make           # Alternative: build using individual Makefiles
 
 # Deploy to LocalStack
 make local-deploy
@@ -205,12 +223,14 @@ make integration-test
 ```
 
 4. **Commit with proper format**:
+
 ```bash
 git add .
 make commit  # Interactive conventional commit helper
 ```
 
 5. **Push and create PR**:
+
 ```bash
 git push origin feature/your-feature-name
 # Create PR to dev branch
@@ -219,6 +239,7 @@ git push origin feature/your-feature-name
 ### Code Quality Checks
 
 Pre-commit hooks automatically run:
+
 - Branch name validation
 - Python syntax validation
 - TypeScript compilation check
@@ -233,22 +254,12 @@ Pre-commit hooks automatically run:
 - **TypeScript**: Jest for CDK constructs
 - **Location**: `test/` directories in each module
 
-### Integration Tests
-
-- **Purpose**: Validate deployed resources functionality
-- **Environment**: Runs against deployed stacks
-- **Location**: `tests/integration/`
-
 ### Running Tests
 
 ```bash
 # Unit tests
 npm test                    # All modules
 cd app && npm test         # Specific module
-
-# Integration tests (requires deployment)
-npm run test:integration   # All integration tests
-STACK_NAME=app npm run test:integration  # Specific stack
 ```
 
 ## Deployment Process
@@ -257,8 +268,7 @@ STACK_NAME=app npm run test:integration  # Specific stack
 
 1. **Local** (`local`): LocalStack development
 2. **Development** (`dev`): AWS development account
-3. **Integration** (`int`): AWS integration testing account
-4. **Production** (`prod`): AWS production account
+3. **Production** (`prod`): AWS production account
 
 ### Deployment Commands
 
@@ -280,47 +290,7 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 1. **Source**: CodeCommit/GitHub repository
 2. **Build**: Enhanced build with validation
 3. **Deploy**: Multi-region deployment
-4. **Test**: Integration testing
-5. **Approval**: Manual approval for production
-
-## Integration Testing
-
-### Test Categories
-
-1. **Lambda Function Tests**:
-   - Function invocation
-   - Response validation
-   - Error handling
-
-2. **Infrastructure Tests**:
-   - Resource existence
-   - Configuration validation
-   - Connectivity tests
-
-3. **End-to-End Tests**:
-   - Complete workflow validation
-   - Cross-service integration
-
-### Test Configuration
-
-Integration tests use environment-specific configuration:
-
-```bash
-# Environment variables
-export STAGE=dev
-export AWS_REGION=us-east-1
-
-# Run tests
-pytest tests/integration/ -v --stage=$STAGE
-```
-
-### Adding New Tests
-
-1. Create test files in `tests/integration/`
-2. Follow naming convention: `test_*.py`
-3. Use shared fixtures from `conftest.py`
-4. Include proper cleanup
-5. Add environment-specific markers
+4. **Approval**: Manual approval for production
 
 ## Best Practices
 
@@ -358,6 +328,7 @@ pytest tests/integration/ -v --stage=$STAGE
 2. **Build failures**:
    - Verify all dependencies are installed
    - Check Python virtual environment
+   - No environment variables required for builds (STACK_NAME auto-detected)
    - Validate TypeScript compilation
 
 3. **Deployment issues**:
@@ -376,9 +347,14 @@ pytest tests/integration/ -v --stage=$STAGE
 
 ```bash
 # Development
-make build                 # Build all modules
+make build                 # Build all modules using npm workspaces
+make build-make           # Alternative: build using individual Makefiles
 make clean                 # Clean build artifacts
 make update                # Update dependencies
+
+# Module-specific development
+cd app && make build       # Build specific module
+cd app && make test        # Test specific module
 
 # Local testing
 docker-compose -f docker-compose.local.yml up -d    # Start LocalStack

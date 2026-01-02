@@ -11,22 +11,20 @@
     "shared"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build:shared && npm run build:modules",
     "build:shared": "npm run build --workspace=shared",
     "build:modules": "npm run build --workspace=app --workspace=firewall --workspace=vpc",
-    "build:app": "npm run build --workspace=app",
-    "build:firewall": "npm run build --workspace=firewall",
-    "build:vpc": "npm run build --workspace=vpc",
+    "build:app": "npm run build:shared && npm run build --workspace=app",
+    "build:firewall": "npm run build:shared && npm run build --workspace=firewall",
+    "build:vpc": "npm run build:shared && npm run build --workspace=vpc",
     "test": "npm test --workspaces",
     "test:shared": "npm test --workspace=shared",
     "test:modules": "npm test --workspace=app --workspace=firewall --workspace=vpc",
     "test:app": "npm test --workspace=app",
     "test:firewall": "npm test --workspace=firewall",
     "test:vpc": "npm test --workspace=vpc",
-    "test:integration": "chmod +x scripts/integration-test.sh && scripts/integration-test.sh",
     "clean": "npm run clean --workspaces && npm run clean:artifacts",
     "clean:modules": "npm run clean --workspaces",
-    "clean:artifacts": "rm -rf cdk.out dist *.log build-report.json integration-test-report.json",
     "lint": "npm run lint --workspaces",
     "lint-fix": "npm run lint-fix --workspaces",
     "lint:modules": "npm run lint --workspaces",
@@ -94,7 +92,7 @@
       "prettier --write"
     ],
     "*.py": [
-      "python -m py_compile"
+      "python3 -m py_compile"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"

@@ -72,30 +72,40 @@ class TestCustomerLogHandler(unittest.TestCase):
         log_stream_name = "test-log-stream"
         bucket_name = "XXXXXXXXXXX"
 
-        # Mock the put_log_events method
-        mock_log_events = MagicMock()
-        self.handler.logclient.create_export_task = mock_log_events
+        # Mock the create_export_task method
+        mock_create_export_task = MagicMock()
+        self.handler.logclient.create_export_task = mock_create_export_task
 
-        # Mock dates
-        datetoday = int(round(datetime.now().timestamp() * 1000))
-        start_date = datetime.now() - timedelta(29)
-        date29daysback = int(round(start_date.timestamp() * 1000))
+        # Mock the timestamp generation methods to return consistent values
+        mock_timestamp = 1641024000000  # Fixed timestamp
+        mock_timestamp_29d = 1638345600000  # Fixed timestamp 29 days back
+        
+        mock_generate_time_stamp = MagicMock(return_value=mock_timestamp)
+        mock_generate_time_stamp_29d = MagicMock(return_value=mock_timestamp_29d)
+        
+        self.handler._generate_time_stamp = mock_generate_time_stamp
+        self.handler._generate_time_stamp_29d = mock_generate_time_stamp_29d
 
         self.handler.export_logs_to_s3(log_stream_name, bucket_name)
 
-        mock_log_events.assert_called_with(
+        mock_create_export_task.assert_called_with(
             taskName="NFW_Customer_Log_Export",
             logGroupName="test-log-group",
             logStreamNamePrefix=log_stream_name,
-            fromTime=date29daysback,
-            to=datetoday,
+            fromTime=mock_timestamp_29d,
+            to=mock_timestamp,
             destination=bucket_name,
             destinationPrefix=f"{log_stream_name}",
         )
 
-    def test_generate_log_stream_name(self):
-        datetoday_var = int(round(datetime.now().timestamp() * 1000))
-        log_stream_name_var = datetime.now().strftime("%Y/%m/%d/%H/%M")
+    @patch("lib.log_handler.datetime")
+    def test_generate_log_stream_name(self, mock_datetime):
+        # Mock datetime to return consistent values
+        mock_now = datetime(2026, 1, 2, 14, 12, 30, 123456)
+        mock_datetime.datetime.now.return_value = mock_now
+        
+        datetoday_var = int(round(mock_now.timestamp() * 1000))
+        log_stream_name_var = mock_now.strftime("%Y/%m/%d/%H/%M")
 
         self.assertEqual(
             self.handler.generate_log_stream_name(),

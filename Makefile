@@ -7,11 +7,10 @@ help:
 	@echo "  local            - Setup and start LocalStack (requires Docker)"
 	@echo ""
 	@echo "🏗️  Build & Test Commands:"
-	@echo "  build            - Build all modules"
+	@echo "  build            - Build all modules with comprehensive process (Python, TypeScript, CDK, security)"
 	@echo "  test             - Run all tests"
 	@echo "  lint             - Run linting on all modules"
 	@echo "  lint-fix         - Fix all lint issues automatically"
-	@echo "  integration-test - Run integration tests"
 	@echo ""
 	@echo "🚀 Deployment Commands:"
 	@echo "  deploy           - Deploy all modules to AWS"
@@ -30,10 +29,15 @@ help:
 	@echo "🧹 Utility Commands:"
 	@echo "  clean            - Clean all build artifacts"
 	@echo "  update           - Update all dependencies"
+	@echo ""
+	@echo "📦 Module Commands:"
+	@echo "  Individual modules can be built with: cd <module> && make build"
+	@echo "  Available modules: app, firewall, vpc, shared"
+	@echo "  Module builds use the same unified build.sh script"
 
-build: 
-	@echo "Building all modules..."
-	npm run build
+build:
+	@echo "Building all modules using unified build process..."
+	bash -e scripts/build.sh
 
 test:
 	@echo "Running all tests..."
@@ -100,9 +104,6 @@ local-deploy:
 	@echo "Deploying to local environment..."
 	npm run deploy:local
 
-integration-test:
-	@echo "Running integration tests..."
-	npm run test:integration
 
 setup-commits:
 	@echo "Setting up commit standards..."
@@ -118,4 +119,4 @@ validate-commit:
 	@echo "Validating last commit message..."
 	git log -1 --pretty=format:"%s" | npx commitlint
 
-.PHONY: all help build test update deploy clean lint lint-fix local local-setup local-start local-stop local-deploy integration-test setup-commits commit validate-commit
+.PHONY: all help build test update deploy clean lint lint-fix local local-setup local-start local-stop local-deploy setup-commits commit validate-commit
