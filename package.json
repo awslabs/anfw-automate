@@ -41,7 +41,6 @@
     "synth:modules": "cd app && npx cdk synth && cd ../firewall && npx cdk synth && cd ../vpc && npx cdk synth",
     "prepare": "husky install && chmod +x .husky/* || true",
     "commit": "node scripts/commit.js",
-    "commit:retry": "npx cz --retry",
     "validate:commit": "commitlint --edit",
     "validate:branch": "validate-branch-name",
     "release": "semantic-release",
@@ -56,15 +55,12 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@commitlint/prompt-cli": "^20.3.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "25.0.3",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.50.1",
-    "commitizen": "^4.2.4",
-    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -103,11 +99,6 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   },
   "validate-branch-name": {
     "pattern": "^(main|dev|feature/.+|hotfix/.+|release/.+)$",
