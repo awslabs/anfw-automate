@@ -111,6 +111,7 @@ setup-commits:
 
 commit:
 	@echo "Creating a conventional commit..."
+	@echo "✅ Using custom commit helper (Node.js v23 compatible)"
 	npm run commit
 
 validate-commit:
