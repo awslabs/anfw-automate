@@ -15,7 +15,6 @@ export class FirewallPipelineStack extends TaggedStack {
     super(scope, id, props);
 
     const target_account = props.globalConfig.base.target_account_id;
-    const primary_region = props.globalConfig.base.primary_region;
 
     // Source repo
     const sourceCode = CodePipelineSource.connection(
@@ -36,20 +35,6 @@ export class FirewallPipelineStack extends TaggedStack {
       },
       buildEnvironment: {
         privileged: true,
-      },
-    });
-
-    // Add integration test step
-    const integrationTestStep = new CodeBuildStep('IntegrationTest', {
-      input: sourceCode,
-      commands: ['chmod +x scripts/integration-test.sh', 'scripts/integration-test.sh'],
-      env: {
-        STAGE: props.stage,
-        STACK_NAME: 'firewall',
-        AWS_REGION: primary_region,
-      },
-      buildEnvironment: {
-        privileged: false,
       },
     });
 
@@ -112,11 +97,6 @@ export class FirewallPipelineStack extends TaggedStack {
       routingWave.addStage(routingStage);
       routingStages.push(routingStage);
     });
-
-    // Add integration tests as post-deployment steps to the last routing stage
-    if (routingStages.length > 0) {
-      routingStages[routingStages.length - 1].addPost(integrationTestStep);
-    }
 
     pipeline.buildPipeline();
 

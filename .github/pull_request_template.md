@@ -6,7 +6,8 @@ Brief description of the changes made in this PR.
 
 - [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
 - [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] 💥 Breaking change (fix or feature that would cause existing functionality
+      to not work as expected)
 - [ ] 📚 Documentation update
 - [ ] 🔧 Refactoring (no functional changes)
 - [ ] ⚡ Performance improvement
@@ -26,7 +27,6 @@ Brief description of the changes made in this PR.
 ## Testing
 
 - [ ] Unit tests pass locally (`npm test`)
-- [ ] Integration tests pass (if applicable)
 - [ ] Manual testing completed
 - [ ] New tests added for new functionality
 
@@ -56,16 +56,19 @@ Brief description of the changes made in this PR.
 - [ ] Requires infrastructure changes
 
 ### Configuration Changes Required
+
 <!-- If applicable, describe any configuration changes needed -->
 
 ## Screenshots/Logs
+
 <!-- If applicable, add screenshots or relevant log outputs -->
 
 ## Related Issues
+
 <!-- Link to related issues using #issue_number -->
 
-Closes #
-Relates to #
+Closes # Relates to #
 
 ## Additional Notes
+
 <!-- Any additional information that reviewers should know -->

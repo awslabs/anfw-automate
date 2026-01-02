@@ -36,7 +36,9 @@ jobs:
         run: npm audit signatures
 
       - name: Build project
-        run: npm run build
+        env:
+          STAGE: dev
+        run: make build
 
       - name: Run tests
         run: npm test

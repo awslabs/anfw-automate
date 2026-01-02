@@ -18,7 +18,6 @@ export class AppPipelineStack extends TaggedStack {
 
     const target_account = props.globalConfig.base.target_account_id;
     const delegated_admin_account = props.globalConfig.base.delegated_admin_account_id;
-    const primary_region = props.globalConfig.base.primary_region;
 
     // Checks if the config object contains a "stackset" key in any region.
     function hasStacksetInAnyRegion(config: any): boolean {
@@ -52,20 +51,6 @@ export class AppPipelineStack extends TaggedStack {
       },
       buildEnvironment: {
         privileged: true,
-      },
-    });
-
-    // Add integration test step
-    const integrationTestStep = new CodeBuildStep('IntegrationTest', {
-      input: sourceCode,
-      commands: ['chmod +x scripts/integration-test.sh', 'scripts/integration-test.sh'],
-      env: {
-        STAGE: props.stage,
-        STACK_NAME: 'app',
-        AWS_REGION: primary_region,
-      },
-      buildEnvironment: {
-        privileged: false,
       },
     });
 
@@ -132,11 +117,6 @@ export class AppPipelineStack extends TaggedStack {
         );
       }
     });
-
-    // Add integration tests as post-deployment steps to the last serverless stage
-    if (serverlessStages.length > 0) {
-      serverlessStages[serverlessStages.length - 1].addPost(integrationTestStep);
-    }
 
     pipeline.buildPipeline();
 

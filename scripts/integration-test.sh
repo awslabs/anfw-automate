@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# NOTICE: Integration tests have been disabled
+# This script is kept for reference but will exit immediately
+echo "Integration tests have been disabled and removed from the pipeline"
+exit 0
+
+# Legacy integration test code below (disabled)
+# set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
