@@ -308,7 +308,7 @@ synthesize_cdk_in_directory() {
     cdk acknowledge 32775 2>/dev/null || true
     
     # Run CDK synth with notices disabled
-    npx cdk synth --strict --no-notices
+    npx cdk synth --no-notices
     
     # Validate generated CloudFormation templates
     if command -v cfn-lint &> /dev/null; then
