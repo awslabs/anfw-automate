@@ -7,6 +7,7 @@
 !**/*.config.js
 !**/conf/sample.json
 !**/conf/schema.json
+.kiro
 
 # TypeScript build artifacts
 *.d.ts

@@ -243,6 +243,42 @@ Source → Build → Deploy → [Manual Approval] → Production
 
 ## 📁 Configuration
 
+### Enhanced Configuration Management
+
+The project now uses an enhanced configuration management system that provides:
+
+- **Multiple Configuration Sources**: SSM Parameter Store (primary) and JSON
+  files (fallback)
+- **Schema Validation**: Comprehensive validation with detailed error messages
+- **Environment Overrides**: Environment-specific configuration merging
+- **Module Isolation**: Independent configuration management per module
+- **Error Handling**: Clear, actionable error messages for troubleshooting
+
+#### Configuration Sources
+
+The system supports multiple configuration sources with automatic fallback:
+
+1. **SSM Parameter Store** (Primary)
+   - Global: `/anfw-automate/{stage}/global/config`
+   - Module: `/anfw-automate/{stage}/{module}/config`
+   - Overrides: `/anfw-automate/{stage}/{module}/overrides`
+
+2. **JSON Files** (Fallback)
+   - Global: `conf/{stage}.json`
+   - Module: `{module}/conf/{stage}.json`
+   - Overrides: `{module}/conf/{stage}-overrides.json`
+
+**Credential Handling**: The system gracefully handles AWS credential errors by
+automatically falling back to file-based configuration. When AWS credentials are
+not available or invalid, you'll see clean messages like:
+
+```
+SSM parameter '/anfw-automate/dev/global/config' not accessible (no AWS credentials), falling back to file-based config.
+```
+
+This ensures the system works seamlessly in both AWS environments (with SSM) and
+local development environments (with files).
+
 ### Environment Configuration
 
 Create `deploy_vars.sh` in the root directory:
@@ -265,7 +301,7 @@ export AWS_REGION=us-east-1
 
 ### Stage Configuration
 
-Create `<STAGE>.json` in the `conf/` folder:
+Create `<STAGE>.json` in the `conf/` folder with enhanced validation:
 
 ```json
 {
@@ -283,6 +319,23 @@ Create `<STAGE>.json` in the `conf/` folder:
   }
 }
 ```
+
+**Schema Validation**: Each configuration file is automatically validated
+against its corresponding schema (`conf/schema.json` for global config,
+`{module}/conf/schema.json` for module-specific config). The system provides
+detailed error messages for any validation failures:
+
+```
+Configuration validation failed for module 'app' in stage 'dev'
+Validation errors:
+  - environments.dev.vpc_id: VPC ID must match pattern vpc-* but got "invalid-vpc-id"
+  - environments.dev.rule_order: Rule order must be one of: DEFAULT_ACTION_ORDER, STRICT_ORDER
+  - firewall_policy_arns: Missing required property: firewall_policy_arns
+```
+
+**Environment Overrides**: You can create environment-specific override files
+(e.g., `app/conf/dev-overrides.json`) that will be automatically merged with the
+base configuration.
 
 ## 🔍 Monitoring and Observability
 
@@ -353,12 +406,16 @@ npm run clean              # Clean artifacts
 ## 📚 Documentation
 
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Comprehensive development guide
+- **[CONFIGURATION_MIGRATION.md](CONFIGURATION_MIGRATION.md)** - Enhanced
+  configuration migration guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[GLOSSARY.md](GLOSSARY.md)** - Project terminology
 - **Module READMEs**: Detailed documentation for each module
   - [app/README.md](app/README.md)
   - [firewall/README.md](firewall/README.md)
   - [vpc/README.md](vpc/README.md)
+- **Shared Library**: Enhanced configuration management
+  - [shared/README.md](shared/README.md)
 
 ## 🔒 Security
 
@@ -407,6 +464,12 @@ for details.
 2. **Build Failures**: Check dependencies - no environment variables required
    for builds
 3. **Deployment Issues**: Check AWS credentials and CloudFormation logs
+4. **Configuration Issues**:
+   - Check configuration file syntax and schema validation
+   - Verify SSM parameter paths if using Parameter Store
+   - Review detailed error messages for specific field-level issues
+   - Use file-based configuration for local development when AWS credentials are
+     not available
 
 ### Getting Help
 
@@ -417,11 +480,33 @@ for details.
 
 ## 🔄 Migration from Previous Versions
 
+### Enhanced Configuration Migration (Latest)
+
+**✅ Migration Complete**: All modules now use enhanced configuration management
+with improved error handling, schema validation, and multiple configuration
+sources.
+
+**Key Improvements**:
+
+- Multiple configuration sources (SSM Parameter Store + JSON files)
+- Comprehensive schema validation with detailed error messages
+- Automatic fallback for local development
+- Enhanced error handling and troubleshooting guidance
+
+**No Action Required**: The migration is backward compatible. Existing
+configurations continue to work without changes.
+
+See [CONFIGURATION_MIGRATION.md](CONFIGURATION_MIGRATION.md) for complete
+details.
+
+### General Migration Steps
+
 If upgrading from a previous version:
 
 1. **Backup existing configurations**
 2. **Run the new setup script**: `./scripts/local-dev-setup.sh`
-3. **Update configuration files** to match new schema
+3. **Update configuration files** to match new schema (optional - existing files
+   work)
 4. **Test locally** before deploying to production
 5. **Follow the new commit standards** for future changes
 

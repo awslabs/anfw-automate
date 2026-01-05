@@ -181,6 +181,40 @@ export AWS_SECRET_ACCESS_KEY=test
 }
 ```
 
+### Enhanced Configuration Management
+
+The project uses an enhanced configuration management system that provides:
+
+- **Multiple Configuration Sources**: SSM Parameter Store (primary) and JSON
+  files (fallback)
+- **Schema Validation**: Comprehensive validation with detailed error messages
+- **Environment Overrides**: Environment-specific configuration merging
+- **Error Handling**: Clear, actionable error messages for troubleshooting
+
+#### Configuration Sources
+
+1. **SSM Parameter Store** (Primary - for AWS environments)
+   - Global: `/anfw-automate/{stage}/global/config`
+   - Module: `/anfw-automate/{stage}/{module}/config`
+   - Overrides: `/anfw-automate/{stage}/{module}/overrides`
+
+2. **JSON Files** (Fallback - for local development)
+   - Global: `conf/{stage}.json`
+   - Module: `{module}/conf/{stage}.json`
+   - Overrides: `{module}/conf/{stage}-overrides.json`
+
+#### Local Development Configuration
+
+For local development, the system automatically falls back to file-based
+configuration when AWS credentials are not available. You'll see messages like:
+
+```
+SSM parameter '/anfw-automate/local/global/config' not accessible (no AWS credentials), falling back to file-based config.
+```
+
+This is expected behavior and allows seamless local development without AWS
+credentials.
+
 ## Development Workflow
 
 ### Branch Strategy
