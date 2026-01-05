@@ -40,15 +40,50 @@ Deployment of the application module utilizes a cross-account CI/CD pipeline
 - Ensure that you completed the steps in `PREPARE` section of
   [README](../README.md)
 
+## CONFIGURATION
+
+### Enhanced Configuration Management
+
+The app module now uses an enhanced configuration management system that
+provides:
+
+- **Multiple Configuration Sources**: SSM Parameter Store (primary) and JSON
+  files (fallback)
+- **Schema Validation**: Comprehensive validation with detailed error messages
+- **Environment Overrides**: Environment-specific configuration merging
+- **Error Handling**: Clear, actionable error messages for troubleshooting
+
+#### Configuration Sources
+
+The system supports multiple configuration sources with automatic fallback:
+
+1. **SSM Parameter Store** (Primary)
+   - Global: `/anfw-automate/{stage}/global/config`
+   - App module: `/anfw-automate/{stage}/app/config`
+   - Overrides: `/anfw-automate/{stage}/app/overrides`
+
+2. **JSON Files** (Fallback)
+   - Global: `conf/{stage}.json`
+   - App module: `app/conf/{stage}.json`
+   - Overrides: `app/conf/{stage}-overrides.json`
+
+**Credential Handling**: The system gracefully handles AWS credential errors by
+automatically falling back to file-based configuration for local development.
+
 ### CONFIGURE
 
 - Change to module directory e.g. `cd app`
 - Create a file named `<STAGE>.json` in [conf](conf/) folder in-line with the
-  explaination `STAGE` variable so far.
+  explanation `STAGE` variable so far.
 - Follow appropriate `schema.json` in **conf** folder to create the
   configuration files. Refer the [GLOSSARY](../GLOSSARY.md) to understand each
   parameter. e.g. create `dev.json` in `conf` folder based on
   `conf/schema.json`.
+- **Schema Validation**: The system automatically validates your configuration
+  against the schema and provides detailed error messages for any issues.
+- **Environment Overrides**: You can create environment-specific override files
+  (e.g., `app/conf/dev-overrides.json`) that will be automatically merged with
+  the base configuration.
 - Run `chmod a+x deploy_vars.sh && source deploy_vars.sh`
 
 ### BOOTSTRAP
