@@ -18,8 +18,25 @@ if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ]; then
     exit 1
 fi
 
-# Run tests before push (only for non-protected branches)
+# Run full linting on all modules
+echo "🔍 Running linting on all modules..."
+make lint || {
+    echo "❌ Linting failed. Fix issues before pushing."
+    exit 1
+}
+
+# Run comprehensive security scan
+echo "🔒 Running comprehensive security scan..."
+make security-scan || {
+    echo "❌ Security scan failed. Fix issues before pushing."
+    exit 1
+}
+
+# Run tests before push
 echo "🧪 Running tests..."
-npm test || exit 1
+npm test || {
+    echo "❌ Tests failed. Fix issues before pushing."
+    exit 1
+}
 
 echo "✅ Pre-push checks passed!"

@@ -214,7 +214,9 @@ setup:
 # Git and commit commands
 commit:
 	@echo "📝 Creating a conventional commit..."
-	yarn commit
+	@echo "ℹ️  Note: Pre-commit hooks will run linting and security scans automatically"
+	@echo ""
+	@yarn commit
 
 validate-commit:
 	@echo "✅ Validating last commit message..."

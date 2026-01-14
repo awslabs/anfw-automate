@@ -80,6 +80,24 @@ rl.question('\nSelect scope (1-8): ', scopeIndex => {
           console.log(commitMessage);
           console.log('---');
 
+          // Validate commit message format before proceeding
+          console.log('\n⚡ Validating commit message format...');
+          try {
+            const tempFile = '.git/COMMIT_EDITMSG_TEMP';
+            execSync(`echo "${commitMessage.replace(/"/g, '\\"')}" > ${tempFile}`, {
+              stdio: 'pipe',
+            });
+            execSync(`npx commitlint --edit ${tempFile}`, { stdio: 'pipe' });
+            execSync(`rm ${tempFile}`, { stdio: 'pipe' });
+            console.log('✅ Commit message format is valid');
+          } catch (error) {
+            console.error('\n❌ Commit message validation failed!');
+            console.error('   Your message does not follow conventional commit format.');
+            console.error('   Expected format: type(scope): subject');
+            rl.close();
+            process.exit(1);
+          }
+
           rl.question('\n✅ Proceed with commit? (y/N): ', confirm => {
             if (confirm.toLowerCase() === 'y' || confirm.toLowerCase() === 'yes') {
               try {
