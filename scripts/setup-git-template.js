@@ -36,7 +36,7 @@ function setupGitTemplate() {
 
     console.log('\n📝 Usage:');
     console.log('  - Run "git commit" (without -m) to use the template');
-    console.log('  - Or use "npm run commit" for interactive commit helper');
+    console.log('  - Or use "yarn commit" for interactive commit helper');
     console.log('  - Template provides guidance for conventional commit format');
   } catch (error) {
     console.error('❌ Failed to configure git template:', error.message);

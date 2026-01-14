@@ -1,0 +1,7 @@
+# Gitleaks fingerprint-based ignore file
+# Format: <commit>:<file>:<line>
+# Use this to ignore specific false positives after they've been detected
+# Path-based exclusions are configured in .gitleaks.toml
+
+# Example:
+# abc123def456:src/config.ts:42

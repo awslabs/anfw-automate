@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version)
 for commit guidelines.
 
+## [Unreleased]
+
+### ⚠ BREAKING CHANGES
+
+**Migration from npm to Yarn 4.12.0**
+
+The project has migrated from npm to Yarn 4.12.0 as the package manager. This is
+a breaking change that requires action from all contributors and users.
+
+**Required Actions:**
+
+1. Install Yarn 4.12.0: `corepack enable` (or `npm install -g yarn`)
+2. Remove `node_modules` and `package-lock.json` if they exist
+3. Run `yarn install` instead of `npm install`
+4. Update CI/CD pipelines to use Yarn commands
+5. Update any scripts or automation that use npm commands
+
+**Command Changes:**
+
+- `npm install` → `yarn install`
+- `npm ci` → `yarn install --immutable`
+- `npm test` → `yarn test`
+- `npm run <script>` → `yarn <script>`
+- `npx <command>` → `yarn exec <command>`
+
+See [docs/YARN_MIGRATION.md](docs/YARN_MIGRATION.md) for complete migration
+guide.
+
+### Changed
+
+- Migrated all build scripts, Makefiles, and CI/CD workflows from npm to Yarn
+- Updated all module Makefiles to use Yarn commands
+- Updated Husky git hooks to use Yarn
+- Updated GitHub Actions workflows to use Yarn
+- Standardized security scanning to use Yarn audit
+
+### Fixed
+
+- Fixed security scan failures due to inconsistent command naming
+- Fixed corrupted `.gitleaks.toml` configuration file
+- Standardized bandit configuration usage across all scripts
+- Fixed all npm/npx references to use Yarn equivalents
+
 ### 2.1.0 (2024-04-12)
 
 ### Added

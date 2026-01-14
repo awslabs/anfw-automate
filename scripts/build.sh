@@ -202,20 +202,20 @@ build_typescript_components() {
         
         # Ensure all dependencies are installed at workspace level
         print_status "Installing workspace dependencies..."
-        npm install
+        yarn install
         
         if [ "${target_module}" = "all" ]; then
             # Build shared first, then all other modules
             print_status "Building shared dependencies..."
-            npm run build:shared
+            yarn build:shared
             
             for module in app firewall vpc; do
                 if [ -d "$module" ] && [ -f "$module/package.json" ]; then
                     print_status "Building TypeScript for module: $module"
-                    npm run build --workspace=${module}
+                    yarn workspace ${module} build
                     
                     print_status "Running TypeScript tests for ${module}..."
-                    npm run test --workspace=${module} || {
+                    yarn workspace ${module} test || {
                         print_warning "TypeScript tests failed or no tests found for ${module}"
                     }
                 fi
@@ -224,14 +224,14 @@ build_typescript_components() {
             # Build specific module
             if [ "${target_module}" != "shared" ]; then
                 print_status "Building shared dependencies..."
-                npm run build:shared
+                yarn build:shared
             fi
             
             print_status "Building TypeScript for ${target_module}..."
-            npm run build --workspace=${target_module}
+            yarn workspace ${target_module} build
             
             print_status "Running TypeScript tests for ${target_module}..."
-            npm run test --workspace=${target_module} || {
+            yarn workspace ${target_module} test || {
                 print_warning "TypeScript tests failed or no tests found for ${target_module}"
             }
         fi
@@ -242,17 +242,17 @@ build_typescript_components() {
         # Install npm dependencies
         if [ -f "package.json" ]; then
             print_status "Installing npm dependencies..."
-            npm ci
+            yarn install
             
             # Run TypeScript compilation check
             if [ -f "tsconfig.json" ]; then
                 print_status "Checking TypeScript compilation..."
-                npx tsc --noEmit
+                yarn exec tsc --noEmit
             fi
             
             # Run TypeScript tests
             print_status "Running TypeScript tests..."
-            npm test || {
+            yarn test || {
                 print_warning "TypeScript tests failed or no tests found"
             }
         fi
@@ -308,7 +308,7 @@ synthesize_cdk_in_directory() {
     cdk acknowledge 32775 2>/dev/null || true
     
     # Run CDK synth with notices disabled
-    npx cdk synth --no-notices
+    yarn exec cdk synth --no-notices
     
     # Validate generated CloudFormation templates
     if command -v cfn-lint &> /dev/null; then

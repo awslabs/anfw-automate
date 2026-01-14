@@ -19,7 +19,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm run version:sync"
+        "prepareCmd": "yarn version:sync"
       }
     ],
     [

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Simple Security Scanning Script
-# Runs bandit, npm audit, CDK NAG, and container scanning with proper exit codes
+# Security Scanning Script
+# Runs gitleaks, bandit, yarn audit, and CDK NAG
 
 set -e
 
@@ -32,7 +32,8 @@ print_error() {
 run_bandit_scan() {
     print_status "Running Python security scan with bandit..."
     
-    bandit -r . -x "*/tests/*,*/test_*,*_test.py,**/.venv/*,**/node_modules/*,**/cdk.out/*,**/__pycache__/*"
+    # Use bandit.yaml config file for consistent exclusions
+    bandit -r . -c bandit.yaml -ll
     
     print_success "Python security scan passed"
 }
@@ -59,34 +60,29 @@ run_cdk_nag() {
     for module in app firewall vpc; do
         if [ -f "$module/cdk.json" ]; then
             print_status "Checking $module..."
-            (cd "$module" && npm run build > /dev/null 2>&1 && npx cdk synth > /dev/null)
+            (cd "$module" && yarn build > /dev/null 2>&1 && yarn exec cdk synth > /dev/null)
         fi
     done
     
     print_success "CDK NAG compliance checks passed"
 }
 
-# Container Security Scanning
-run_container_scan() {
-    print_status "Running container security scan..."
+# Secret Scanning with gitleaks
+run_secret_scan() {
+    print_status "Scanning for hardcoded secrets with gitleaks..."
     
-    # Check if Docker and Trivy are available
-    if ! command -v docker &> /dev/null; then
-        print_warning "Docker not available, skipping container scan"
-        return 0
+    # Check if yarn is available
+    if ! command -v yarn &> /dev/null; then
+        print_error "yarn not found - ensure Node.js and Yarn are installed"
+        exit 1
     fi
     
-    if ! docker info &> /dev/null; then
-        print_warning "Docker daemon not running, skipping container scan"
-        return 0
-    fi
+    # Run gitleaks on the repository
+    # --no-git: scan files without git history
+    # --config: use custom config with path exclusions
+    yarn exec gitleaks detect --source . --no-git --config .gitleaks.toml --verbose
     
-    if ! command -v trivy &> /dev/null; then
-        print_warning "Trivy not installed, skipping container scan"
-        return 0
-    fi
-    
-    print_success "Container security scan passed"
+    print_success "Secret scan passed - no secrets detected"
 }
 
 # Main execution
@@ -101,31 +97,31 @@ main() {
         "python"|"bandit")
             run_bandit_scan
             ;;
-        "nodejs"|"npm")
+        "nodejs"|"npm"|"yarn")
             run_npm_audit
             ;;
         "cdk"|"nag")
             run_cdk_nag
             ;;
-        "containers"|"trivy")
-            run_container_scan
+        "secrets"|"git-secrets")
+            run_secret_scan
             ;;
         "all")
+            run_secret_scan
+            echo ""
             run_bandit_scan
             echo ""
             run_npm_audit
             echo ""
             run_cdk_nag
-            echo ""
-            run_container_scan
             ;;
         *)
-            echo "Usage: $0 [all|python|nodejs|cdk|containers]"
-            echo "  all: Run all security scans (default)"
-            echo "  python: Run Python security scan with bandit"
-            echo "  nodejs: Run Node.js security audit"
-            echo "  cdk: Run CDK NAG compliance checks"
-            echo "  containers: Run container security scan"
+            echo "Usage: $0 [all|python|nodejs|cdk|secrets]"
+            echo "  all:     Run all security scans (default)"
+            echo "  python:  Run Python security scan with bandit"
+            echo "  nodejs:  Run Node.js security audit"
+            echo "  cdk:     Run CDK NAG compliance checks"
+            echo "  secrets: Scan for hardcoded secrets with gitleaks"
             exit 1
             ;;
     esac

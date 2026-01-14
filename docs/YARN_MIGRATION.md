@@ -1,9 +1,25 @@
 # Yarn Migration Guide
 
-This project has migrated from npm to Yarn 4.12.0 for improved performance,
-better security, and enhanced workspace management.
+## ⚠️ BREAKING CHANGE
 
-## 🚀 Quick Migration for Existing Contributors
+This project has migrated from npm to Yarn 4.12.0. **This is a breaking change**
+that requires action from all contributors and users.
+
+### Why This is Breaking
+
+- All npm commands (`npm install`, `npm test`, etc.) will no longer work
+- CI/CD pipelines using npm must be updated
+- Scripts and automation using npm/npx must be updated
+- `package-lock.json` is replaced by `yarn.lock`
+
+### Benefits
+
+- **Performance**: Faster installs with Yarn's improved caching
+- **Security**: Better security scanning with `yarn npm audit`
+- **Workspace Management**: Enhanced monorepo support
+- **Consistency**: Deterministic installs with `yarn.lock`
+
+## 🚀 Required Migration Steps for Existing Contributors
 
 ### 1. Install Yarn
 

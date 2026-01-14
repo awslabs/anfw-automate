@@ -33,7 +33,7 @@ check_git_repo() {
     print_status "Git repository detected"
 }
 
-# Install npm dependencies
+# Install Yarn dependencies
 install_dependencies() {
     print_header "Installing commit standard dependencies..."
     
@@ -42,8 +42,8 @@ install_dependencies() {
         exit 1
     fi
     
-    print_status "Installing npm dependencies..."
-    npm install
+    print_status "Installing Yarn dependencies..."
+    yarn install
     
     print_status "Dependencies installed successfully"
 }
@@ -63,12 +63,12 @@ configure_git_legacy() {
     print_status "Git configuration completed"
 }
 
-# Setup Husky (now handled by npm prepare script)
+# Setup Husky (now handled by yarn prepare script)
 setup_husky_legacy() {
     print_header "Setting up Husky git hooks..."
     
     # Initialize husky
-    npx husky install
+    yarn exec husky install
     
     # Make hook files executable
     chmod +x .husky/pre-commit
@@ -100,9 +100,9 @@ show_examples() {
     
     echo -e "${BLUE}How to make commits:${NC}"
     echo "  1. Stage your changes: git add ."
-    echo "  2. Use interactive commit: npm run commit"
+    echo "  2. Use interactive commit: yarn commit"
     echo "  3. Or commit manually: git commit (uses template)"
-    echo "  4. Generate changelog: npm run changelog:preview"
+    echo "  4. Generate changelog: yarn changelog:preview"
     echo ""
 }
 
@@ -111,7 +111,7 @@ test_setup() {
     print_header "Testing commit standards setup..."
     
     # Test commitlint configuration
-    echo "test: validate setup" | npx commitlint && {
+    echo "test: validate setup" | yarn exec commitlint && {
         print_status "✅ Commitlint validation works"
     } || {
         print_error "❌ Commitlint test failed"
@@ -223,17 +223,17 @@ main() {
     
     check_git_repo
     
-    # Check if npm install has been run
+    # Check if yarn install has been run
     if [ ! -d "node_modules" ]; then
-        print_warning "Dependencies not installed. Running npm install..."
+        print_warning "Dependencies not installed. Running yarn install..."
         install_dependencies
     else
         print_status "Dependencies already installed"
     fi
     
-    # Setup git template (not done by npm install)
+    # Setup git template (not done by yarn install)
     print_header "Configuring git commit template..."
-    npm run setup:git-template
+    yarn setup:git-template
     
     # Create GitHub recommendations (useful for repository setup)
     create_github_recommendations
@@ -249,8 +249,8 @@ main() {
     
     echo -e "${GREEN}Next steps:${NC}"
     echo "1. Configure GitHub repository settings (see .github/REPOSITORY_SETUP.md)"
-    echo "2. Create your first commit using: npm run commit"
-    echo "3. Generate changelog preview: npm run changelog:preview"
+    echo "2. Create your first commit using: yarn commit"
+    echo "3. Generate changelog preview: yarn changelog:preview"
     echo "4. Push to a feature branch and create a PR to test enforcement"
     echo ""
     

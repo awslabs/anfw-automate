@@ -14,14 +14,14 @@ help:
 	@echo "  format           - Format code with Prettier"
 	@echo ""
 	@echo "🔒 Security Commands:"
-	@echo "  security:scan    - Run comprehensive security scanning"
-	@echo "  security:python  - Run Python security scan with bandit"
-	@echo "  security:nodejs  - Run Node.js security audit"
-	@echo "  security:cdk     - Run CDK NAG compliance checks"
-	@echo "  security:secrets - Scan for hardcoded secrets with gitleaks"
-	@echo "  security:fix     - Fix security vulnerabilities"
-	@echo "  security:fix-force - Force fix vulnerabilities (may break compatibility)"
-	@echo "  security:status  - Show security vulnerability status summary"
+	@echo "  security-scan    - Run comprehensive security scanning"
+	@echo "  security-python  - Run Python security scan with bandit"
+	@echo "  security-nodejs  - Run Node.js security audit"
+	@echo "  security-cdk     - Run CDK NAG compliance checks"
+	@echo "  security-secrets - Scan for hardcoded secrets with gitleaks"
+	@echo "  security-fix     - Fix security vulnerabilities"
+	@echo "  security-fix-force - Force fix vulnerabilities (may break compatibility)"
+	@echo "  security-status  - Show security vulnerability status summary"
 	@echo "  audit            - Run yarn audit on all modules"
 	@echo ""
 	@echo "🚀 Deployment Commands:"
@@ -47,24 +47,15 @@ build:
 
 test:
 	@echo "🧪 Running all tests..."
-	@for module in shared app firewall vpc; do \
-		echo "Testing $$module..."; \
-		(cd "$$module" && make test); \
-	done
+	yarn test
 
 lint:
 	@echo "🔍 Running linting on all modules..."
-	@for module in shared app firewall vpc; do \
-		echo "Linting $$module..."; \
-		(cd "$$module" && make lint); \
-	done
+	yarn lint
 
 lint-fix:
 	@echo "🔧 Fixing lint issues on all modules..."
-	@for module in shared app firewall vpc; do \
-		echo "Fixing $$module..."; \
-		(cd "$$module" && make lint-fix); \
-	done
+	yarn lint-fix
 
 format:
 	@echo "🎨 Formatting code with Prettier..."
@@ -100,7 +91,7 @@ security\:%:
 			done; \
 			echo ""; \
 			echo "✅ Project module security fixes completed!"; \
-			echo "ℹ️  If bundled vulnerabilities remain in Yarn itself, update Yarn: corepack prepare yarn@stable --activate" ;; \
+			echo "ℹ️  If bundled npm vulnerabilities remain, consider updating npm: npm install -g npm@latest" ;; \
 		fix-force) \
 			echo "🔧 Force fixing security vulnerabilities (may introduce breaking changes)..."; \
 			echo "⚠️  This will attempt to force-fix all vulnerabilities, including major version updates"; \
@@ -116,26 +107,34 @@ security\:%:
 		status) \
 			echo "🔍 Security vulnerability status summary..."; \
 			echo ""; \
-			has_issues=0; \
+			bundled_issues=0; \
+			project_issues=0; \
 			for module in . app firewall vpc shared; do \
 				if [ -f "$$module/package.json" ]; then \
 					echo "📦 Checking $$module..."; \
 					cd "$$module"; \
-					if yarn npm audit --severity moderate 2>/dev/null | grep -q "No audit suggestions"; then \
-						echo "  ✅ No vulnerabilities found"; \
+					if npm audit --audit-level=moderate 2>/dev/null | grep -q "found 0 vulnerabilities"; then \
+						echo "  ✅ No vulnerabilities in project dependencies"; \
 					else \
-						echo "  ⚠️  Vulnerabilities detected"; \
-						has_issues=1; \
+						if npm audit --audit-level=moderate 2>/dev/null | grep -q "bundled dependency"; then \
+							echo "  ⚠️  Bundled npm vulnerabilities detected (not fixable via npm audit fix)"; \
+							bundled_issues=1; \
+						else \
+							echo "  ❌ Project vulnerabilities detected"; \
+							project_issues=1; \
+						fi; \
 					fi; \
 					cd - > /dev/null; \
 				fi; \
 			done; \
 			echo ""; \
-			if [ $$has_issues -eq 0 ]; then \
+			if [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 0 ]; then \
 				echo "🎉 All clear! No security vulnerabilities found."; \
+			elif [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 1 ]; then \
+				echo "✅ Your project is secure! Only bundled npm vulnerabilities detected."; \
+				echo "💡 To fix bundled vulnerabilities: npm install -g npm@latest"; \
 			else \
-				echo "⚠️  Vulnerabilities found. Run 'make security:fix' to resolve."; \
-				echo "   For details: make security:nodejs"; \
+				echo "⚠️  Project vulnerabilities found. Run 'make security:fix' to resolve."; \
 			fi ;; \
 		*) \
 			echo "Unknown security target: $*"; \
@@ -144,8 +143,68 @@ security\:%:
 	esac
 
 audit:
+	@echo "🔧 Fixing security vulnerabilities..."
+	@echo "📋 Note: Bundled npm dependencies cannot be auto-fixed and require npm updates"
+	@echo ""
+	@for module in . app firewall vpc shared; do \
+		if [ -f "$$module/package.json" ]; then \
+			echo "  📦 Fixing $$module..."; \
+			(cd "$$module" && yarn up '*' --mode=update-lockfile) || true; \
+		fi; \
+	done
+	@echo ""
+	@echo "✅ Project module security fixes completed!"
+	@echo "ℹ️  If bundled npm vulnerabilities remain, consider updating npm: npm install -g npm@latest"
+
+security-fix-force:
+	@echo "🔧 Force fixing security vulnerabilities (may introduce breaking changes)..."
+	@echo "⚠️  This will attempt to force-fix all vulnerabilities, including major version updates"
+	@echo ""
+	@for module in . app firewall vpc shared; do \
+		if [ -f "$$module/package.json" ]; then \
+			echo "  📦 Force fixing $$module..."; \
+			(cd "$$module" && yarn up '*' --force) || true; \
+		fi; \
+	done
+	@echo ""
+	@echo "⚠️  Force fixes completed - review changes carefully!"
+
+security-status:
+	@echo "🔍 Security vulnerability status summary..."
+	@echo ""
+	@bundled_issues=0; \
+	project_issues=0; \
+	for module in . app firewall vpc shared; do \
+		if [ -f "$$module/package.json" ]; then \
+			echo "📦 Checking $$module..."; \
+			cd "$$module"; \
+			if npm audit --audit-level=moderate 2>/dev/null | grep -q "found 0 vulnerabilities"; then \
+				echo "  ✅ No vulnerabilities in project dependencies"; \
+			else \
+				if npm audit --audit-level=moderate 2>/dev/null | grep -q "bundled dependency"; then \
+					echo "  ⚠️  Bundled npm vulnerabilities detected (not fixable via npm audit fix)"; \
+					bundled_issues=1; \
+				else \
+					echo "  ❌ Project vulnerabilities detected"; \
+					project_issues=1; \
+				fi; \
+			fi; \
+			cd - > /dev/null; \
+		fi; \
+	done; \
+	echo ""; \
+	if [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 0 ]; then \
+		echo "🎉 All clear! No security vulnerabilities found."; \
+	elif [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 1 ]; then \
+		echo "✅ Your project is secure! Only bundled npm vulnerabilities detected."; \
+		echo "💡 To fix bundled vulnerabilities: npm install -g npm@latest"; \
+	else \
+		echo "⚠️  Project vulnerabilities found. Run 'make security-fix' to resolve."; \
+	fi
+
+audit:
 	@echo "🔍 Running security audit on all modules..."
-	./scripts/security-scan.sh nodejs
+	yarn security:audit
 
 # Module-specific commands
 build\:%:
@@ -176,7 +235,7 @@ commit:
 
 validate-commit:
 	@echo "✅ Validating last commit message..."
-	git log -1 --pretty=format:"%s" | yarn exec commitlint
+	git log -1 --pretty=format:"%s" | yarn commitlint
 
 # Deployment commands
 deploy: build	
@@ -195,4 +254,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format audit setup commit validate-commit deploy clean update
+.PHONY: all help build test lint lint-fix format security-scan security-python security-nodejs security-cdk security-secrets security-fix security-fix-force security-status audit setup commit validate-commit deploy clean update

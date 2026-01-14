@@ -87,7 +87,7 @@ rl.question('\nSelect scope (1-8): ', scopeIndex => {
             execSync(`echo "${commitMessage.replace(/"/g, '\\"')}" > ${tempFile}`, {
               stdio: 'pipe',
             });
-            execSync(`npx commitlint --edit ${tempFile}`, { stdio: 'pipe' });
+            execSync(`yarn exec commitlint --edit ${tempFile}`, { stdio: 'pipe' });
             execSync(`rm ${tempFile}`, { stdio: 'pipe' });
             console.log('✅ Commit message format is valid');
           } catch (error) {
