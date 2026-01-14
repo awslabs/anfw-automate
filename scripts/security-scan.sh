@@ -77,6 +77,9 @@ run_secret_scan() {
         exit 1
     fi
     
+    # Enable corepack for Yarn 4
+    corepack enable
+    
     # Run gitleaks on the repository
     # --no-git: scan files without git history
     # --config: use custom config with path exclusions

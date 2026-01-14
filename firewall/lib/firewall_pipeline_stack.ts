@@ -27,7 +27,7 @@ export class FirewallPipelineStack extends TaggedStack {
 
     const synthStep = new CodeBuildStep('Synth', {
       input: sourceCode,
-      commands: ['cd firewall', 'make'],
+      commands: ['corepack enable', 'cd firewall', 'make'],
       primaryOutputDirectory: 'firewall/cdk.out',
       env: {
         STAGE: props.stage,
