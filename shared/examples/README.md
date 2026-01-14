@@ -202,8 +202,8 @@ If examples fail to run:
 
    ```bash
    cd shared
-   npm install
-   npm run build
+   yarn install
+   yarn build
    ```
 
 3. **Path issues**: Examples use relative paths. Run them from the `shared/`

@@ -241,7 +241,7 @@ Run tests:
 
 ```bash
 cd shared
-npm test
+yarn test
 ```
 
 ## Configuration Schema Structure

@@ -73,7 +73,7 @@ git config commit.template .gitmessage
 2. Install commitlint (optional but recommended):
 
 ```bash
-npm install -g @commitlint/cli @commitlint/config-conventional
+yarn global add @commitlint/cli @commitlint/config-conventional
 ```
 
 ## Local Development Setup
@@ -81,7 +81,8 @@ npm install -g @commitlint/cli @commitlint/config-conventional
 ### Prerequisites
 
 - Docker and Docker Compose
-- Node.js 18+
+- Node.js 20.8.1+
+- Yarn 4.0.0+ (install with `corepack enable`)
 - Python 3.11+
 - Poetry (Python package manager)
 - AWS CLI (optional, for cloud testing)
@@ -108,7 +109,7 @@ If you prefer step-by-step setup:
 
 ```bash
 # 1. Install dependencies (sets up commit standards)
-npm install
+yarn install
 
 # 2. Setup local environment
 make local-setup
@@ -135,12 +136,12 @@ source deploy_vars.local.sh
 
 ```bash
 # Install shared module
-cd shared && npm install && npm run build && cd ..
+cd shared && yarn install && yarn build && cd ..
 
 # Install module dependencies
 for module in app firewall vpc; do
     cd $module
-    npm install
+    yarn install
     # Install Python dependencies if they exist
     if [ -d "src" ]; then
         cd src && poetry install --no-root && cd ..
@@ -246,7 +247,7 @@ git checkout -b feature/your-feature-name
 
 ```bash
 # Build and test
-make build                 # Build all modules using npm workspaces
+make build                 # Build all modules using yarn workspaces
 make build-make           # Alternative: build using individual Makefiles
 
 # Deploy to LocalStack
@@ -292,8 +293,8 @@ Pre-commit hooks automatically run:
 
 ```bash
 # Unit tests
-npm test                    # All modules
-cd app && npm test         # Specific module
+yarn test                    # All modules
+cd app && yarn test         # Specific module
 ```
 
 ## Deployment Process
@@ -381,7 +382,7 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 
 ```bash
 # Development
-make build                 # Build all modules using npm workspaces
+make build                 # Build all modules using yarn workspaces
 make build-make           # Alternative: build using individual Makefiles
 make clean                 # Clean build artifacts
 make update                # Update dependencies

@@ -1,122 +1,114 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-        "project": {
-            "type": "object",
-            "properties": {
-                "aws_organziation_scope": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 3,
-                    "pattern": "^[a-zA-Z0-9]+$"
-                },
-                "brand": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 3,
-                    "pattern": "^[a-zA-Z0-9]+$"
-                },
-                "department": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 3,
-                    "pattern": "^[a-zA-Z0-9]+$"
-                },
-                "project_name": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 4,
-                    "pattern": "^[a-zA-Z0-9]+$"
-                },
-                "module_name": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 10,
-                    "pattern": "^[a-zA-Z0-9]+$"
-                }
-            },
-            "required": [
-                "aws_organziation_scope",
-                "project_name",
-                "module_name"
-            ]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "object",
+      "properties": {
+        "aws_organziation_scope": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 3,
+          "pattern": "^[a-zA-Z0-9]+$"
         },
-        "base": {
-            "type": "object",
-            "properties": {
-                "primary_region": {
-                    "type": "string",
-                    "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
-                },
-                "target_account_id": {
-                    "type": "string",
-                    "pattern": "^[0-9]{12}$"
-                },
-                "resource_account_id": {
-                    "type": "string",
-                    "pattern": "^[0-9]{12}$"
-                },
-                "delegated_admin_account_id": {
-                    "type": "string",
-                    "pattern": "^[0-9]{12}$"
-                },
-                "organziation_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^o-[a-zA-Z0-9]+$"
-                    },
-                    "minItems": 1
-                }
-            },
-            "required": [
-                "primary_region",
-                "target_account_id",
-                "resource_account_id",
-                "delegated_admin_account_id",
-                "organziation_ids"
-            ]
+        "brand": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 3,
+          "pattern": "^[a-zA-Z0-9]+$"
         },
-        "pipeline": {
-            "type": "object",
-            "properties": {
-                "codestar_connection_arn": {
-                    "type": "string",
-                    "pattern": "^arn:aws:.+:[a-z0-9-]+:[0-9]+:.+$"
-                },
-                "repo_name": {
-                    "type": "string"
-                },
-                "repo_branch_name": {
-                    "type": "string"
-                },
-                "auto_promote_pipeline": {
-                    "type": "boolean"
-                },
-                "auto_detect_changes": {
-                    "type": "boolean"
-                },
-                "tags": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            },
-            "required": [
-                "codestar_connection_arn",
-                "repo_name",
-                "repo_branch_name",
-                "auto_promote_pipeline",
-                "auto_detect_changes"
-            ]
+        "department": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 3,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "project_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 4,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "module_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 10,
+          "pattern": "^[a-zA-Z0-9]+$"
         }
+      },
+      "required": ["aws_organziation_scope", "project_name", "module_name"]
     },
-    "required": [
-        "project",
-        "base",
-        "pipeline"
-    ],
-    "additionalProperties": false
+    "base": {
+      "type": "object",
+      "properties": {
+        "primary_region": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[a-z]+)?-[a-z]+-[0-9]+$"
+        },
+        "target_account_id": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "resource_account_id": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "delegated_admin_account_id": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "organziation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^o-[a-zA-Z0-9]+$"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "primary_region",
+        "target_account_id",
+        "resource_account_id",
+        "delegated_admin_account_id",
+        "organziation_ids"
+      ]
+    },
+    "pipeline": {
+      "type": "object",
+      "properties": {
+        "codestar_connection_arn": {
+          "type": "string",
+          "pattern": "^arn:aws:.+:[a-z0-9-]+:[0-9]+:.+$"
+        },
+        "repo_name": {
+          "type": "string"
+        },
+        "repo_branch_name": {
+          "type": "string"
+        },
+        "auto_promote_pipeline": {
+          "type": "boolean"
+        },
+        "auto_detect_changes": {
+          "type": "boolean"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "codestar_connection_arn",
+        "repo_name",
+        "repo_branch_name",
+        "auto_promote_pipeline",
+        "auto_detect_changes"
+      ]
+    }
+  },
+  "required": ["project", "base", "pipeline"],
+  "additionalProperties": false
 }

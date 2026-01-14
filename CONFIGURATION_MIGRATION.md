@@ -176,10 +176,10 @@ The enhanced configuration system includes:
 
 ```bash
 # Run all tests
-npm test
+yarn test
 
 # Run specific module tests
-cd shared && npm test
+cd shared && yarn test
 ```
 
 ## Support

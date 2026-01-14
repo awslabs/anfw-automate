@@ -1,6 +1,9 @@
 echo "📝 Validating commit message..."
 
-# Run commitlint
+# Run our comprehensive commit validator
+node scripts/commit-validator.js $1
+
+# Also run commitlint for additional validation
 npx commitlint --edit $1
 
 echo "✅ Commit message is valid!"

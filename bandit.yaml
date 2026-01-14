@@ -1,0 +1,10 @@
+# Bandit Configuration - Run all checks but exclude unnecessary directories
+exclude_dirs:
+  - .venv
+  - venv
+  - node_modules
+  - cdk.out
+  - tests
+  - __pycache__
+  - .git
+  - dist

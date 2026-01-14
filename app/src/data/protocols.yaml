@@ -4,9 +4,9 @@
 # Any user with such a need must define the rules in surricata rule format: https://docs.suricata.io/en/latest/rules/intro.html
 
 PredfinedRuleProtocols:
-  http: "http.host"
-  https: "tls.sni"
-  tls: "tls.sni"
+  http: 'http.host'
+  https: 'tls.sni'
+  tls: 'tls.sni'
 
 CustomRuleProtocols:
   - ftp #(data protocol not supported by ANFW)

@@ -31,21 +31,21 @@ releases based on conventional commit messages.
 
 ```bash
 # Dry run to see what would happen
-npm run release:dry-run
+yarn release:dry-run
 ```
 
 ### Manual Release (if needed)
 
 ```bash
 # Trigger release manually
-npm run release
+yarn release
 ```
 
 ### Workspace Version Sync
 
 ```bash
 # Sync versions across all workspaces
-npm run version:sync
+yarn version:sync
 ```
 
 ## Commit Message Examples
@@ -129,7 +129,7 @@ The version sync script ensures consistency across all packages.
 
 ```bash
 # Manually sync versions if needed
-npm run version:sync
+yarn version:sync
 ```
 
 ### Rollback Release

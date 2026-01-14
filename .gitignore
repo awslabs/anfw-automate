@@ -8,6 +8,7 @@
 !**/conf/sample.json
 !**/conf/schema.json
 .kiro
+.yarn
 
 # TypeScript build artifacts
 *.d.ts
@@ -16,6 +17,11 @@
 # Dependencies
 **/node_modules
 package-lock.json
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Build outputs
 archives

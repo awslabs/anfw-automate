@@ -27,5 +27,5 @@ Config:
           - amazonaws.com
           - google.com
       - TLS:
-          - ".amazon.com:443"
-          - ".example.com:443"
+          - '.amazon.com:443'
+          - '.example.com:443'

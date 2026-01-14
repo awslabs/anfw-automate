@@ -1,34 +1,55 @@
-# <type>(<scope>): <subject>
+# <type>(<scope>): <description>
 #
 # <body>
 #
 # <footer>
 
-# Type should be one of the following:
-# * feat: A new feature
-# * fix: A bug fix
-# * docs: Documentation only changes
-# * style: Changes that do not affect the meaning of the code
-# * refactor: A code change that neither fixes a bug nor adds a feature
-# * perf: A code change that improves performance
-# * test: Adding missing tests or correcting existing tests
-# * build: Changes that affect the build system or external dependencies
-# * ci: Changes to our CI configuration files and scripts
-# * chore: Other changes that don't modify src or test files
-# * revert: Reverts a previous commit
-
-# Scope should be one of: app, firewall, vpc, shared, scripts, docs, config
-
-# Subject line should:
-# * use the imperative, present tense: "change" not "changed" nor "changes"
-# * not capitalize the first letter
-# * not end with a dot (.)
-# * be limited to 50 characters
-
-# Body should:
-# * use the imperative, present tense: "change" not "changed" nor "changes"
-# * include motivation for the change and contrasts with previous behavior
-# * wrap at 72 characters
-
-# Footer should contain any information about Breaking Changes and
-# reference GitHub issues that this commit Closes
+# --- CONVENTIONAL COMMIT FORMAT ---
+# 
+# Types:
+#   feat:     New feature
+#   fix:      Bug fix
+#   docs:     Documentation changes
+#   style:    Code style changes (formatting, etc.)
+#   refactor: Code refactoring
+#   test:     Adding or updating tests
+#   chore:    Maintenance tasks
+#   perf:     Performance improvements
+#   ci:       CI/CD changes
+#   build:    Build system changes
+#
+# Scopes:
+#   app:      CDK Application module
+#   firewall: Network Firewall module
+#   vpc:      VPC module
+#   shared:   Shared utilities
+#   scripts:  Build/deployment scripts
+#   docs:     Documentation
+#   config:   Configuration files
+#   ci:       CI/CD workflows
+#
+# Rules:
+#   - Use imperative mood in description (add, fix, update)
+#   - Start description with lowercase letter
+#   - No period at end of description
+#   - Keep subject line under 72 characters
+#   - Separate subject from body with blank line
+#   - Use body to explain what and why vs. how
+#   - Use footer for breaking changes and issue references
+#
+# Examples:
+#   feat(app): add user authentication system
+#   fix(firewall): resolve rule parsing issue
+#   docs(shared): update API documentation
+#   refactor(vpc): simplify subnet configuration
+#
+# Breaking Changes:
+#   feat(app)!: change API response format
+#   
+#   BREAKING CHANGE: API now returns data in different structure
+#
+# Issue References:
+#   fix(app): resolve memory leak in lambda function
+#   
+#   Closes #123
+#   Fixes #456
