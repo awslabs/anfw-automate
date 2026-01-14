@@ -5,7 +5,6 @@ help:
 	@echo ""
 	@echo "🔧 Setup Commands:"
 	@echo "  setup            - Setup development environment and git hooks"
-	@echo "  local            - Setup and start LocalStack (requires Docker)"
 	@echo ""
 	@echo "🏗️  Build & Test Commands:"
 	@echo "  build            - Build all modules (delegates to yarn workspaces)"
@@ -27,7 +26,6 @@ help:
 	@echo ""
 	@echo "🚀 Deployment Commands:"
 	@echo "  deploy           - Deploy all modules to AWS"
-	@echo "  local-deploy     - Deploy to LocalStack"
 	@echo ""
 	@echo "📝 Git & Commit Commands:"
 	@echo "  commit           - Create a conventional commit interactively"
@@ -213,19 +211,6 @@ setup:
 	yarn prepare
 	@echo "✅ Development environment ready!"
 
-local: 
-	@echo "🐳 Setting up LocalStack environment..."
-	@echo "⚠️  This requires Docker and Docker Compose to be installed!"
-	@docker --version || (echo "❌ Docker not found. Please install Docker first." && exit 1)
-	@docker-compose --version || (echo "❌ Docker Compose not found. Please install Docker Compose first." && exit 1)
-	yarn local:setup
-	yarn local:start
-	@echo "✅ LocalStack environment is ready!"
-
-local-deploy:
-	@echo "🚀 Deploying to local environment..."
-	yarn deploy:local
-
 # Git and commit commands
 commit:
 	@echo "📝 Creating a conventional commit..."
@@ -252,4 +237,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format security-scan security-python security-nodejs security-cdk security-containers security-fix security-fix-force security-status security-suppress security-unsuppress audit audit-clean setup local local-deploy commit validate-commit deploy clean update
+.PHONY: all help build test lint lint-fix format security-scan security-python security-nodejs security-cdk security-containers security-fix security-fix-force security-status security-suppress security-unsuppress audit audit-clean setup commit validate-commit deploy clean update

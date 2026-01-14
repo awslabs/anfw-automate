@@ -48,14 +48,6 @@ corepack enable
 npm install -g yarn
 ```
 
-**Optional (for LocalStack development):**
-
-```bash
-# Check if you have Docker (optional)
-docker --version
-docker-compose --version
-```
-
 **Optional (for AWS deployment):**
 
 ```bash
@@ -74,21 +66,7 @@ cd anfw-automate
 yarn install
 ```
 
-### Step 3: Choose Your Development Path
-
-### Option A: Local Development with LocalStack
-
-**Requirements:** Docker + Docker Compose
-
-```bash
-# Start LocalStack
-make local
-
-# Deploy to LocalStack
-make local-deploy
-```
-
-### Option B: Development without LocalStack
+### Step 3: Build and Test
 
 **Requirements:** Just Node.js + Python
 
@@ -117,9 +95,6 @@ Install these tools before starting:
 
 #### Optional Tools
 
-- **[Docker](https://docs.docker.com/get-docker/)** +
-  **[Docker Compose](https://docs.docker.com/compose/install/)** - For
-  LocalStack development
 - **[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)** -
   For cloud deployment
 
@@ -148,7 +123,6 @@ anfw-automate/
 ├── scripts/               # Build and deployment scripts
 ├── tests/integration/     # Integration tests
 ├── conf/                  # Configuration files
-├── docker-compose.local.yml # LocalStack configuration
 └── DEVELOPMENT.md         # Detailed development guide
 ```
 
@@ -200,17 +174,12 @@ See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 # Install dependencies first
 yarn install
 
-# Option 1: With LocalStack (requires Docker)
-make local            # Setup and start LocalStack
-make local-deploy     # Deploy to LocalStack
-make local-stop       # Stop LocalStack when done
-
-# Option 2: Without LocalStack
+# Build and test
 make build            # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
 make test             # Run all tests
 make deploy           # Deploy to AWS (requires credentials)
 
-# Development workflow (both options)
+# Development workflow
 make commit           # Create conventional commits
 make lint             # Run code linting
 make clean            # Clean build artifacts
@@ -238,9 +207,8 @@ cd app && yarn test
 
 ### Environment Progression
 
-1. **Local** (`local`) - LocalStack development
-2. **Development** (`dev`) - AWS development account
-3. **Production** (`prod`) - AWS production account
+1. **Development** (`dev`) - AWS development account
+2. **Production** (`prod`) - AWS production account
 
 ### Pipeline Architecture
 
@@ -374,7 +342,6 @@ base configuration.
 ### Setup Commands
 
 ```bash
-make local                 # Setup LocalStack (requires Docker)
 make help                  # Show all available commands
 ```
 
@@ -397,15 +364,7 @@ cd firewall && make build  # Build just the firewall module
 
 ```bash
 make deploy                # Deploy to AWS
-make local-deploy          # Deploy to LocalStack
 make integration-test      # Run integration tests
-```
-
-### LocalStack Commands (Docker Required)
-
-```bash
-make local-start           # Start LocalStack containers
-make local-stop            # Stop LocalStack containers
 ```
 
 ### Yarn Scripts
@@ -414,9 +373,6 @@ make local-stop            # Stop LocalStack containers
 yarn build              # Build all modules
 yarn test               # Run all tests
 yarn test:integration   # Run integration tests
-yarn local:setup        # Setup local development
-yarn local:start        # Start LocalStack
-yarn local:stop         # Stop LocalStack
 yarn clean              # Clean artifacts
 ```
 
@@ -477,11 +433,10 @@ for details.
 
 ### Troubleshooting
 
-1. **LocalStack Issues**: Check Docker daemon and port availability
-2. **Build Failures**: Check dependencies - no environment variables required
+1. **Build Failures**: Check dependencies - no environment variables required
    for builds
-3. **Deployment Issues**: Check AWS credentials and CloudFormation logs
-4. **Configuration Issues**:
+2. **Deployment Issues**: Check AWS credentials and CloudFormation logs
+3. **Configuration Issues**:
    - Check configuration file syntax and schema validation
    - Verify SSM parameter paths if using Parameter Store
    - Review detailed error messages for specific field-level issues
@@ -521,11 +476,10 @@ details.
 If upgrading from a previous version:
 
 1. **Backup existing configurations**
-2. **Run the new setup script**: `./scripts/local-dev-setup.sh`
-3. **Update configuration files** to match new schema (optional - existing files
+2. **Update configuration files** to match new schema (optional - existing files
    work)
-4. **Test locally** before deploying to production
-5. **Follow the new commit standards** for future changes
+3. **Test locally** before deploying to production
+4. **Follow the new commit standards** for future changes
 
 ## DEPENDENCIES
 
