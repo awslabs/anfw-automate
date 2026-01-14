@@ -20,23 +20,26 @@ fi
 
 # Run full linting on all modules
 echo "🔍 Running linting on all modules..."
-make lint || {
+if ! make lint; then
+    echo ""
     echo "❌ Linting failed. Fix issues before pushing."
     exit 1
-}
+fi
 
 # Run comprehensive security scan
 echo "🔒 Running comprehensive security scan..."
-make security-scan || {
+if ! make security-scan; then
+    echo ""
     echo "❌ Security scan failed. Fix issues before pushing."
     exit 1
-}
+fi
 
 # Run tests before push
 echo "🧪 Running tests..."
-npm test || {
+if ! npm test; then
+    echo ""
     echo "❌ Tests failed. Fix issues before pushing."
     exit 1
-}
+fi
 
 echo "✅ Pre-push checks passed!"
