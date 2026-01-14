@@ -48,8 +48,23 @@ install_dependencies() {
     print_status "Dependencies installed successfully"
 }
 
-# Setup Husky
-setup_husky() {
+# Configure git settings (now handled by setup:git-template script)
+configure_git_legacy() {
+    print_header "Configuring git settings..."
+    
+    # Set commit message template
+    git config commit.template .gitmessage
+    print_status "Commit message template configured"
+    
+    # Configure git to use conventional commits
+    git config --local core.hooksPath .husky
+    print_status "Git hooks path configured"
+    
+    print_status "Git configuration completed"
+}
+
+# Setup Husky (now handled by npm prepare script)
+setup_husky_legacy() {
     print_header "Setting up Husky git hooks..."
     
     # Initialize husky
@@ -62,22 +77,6 @@ setup_husky() {
     chmod +x .husky/_/husky.sh
     
     print_status "Husky hooks configured successfully"
-}
-
-# Configure git settings
-configure_git() {
-    print_header "Configuring git settings..."
-    
-    # Set commit message template
-    git config commit.template .gitmessage
-    print_status "Commit message template configured"
-    
-    # Configure git to use conventional commits
-    git config --local core.hooksPath .husky
-    print_status "Git hooks path configured"
-    
-    # Set up branch protection (local recommendations)
-    print_status "Git configuration completed"
 }
 
 # Create example commit
@@ -103,6 +102,7 @@ show_examples() {
     echo "  1. Stage your changes: git add ."
     echo "  2. Use interactive commit: npm run commit"
     echo "  3. Or commit manually: git commit (uses template)"
+    echo "  4. Generate changelog: npm run changelog:preview"
     echo ""
 }
 
@@ -118,11 +118,22 @@ test_setup() {
         return 1
     }
     
-    # Test commitizen
-    if npx cz --help &> /dev/null; then
-        print_status "✅ Commitizen is available"
+    # Test our custom commit validator
+    echo "feat(app): test commit message" > /tmp/test-commit-msg
+    if node scripts/commit-validator.js /tmp/test-commit-msg &> /dev/null; then
+        print_status "✅ Custom commit validator works"
+        rm -f /tmp/test-commit-msg
     else
-        print_error "❌ Commitizen test failed"
+        print_error "❌ Custom commit validator test failed"
+        rm -f /tmp/test-commit-msg
+        return 1
+    fi
+    
+    # Test changelog generator
+    if node scripts/changelog-generator.js --help &> /dev/null; then
+        print_status "✅ Changelog generator is available"
+    else
+        print_error "❌ Changelog generator test failed"
         return 1
     fi
     
@@ -211,10 +222,23 @@ main() {
     echo ""
     
     check_git_repo
-    install_dependencies
-    setup_husky
-    configure_git
+    
+    # Check if npm install has been run
+    if [ ! -d "node_modules" ]; then
+        print_warning "Dependencies not installed. Running npm install..."
+        install_dependencies
+    else
+        print_status "Dependencies already installed"
+    fi
+    
+    # Setup git template (not done by npm install)
+    print_header "Configuring git commit template..."
+    npm run setup:git-template
+    
+    # Create GitHub recommendations (useful for repository setup)
     create_github_recommendations
+    
+    # Test the complete setup
     test_setup
     
     echo ""
@@ -226,7 +250,8 @@ main() {
     echo -e "${GREEN}Next steps:${NC}"
     echo "1. Configure GitHub repository settings (see .github/REPOSITORY_SETUP.md)"
     echo "2. Create your first commit using: npm run commit"
-    echo "3. Push to a feature branch and create a PR to test enforcement"
+    echo "3. Generate changelog preview: npm run changelog:preview"
+    echo "4. Push to a feature branch and create a PR to test enforcement"
     echo ""
     
     print_warning "Note: Direct pushes to main/dev branches are blocked by pre-push hook"

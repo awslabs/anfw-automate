@@ -132,7 +132,13 @@ jobs:
         run: npm ci
 
       - name: Run npm audit
-        run: npm audit --omit=dev --audit-level=moderate || echo "npm audit found issues"
+        run: npm audit --audit-level=moderate || echo "npm audit found issues"
+
+      - name: Run CDK NAG compliance checks
+        run: ./scripts/security-scan.sh cdk || echo "CDK NAG found compliance violations"
+
+      - name: Run container security scanning
+        run: ./scripts/security-scan.sh containers || echo "Container vulnerabilities found"
 
       - name: Run Python security checks
         run: |

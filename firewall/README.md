@@ -10,7 +10,9 @@ CodePipeline) hosted in the Resource Account.
 
 ## PRE-REQUISITES
 
-- Atleast two AWS Accounts are required as follows:
+- **Node.js 20.8.1+** and **Yarn 4.0.0+** (install with `corepack enable`)
+- **Python 3.11+** for Lambda functions
+- At least two AWS Accounts are required as follows:
   - Application Account - to deploy application. This is same account where AWS
     Network Firewall is deployed.
   - Resource Account - to deploy CICD pipeline for application deployment
@@ -25,6 +27,7 @@ CodePipeline) hosted in the Resource Account.
 
 - Ensure that you completed the steps in `PREPARE` section of
   [README](../README.md)
+- Install dependencies: `yarn install` (from project root)
 
 ## CONFIGURATION
 

@@ -26,7 +26,7 @@ Brief description of the changes made in this PR.
 
 ## Testing
 
-- [ ] Unit tests pass locally (`npm test`)
+- [ ] Unit tests pass locally (`yarn test`)
 - [ ] Manual testing completed
 - [ ] New tests added for new functionality
 

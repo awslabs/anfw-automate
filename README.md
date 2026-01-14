@@ -1,5 +1,10 @@
 # Automate AWS Network Firewall Rule Management
 
+> **📦 Package Manager Migration Notice**: This project has migrated from npm to
+> Yarn 4.12.0. If you're an existing contributor, please install Yarn
+> (`corepack enable`) and use `yarn install` instead of `npm install`. All
+> `make` commands continue to work as before.
+
 An event-based serverless application that automatically performs CRUD
 operations on AWS Network Firewall rule-groups and rules based on distributed
 configuration files. The application consist of three modules:
@@ -27,9 +32,20 @@ configuration files. The application consist of three modules:
 
 ```bash
 # Check if you have the required tools
-node --version    # Should be 18+
+node --version    # Should be 20.8.1+
+yarn --version    # Should be 4.0.0+
 python3 --version # Should be 3.11+
 git --version     # Any recent version
+```
+
+**Install Yarn (if not already installed):**
+
+```bash
+# Enable corepack (recommended - comes with Node.js 16.10+)
+corepack enable
+
+# Or install globally via npm
+npm install -g yarn
 ```
 
 **Optional (for LocalStack development):**
@@ -55,7 +71,7 @@ git clone <repository-url>
 cd anfw-automate
 
 # Install dependencies and setup commit standards
-npm install
+yarn install
 ```
 
 ### Step 3: Choose Your Development Path
@@ -93,7 +109,9 @@ Install these tools before starting:
 
 #### Core Requirements (Always Needed)
 
-- **[Node.js 18+](https://nodejs.org/)** - JavaScript runtime
+- **[Node.js 20.8.1+](https://nodejs.org/)** - JavaScript runtime
+- **[Yarn 4.0.0+](https://yarnpkg.com/)** - Package manager (install with
+  `corepack enable`)
 - **[Python 3.11+](https://www.python.org/)** - For Lambda functions
 - **[Git](https://git-scm.com/)** - Version control
 
@@ -107,11 +125,10 @@ Install these tools before starting:
 
 ### Auto-Installed Dependencies
 
-These are installed automatically via `npm install`:
+These are installed automatically via `yarn install`:
 
 - **Poetry** - Python package manager
 - **Husky** - Git hooks for commit standards
-- **Commitizen** - Interactive commit creation
 
 ### AWS Accounts (for Cloud Deployment)
 
@@ -143,7 +160,7 @@ Commit standards are automatically enforced both locally and on GitHub:
 
 ```bash
 # Install dependencies (sets up commit hooks automatically)
-npm install
+yarn install
 
 # Stage your changes
 git add .
@@ -151,7 +168,7 @@ git add .
 # Create conventional commits interactively
 make commit
 # or
-npm run commit
+yarn commit
 
 # Validate commit messages
 make validate-commit
@@ -166,7 +183,7 @@ make validate-commit
 **Branch Names**: `feature/*`, `hotfix/*`, `release/*`
 
 **Automatic Setup**: Git hooks and commit validation are configured
-automatically when you run `npm install`.
+automatically when you run `yarn install`.
 
 See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 
@@ -181,7 +198,7 @@ See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
 
 ```bash
 # Install dependencies first
-npm install
+yarn install
 
 # Option 1: With LocalStack (requires Docker)
 make local            # Setup and start LocalStack
@@ -211,10 +228,10 @@ make clean            # Clean build artifacts
 
 ```bash
 # All tests
-npm test
+yarn test
 
 # Module-specific tests
-cd app && npm test
+cd app && yarn test
 ```
 
 ## 🚀 Deployment Process
@@ -364,7 +381,7 @@ make help                  # Show all available commands
 ### Development Commands
 
 ```bash
-npm install                # Install dependencies and setup commit standards
+yarn install                # Install dependencies and setup commit standards
 make build                 # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
 make test                  # Run all tests
 make lint                  # Run linting
@@ -391,16 +408,16 @@ make local-start           # Start LocalStack containers
 make local-stop            # Stop LocalStack containers
 ```
 
-### NPM Scripts
+### Yarn Scripts
 
 ```bash
-npm run build              # Build all modules
-npm test                   # Run all tests
-npm run test:integration   # Run integration tests
-npm run local:setup        # Setup local development
-npm run local:start        # Start LocalStack
-npm run local:stop         # Stop LocalStack
-npm run clean              # Clean artifacts
+yarn build              # Build all modules
+yarn test               # Run all tests
+yarn test:integration   # Run integration tests
+yarn local:setup        # Setup local development
+yarn local:start        # Start LocalStack
+yarn local:stop         # Stop LocalStack
+yarn clean              # Clean artifacts
 ```
 
 ## 📚 Documentation
@@ -421,8 +438,8 @@ npm run clean              # Clean artifacts
 
 ### Security Features
 
-- **Automated Security Scanning**: Bandit for Python, npm audit for Node.js
-- **Dependency Vulnerability Checks**: pip-audit and npm audit
+- **Automated Security Scanning**: Bandit for Python, yarn audit for Node.js
+- **Dependency Vulnerability Checks**: pip-audit and yarn audit
 - **IAM Least Privilege**: Minimal required permissions
 - **Encryption**: All data encrypted in transit and at rest
 - **Network Security**: VPC isolation and security groups
@@ -438,7 +455,7 @@ npm run clean              # Clean artifacts
 
 1. Fork the repository
 2. Clone and install dependencies:
-   `git clone <repo> && cd <repo> && npm install`
+   `git clone <repo> && cd <repo> && yarn install`
 3. Create a feature branch: `git checkout -b feature/your-feature`
 4. Make changes and commit using: `make commit` (follows conventional commits
    automatically)
@@ -447,7 +464,7 @@ npm run clean              # Clean artifacts
 7. Submit a pull request
 
 **Note**: Commit standards are automatically enforced via git hooks installed
-during `npm install`.
+during `yarn install`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
