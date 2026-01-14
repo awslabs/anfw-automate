@@ -1,4 +1,4 @@
-name: Commit Standards Enforcement
+name: CI
 
 on:
   pull_request:
@@ -20,19 +20,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Validate commit messages
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # For PRs, check all commits in the PR
-            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+            yarn exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
           else
             # For direct pushes, check the last commit
-            npx commitlint --from HEAD~1 --to HEAD --verbose
+            make validate-commit
           fi
 
   validate-branch-name:
@@ -47,10 +47,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Validate branch name
         run: |
@@ -80,7 +80,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -88,24 +88,13 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Run ESLint
-        run: |
-          # Check TypeScript/JavaScript files
-          find . -name "*.ts" -o -name "*.js" | grep -v node_modules | grep -v cdk.out | head -10 | xargs npx eslint || echo "ESLint issues found"
-
-      - name: Check Python syntax
-        run: |
-          # Check Python files
-          find . -name "*.py" -not -path "./node_modules/*" -not -path "./.venv/*" -not -path "./cdk.out/*" | while read file; do
-            python3 -m py_compile "$file"
-          done
+      - name: Run linting
+        run: make lint
 
       - name: Check Prettier formatting
-        run: |
-          # Check if files are properly formatted
-          npx prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore || echo "Formatting issues found"
+        run: yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore
 
   security-scan:
     name: Security Scan
@@ -118,7 +107,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -129,31 +118,10 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate || echo "npm audit found issues"
-
-      - name: Run CDK NAG compliance checks
-        run: ./scripts/security-scan.sh cdk || echo "CDK NAG found compliance violations"
-
-      - name: Run container security scanning
-        run: ./scripts/security-scan.sh containers || echo "Container vulnerabilities found"
-
-      - name: Run Python security checks
-        run: |
-          # Find Python projects and run security checks
-          find . -name "pyproject.toml" -not -path "./node_modules/*" -not -path "./cdk.out/*" | while read file; do
-            dir=$(dirname "$file")
-            echo "Checking Python security in $dir"
-            cd "$dir"
-            if [ -f "pyproject.toml" ]; then
-              poetry install --no-root
-              poetry run bandit -r . -x "**.venv/*","**test/*","**node_modules/*","**cdk.out/*" || echo "Bandit found issues in $dir"
-              poetry run pip-audit --local || echo "pip-audit found issues in $dir"
-            fi
-            cd - > /dev/null
-          done
+      - name: Run comprehensive security scan
+        run: make security:scan
 
   enforce-pr-title:
     name: Enforce PR Title Format

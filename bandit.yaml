@@ -8,3 +8,7 @@ exclude_dirs:
   - __pycache__
   - .git
   - dist
+  - build
+
+# Suppress warnings about comments that look like test names
+skips: []

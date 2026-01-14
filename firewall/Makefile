@@ -18,30 +18,30 @@ help:
 
 build: 
 	@echo "🏗️  Building firewall module..."
-	npm run build
+	yarn build
 
 test:
 	@echo "🧪 Running firewall module tests..."
-	npm test
+	yarn test
 
 lint:
 	@echo "🔍 Running firewall module linting..."
-	npm run lint
+	yarn lint
 
 lint-fix:
 	@echo "🔧 Fixing firewall module lint issues..."
-	npm run lint-fix
+	yarn lint-fix
 
 deploy: build
 	@echo "🚀 Deploying firewall module..."
-	npx cdk deploy --all
+	yarn exec cdk deploy --all
 
 clean:
 	@echo "🧹 Cleaning firewall module artifacts..."
-	npm run clean
+	yarn clean
 
 update: 
 	@echo "📦 Updating firewall module dependencies..."
-	npm update
+	yarn up '*'
 
 .PHONY: all help build test lint lint-fix deploy clean update

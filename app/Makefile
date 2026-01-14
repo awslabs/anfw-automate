@@ -18,19 +18,19 @@ help:
 
 build: pre-synth
 	@echo "🏗️  Building app module..."
-	npm run build
+	yarn build
 
 test:
 	@echo "🧪 Running app module tests..."
-	npm test
+	yarn test
 
 lint:
 	@echo "🔍 Running app module linting..."
-	npm run lint
+	yarn lint
 
 lint-fix:
 	@echo "🔧 Fixing app module lint issues..."
-	npm run lint-fix
+	yarn lint-fix
 
 pre-synth:
 	@echo "📦 Running pre-synth packaging..."
@@ -38,14 +38,14 @@ pre-synth:
 
 deploy: build
 	@echo "🚀 Deploying app module..."
-	npx cdk deploy --all
+	yarn exec cdk deploy --all
 
 clean:
 	@echo "🧹 Cleaning app module artifacts..."
-	npm run clean
+	yarn clean
 
 update: 
 	@echo "📦 Updating app module dependencies..."
-	npm update
+	yarn up '*'
 
 .PHONY: all help build test lint lint-fix pre-synth deploy clean update

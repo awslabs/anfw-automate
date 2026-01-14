@@ -18,30 +18,30 @@ help:
 
 build: 
 	@echo "🏗️  Building vpc module..."
-	npm run build
+	yarn build
 
 test:
 	@echo "🧪 Running vpc module tests..."
-	npm test
+	yarn test
 
 lint:
 	@echo "🔍 Running vpc module linting..."
-	npm run lint
+	yarn lint
 
 lint-fix:
 	@echo "🔧 Fixing vpc module lint issues..."
-	npm run lint-fix
+	yarn lint-fix
 
 deploy: build
 	@echo "🚀 Deploying vpc module..."
-	npx cdk deploy --all
+	yarn exec cdk deploy --all
 
 clean:
 	@echo "🧹 Cleaning vpc module artifacts..."
-	npm run clean
+	yarn clean
 
 update: 
 	@echo "📦 Updating vpc module dependencies..."
-	npm update
+	yarn up '*'
 
 .PHONY: all help build test lint lint-fix deploy clean update

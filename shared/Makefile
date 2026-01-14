@@ -17,26 +17,26 @@ help:
 
 build: 
 	@echo "🏗️  Building shared module..."
-	npm run build
+	yarn build
 
 test:
 	@echo "🧪 Running shared module tests..."
-	npm test
+	yarn test
 
 lint:
 	@echo "🔍 Running shared module linting..."
-	npm run lint
+	yarn lint
 
 lint-fix:
 	@echo "🔧 Fixing shared module lint issues..."
-	npm run lint-fix
+	yarn lint-fix
 
 clean:
 	@echo "🧹 Cleaning shared module artifacts..."
-	npm run clean
+	yarn clean
 
 update: 
 	@echo "📦 Updating shared module dependencies..."
-	npm update
+	yarn up '*'
 
 .PHONY: all help build test lint lint-fix clean update

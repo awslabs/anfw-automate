@@ -28,7 +28,7 @@ fi
 
 # Run comprehensive security scan
 echo "🔒 Running comprehensive security scan..."
-if ! make security-scan; then
+if ! make security:scan; then
     echo ""
     echo "❌ Security scan failed. Fix issues before pushing."
     exit 1
@@ -36,7 +36,7 @@ fi
 
 # Run tests before push
 echo "🧪 Running tests..."
-if ! npm test; then
+if ! make test; then
     echo ""
     echo "❌ Tests failed. Fix issues before pushing."
     exit 1

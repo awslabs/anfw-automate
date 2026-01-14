@@ -27,13 +27,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
-        run: npm audit signatures
+        run: yarn npm audit signatures
 
       - name: Build project
         env:
@@ -41,7 +41,7 @@ jobs:
         run: make build
 
       - name: Run tests
-        run: npm test
+        run: make test
 
   release:
     name: Release (Requires Approval)
@@ -60,14 +60,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUSKY: 0 # Disable Husky in CI
-        run: npx semantic-release
+        run: yarn exec semantic-release

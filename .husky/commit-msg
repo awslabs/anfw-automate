@@ -6,6 +6,6 @@ echo "📝 Validating commit message..."
 node scripts/commit-validator.js $1
 
 # Also run commitlint for additional validation
-npx commitlint --edit $1
+yarn exec commitlint --edit $1
 
 echo "✅ Commit message is valid!"

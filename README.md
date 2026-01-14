@@ -1,9 +1,15 @@
 # Automate AWS Network Firewall Rule Management
 
-> **📦 Package Manager Migration Notice**: This project has migrated from npm to
-> Yarn 4.12.0. If you're an existing contributor, please install Yarn
-> (`corepack enable`) and use `yarn install` instead of `npm install`. All
-> `make` commands continue to work as before.
+> **⚠️ BREAKING CHANGE - Package Manager Migration**: This project has migrated
+> from npm to Yarn 4.12.0. **All npm commands will no longer work.** Existing
+> contributors must:
+>
+> 1. Install Yarn: `corepack enable` (or `npm install -g yarn`)
+> 2. Remove old dependencies: `rm -rf node_modules package-lock.json`
+> 3. Install with Yarn: `yarn install`
+>
+> See [docs/YARN_MIGRATION.md](docs/YARN_MIGRATION.md) for complete migration
+> guide.
 
 An event-based serverless application that automatically performs CRUD
 operations on AWS Network Firewall rule-groups and rules based on distributed
@@ -159,7 +165,7 @@ make validate-commit
 **Automatic Setup**: Git hooks and commit validation are configured
 automatically when you run `yarn install`.
 
-See [COMMIT_STANDARDS.md](COMMIT_STANDARDS.md) for complete details.
+See [docs/COMMIT_STANDARDS.md](docs/COMMIT_STANDARDS.md) for complete details.
 
 ### Branch Strategy
 
@@ -339,90 +345,151 @@ base configuration.
 
 ## 🛠️ Available Commands
 
+All commands use Make as the primary interface for consistency.
+
 ### Setup Commands
 
 ```bash
 make help                  # Show all available commands
+make setup                 # Setup development environment
 ```
 
-### Development Commands
+### Build & Test Commands
 
 ```bash
-yarn install                # Install dependencies and setup commit standards
-make build                 # Build all modules with comprehensive process (Python, TypeScript, CDK, security)
+make build                 # Build all modules (shared first, then app/firewall/vpc)
 make test                  # Run all tests
 make lint                  # Run linting
-make commit                # Create conventional commits
-make clean                 # Clean build artifacts
+make lint-fix              # Fix lint issues
+make format                # Format code with Prettier
+```
 
-# Module-specific builds (optional)
-cd app && make build       # Build just the app module
-cd firewall && make build  # Build just the firewall module
+### Security Commands
+
+```bash
+make security:scan         # Run all security scans
+make security:secrets      # Scan for hardcoded secrets (gitleaks)
+make security:python       # Python security scan (bandit)
+make security:nodejs       # Node.js dependency audit
+make security:cdk          # CDK compliance checks (cdk-nag)
+make security:fix          # Fix vulnerable dependencies
+make security:status       # Show vulnerability status
+make audit                 # Alias for security:nodejs
 ```
 
 ### Deployment Commands
 
 ```bash
-make deploy                # Deploy to AWS
-make integration-test      # Run integration tests
+make deploy                # Deploy all modules to AWS
+make deploy:app            # Deploy app module
+make deploy:firewall       # Deploy firewall module
+make deploy:vpc            # Deploy vpc module
 ```
 
-### Yarn Scripts
+### Git & Commit Commands
 
 ```bash
-yarn build              # Build all modules
-yarn test               # Run all tests
-yarn test:integration   # Run integration tests
-yarn clean              # Clean artifacts
+make commit                # Create conventional commits interactively
+make validate-commit       # Validate last commit message
 ```
+
+### Utility Commands
+
+```bash
+make clean                 # Clean build artifacts
+make update                # Update dependencies
+```
+
+### Module-Specific Commands
+
+```bash
+make build:app             # Build specific module
+make test:firewall         # Test specific module
+```
+
+**Note**: Git hooks use the same `make` commands to ensure consistency between
+manual runs and automated checks.
 
 ## 📚 Documentation
 
-- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Comprehensive development guide
-- **[CONFIGURATION_MIGRATION.md](CONFIGURATION_MIGRATION.md)** - Enhanced
-  configuration migration guide
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[GLOSSARY.md](GLOSSARY.md)** - Project terminology
-- **Module READMEs**: Detailed documentation for each module
-  - [app/README.md](app/README.md)
-  - [firewall/README.md](firewall/README.md)
-  - [vpc/README.md](vpc/README.md)
-- **Shared Library**: Enhanced configuration management
-  - [shared/README.md](shared/README.md)
+### Core Documentation (Root)
+
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community code of conduct
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project
+- **[LICENSE](LICENSE)** - Apache-2.0 license
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
+
+### Development Guides (docs/)
+
+- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Comprehensive development
+  guide
+- **[docs/COMMANDS.md](docs/COMMANDS.md)** - Complete command reference
+- **[docs/COMMIT_STANDARDS.md](docs/COMMIT_STANDARDS.md)** - Commit message
+  standards
+- **[docs/GLOSSARY.md](docs/GLOSSARY.md)** - Project terminology
+
+### Configuration & Migration (docs/)
+
+- **[docs/CONFIGURATION_MIGRATION.md](docs/CONFIGURATION_MIGRATION.md)** -
+  Enhanced configuration migration guide
+- **[docs/YARN_MIGRATION.md](docs/YARN_MIGRATION.md)** - npm to Yarn migration
+  guide
+- **[docs/SEMANTIC_VERSIONING.md](docs/SEMANTIC_VERSIONING.md)** - Versioning
+  strategy
+- **[docs/SECURITY_SCANNING.md](docs/SECURITY_SCANNING.md)** - Security scanning
+  tools and practices
+
+### Module Documentation
+
+- **[app/README.md](app/README.md)** - Application module (Lambda functions)
+- **[firewall/README.md](firewall/README.md)** - Firewall module (Network
+  Firewall)
+- **[vpc/README.md](vpc/README.md)** - VPC module (Networking)
+- **[shared/README.md](shared/README.md)** - Shared libraries and utilities
 
 ## 🔒 Security
 
 ### Security Features
 
-- **Automated Security Scanning**: Bandit for Python, yarn audit for Node.js
-- **Dependency Vulnerability Checks**: pip-audit and yarn audit
+- **Secret Scanning**: gitleaks (npm package) scans for hardcoded credentials
+- **Python Security**: bandit scans for security issues in Python code
+- **Dependency Scanning**: yarn audit checks for vulnerable dependencies
+- **CDK Compliance**: cdk-nag validates infrastructure against AWS best
+  practices
 - **IAM Least Privilege**: Minimal required permissions
 - **Encryption**: All data encrypted in transit and at rest
 - **Network Security**: VPC isolation and security groups
 
+### Security Commands
+
+```bash
+make security:scan        # Run all security scans
+make security:secrets     # Scan for hardcoded secrets (gitleaks)
+make security:python      # Scan Python code (bandit)
+make security:nodejs      # Check Node.js dependencies (yarn audit)
+make security:cdk         # Validate CDK compliance (cdk-nag)
+make security:fix         # Fix vulnerable dependencies
+```
+
 ### Security Best Practices
 
-- Never commit secrets or credentials
+- Never commit secrets or credentials (gitleaks prevents this)
 - Use IAM roles instead of access keys
-- Regular dependency updates
-- Security scanning in CI/CD pipeline
+- Regular dependency updates with `make security:fix`
+- Pre-commit hooks automatically scan full repository
+- Security scanning runs on every push
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Clone and install dependencies:
-   `git clone <repo> && cd <repo> && yarn install`
-3. Create a feature branch: `git checkout -b feature/your-feature`
-4. Make changes and commit using: `make commit` (follows conventional commits
-   automatically)
-5. Write tests for new functionality
-6. Ensure all tests pass: `make test`
-7. Submit a pull request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for
+guidelines on:
 
-**Note**: Commit standards are automatically enforced via git hooks installed
-during `yarn install`.
+- How to submit issues and pull requests
+- Code standards and commit conventions
+- Development workflow
+- Security issue reporting
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
 ## 📄 License
 
@@ -468,8 +535,8 @@ sources.
 **No Action Required**: The migration is backward compatible. Existing
 configurations continue to work without changes.
 
-See [CONFIGURATION_MIGRATION.md](CONFIGURATION_MIGRATION.md) for complete
-details.
+See [docs/CONFIGURATION_MIGRATION.md](docs/CONFIGURATION_MIGRATION.md) for
+complete details.
 
 ### General Migration Steps
 
@@ -521,14 +588,18 @@ not part of the solution.
 | ajv                              | ^8.12.0          |
 | ajv-formats                      | ^3.0.1           |
 
-## APPENDIX
+## 📖 Appendix
 
-Please refer the [GLOSSARY](GLOSSARY.md) before creating any configuration files
+Please refer to [docs/GLOSSARY.md](docs/GLOSSARY.md) before creating any
+configuration files.
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more
-information.
+For security vulnerability reporting, see the [Security](../../security) tab or
+[CONTRIBUTING.md](CONTRIBUTING.md#security-issue-notifications).
+
+For security scanning tools and best practices, see
+[docs/SECURITY_SCANNING.md](docs/SECURITY_SCANNING.md).
 
 ## License
 

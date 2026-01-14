@@ -1,17 +1,48 @@
 # Development Workflow Guide
 
+> **⚠️ BREAKING CHANGE**: This project now uses Yarn 4.12.0 instead of npm. All
+> npm commands have been replaced with Yarn equivalents. See
+> [YARN_MIGRATION.md](YARN_MIGRATION.md) for migration instructions.
+
 This document outlines the improved development workflow for the AWS Network
 Firewall automation project, including commit standards, local development
 setup, and deployment processes.
 
 ## Table of Contents
 
-1. [Commit Standards](#commit-standards)
-2. [Local Development Setup](#local-development-setup)
-3. [Development Workflow](#development-workflow)
-4. [Testing Strategy](#testing-strategy)
-5. [Deployment Process](#deployment-process)
-6. [Integration Testing](#integration-testing)
+1. [Prerequisites](#prerequisites)
+2. [Commit Standards](#commit-standards)
+3. [Local Development Setup](#local-development-setup)
+4. [Development Workflow](#development-workflow)
+5. [Testing Strategy](#testing-strategy)
+6. [Deployment Process](#deployment-process)
+7. [Integration Testing](#integration-testing)
+
+## Prerequisites
+
+Before starting development, ensure you have:
+
+- **Node.js 20.8.1+** - JavaScript runtime
+- **Yarn 4.12.0+** - Package manager (install with `corepack enable`)
+- **Python 3.11+** - Lambda runtime
+- **Poetry** - Python dependency management
+- **AWS CLI** - AWS command line interface
+- **Git** - Version control
+
+**Install Yarn:**
+
+```bash
+# Enable corepack (recommended)
+corepack enable
+
+# Or install globally
+npm install -g yarn
+
+# Verify
+yarn --version  # Should be 4.12.0+
+```
+
+**Important**: Do NOT use npm commands. All package management uses Yarn.
 
 ## Commit Standards
 
@@ -271,9 +302,18 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 ### Security
 
 1. **Never commit secrets**
+   - gitleaks (npm package) scans automatically in pre-commit hooks
+   - Run `make security:secrets` to manually scan
 2. **Use IAM roles with least privilege**
 3. **Enable security scanning in pipelines**
+   - Python: `make security:python` (bandit)
+   - Node.js: `make security:nodejs` (yarn audit)
+   - CDK: `make security:cdk` (cdk-nag)
+   - Secrets: `make security:secrets` (gitleaks)
+   - All: `make security:scan`
 4. **Regular dependency updates**
+   - Run `make security:fix` to update dependencies
+   - Check status with `make security:status`
 
 ### Performance
 

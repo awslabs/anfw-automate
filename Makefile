@@ -14,14 +14,14 @@ help:
 	@echo "  format           - Format code with Prettier"
 	@echo ""
 	@echo "🔒 Security Commands:"
-	@echo "  security-scan    - Run comprehensive security scanning"
-	@echo "  security-python  - Run Python security scan with bandit"
-	@echo "  security-nodejs  - Run Node.js security audit"
-	@echo "  security-cdk     - Run CDK NAG compliance checks"
-	@echo "  security-containers - Run container security scanning"
-	@echo "  security-fix     - Fix security vulnerabilities"
-	@echo "  security-fix-force - Force fix vulnerabilities (may break compatibility)"
-	@echo "  security-status  - Show security vulnerability status summary"
+	@echo "  security:scan    - Run comprehensive security scanning"
+	@echo "  security:python  - Run Python security scan with bandit"
+	@echo "  security:nodejs  - Run Node.js security audit"
+	@echo "  security:cdk     - Run CDK NAG compliance checks"
+	@echo "  security:secrets - Scan for hardcoded secrets with gitleaks"
+	@echo "  security:fix     - Fix security vulnerabilities"
+	@echo "  security:fix-force - Force fix vulnerabilities (may break compatibility)"
+	@echo "  security:status  - Show security vulnerability status summary"
 	@echo "  audit            - Run yarn audit on all modules"
 	@echo ""
 	@echo "🚀 Deployment Commands:"
@@ -47,149 +47,105 @@ build:
 
 test:
 	@echo "🧪 Running all tests..."
-	yarn test
+	@for module in shared app firewall vpc; do \
+		echo "Testing $$module..."; \
+		(cd "$$module" && make test); \
+	done
 
 lint:
 	@echo "🔍 Running linting on all modules..."
-	yarn lint
+	@for module in shared app firewall vpc; do \
+		echo "Linting $$module..."; \
+		(cd "$$module" && make lint); \
+	done
 
 lint-fix:
 	@echo "🔧 Fixing lint issues on all modules..."
-	yarn lint-fix
+	@for module in shared app firewall vpc; do \
+		echo "Fixing $$module..."; \
+		(cd "$$module" && make lint-fix); \
+	done
 
 format:
 	@echo "🎨 Formatting code with Prettier..."
 	yarn prettier --write "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore
 
-# Security commands
-security-scan:
-	@echo "🔒 Running comprehensive security scanning..."
-	./scripts/security-scan.sh all
-
-security-python:
-	@echo "🐍 Running Python security scan..."
-	./scripts/security-scan.sh python
-
-security-nodejs:
-	@echo "📦 Running Node.js security audit..."
-	./scripts/security-scan.sh nodejs
-
-security-cdk:
-	@echo "☁️  Running CDK NAG compliance checks..."
-	./scripts/security-scan.sh cdk
-
-security-containers:
-	@echo "🐳 Running container security scanning..."
-	./scripts/security-scan.sh containers
-
-security-fix:
-	@echo "🔧 Fixing security vulnerabilities..."
-	@echo "📋 Note: Bundled npm dependencies cannot be auto-fixed and require npm updates"
-	@echo ""
-	@for module in . app firewall vpc shared; do \
-		if [ -f "$$module/package.json" ]; then \
-			echo "  📦 Fixing $$module..."; \
-			(cd "$$module" && yarn up '*' --mode=update-lockfile) || true; \
-		fi; \
-	done
-	@echo ""
-	@echo "✅ Project module security fixes completed!"
-	@echo "ℹ️  If bundled npm vulnerabilities remain, consider updating npm: npm install -g npm@latest"
-
-security-fix-force:
-	@echo "🔧 Force fixing security vulnerabilities (may introduce breaking changes)..."
-	@echo "⚠️  This will attempt to force-fix all vulnerabilities, including major version updates"
-	@echo ""
-	@for module in . app firewall vpc shared; do \
-		if [ -f "$$module/package.json" ]; then \
-			echo "  📦 Force fixing $$module..."; \
-			(cd "$$module" && yarn up '*' --force) || true; \
-		fi; \
-	done
-	@echo ""
-	@echo "⚠️  Force fixes completed - review changes carefully!"
-
-security-status:
-	@echo "🔍 Security vulnerability status summary..."
-	@echo ""
-	@bundled_issues=0; \
-	project_issues=0; \
-	for module in . app firewall vpc shared; do \
-		if [ -f "$$module/package.json" ]; then \
-			echo "📦 Checking $$module..."; \
-			cd "$$module"; \
-			if npm audit --audit-level=moderate 2>/dev/null | grep -q "found 0 vulnerabilities"; then \
-				echo "  ✅ No vulnerabilities in project dependencies"; \
-			else \
-				if npm audit --audit-level=moderate 2>/dev/null | grep -q "bundled dependency"; then \
-					echo "  ⚠️  Bundled npm vulnerabilities detected (not fixable via npm audit fix)"; \
-					bundled_issues=1; \
-				else \
-					echo "  ❌ Project vulnerabilities detected"; \
-					project_issues=1; \
+# Security commands (pattern rule)
+security\:%:
+	@case "$*" in \
+		scan) \
+			echo "🔒 Running comprehensive security scanning..."; \
+			./scripts/security-scan.sh all ;; \
+		python) \
+			echo "🐍 Running Python security scan..."; \
+			./scripts/security-scan.sh python ;; \
+		nodejs) \
+			echo "📦 Running Node.js security audit..."; \
+			./scripts/security-scan.sh nodejs ;; \
+		cdk) \
+			echo "☁️  Running CDK NAG compliance checks..."; \
+			./scripts/security-scan.sh cdk ;; \
+		secrets) \
+			echo "🔐 Scanning for hardcoded secrets..."; \
+			./scripts/security-scan.sh secrets ;; \
+		fix) \
+			echo "🔧 Fixing security vulnerabilities..."; \
+			echo "📋 Note: Bundled npm dependencies cannot be auto-fixed and require npm updates"; \
+			echo ""; \
+			for module in . app firewall vpc shared; do \
+				if [ -f "$$module/package.json" ]; then \
+					echo "  📦 Fixing $$module..."; \
+					(cd "$$module" && yarn up '*' --mode=update-lockfile) || true; \
 				fi; \
-			fi; \
-			cd - > /dev/null; \
-		fi; \
-	done; \
-	echo ""; \
-	if [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 0 ]; then \
-		echo "🎉 All clear! No security vulnerabilities found."; \
-	elif [ $$project_issues -eq 0 ] && [ $$bundled_issues -eq 1 ]; then \
-		echo "✅ Your project is secure! Only bundled npm vulnerabilities detected."; \
-		echo "💡 To fix bundled vulnerabilities: npm install -g npm@latest"; \
-	else \
-		echo "⚠️  Project vulnerabilities found. Run 'make security-fix' to resolve."; \
-	fi
+			done; \
+			echo ""; \
+			echo "✅ Project module security fixes completed!"; \
+			echo "ℹ️  If bundled vulnerabilities remain in Yarn itself, update Yarn: corepack prepare yarn@stable --activate" ;; \
+		fix-force) \
+			echo "🔧 Force fixing security vulnerabilities (may introduce breaking changes)..."; \
+			echo "⚠️  This will attempt to force-fix all vulnerabilities, including major version updates"; \
+			echo ""; \
+			for module in . app firewall vpc shared; do \
+				if [ -f "$$module/package.json" ]; then \
+					echo "  📦 Force fixing $$module..."; \
+					(cd "$$module" && yarn up '*' --force) || true; \
+				fi; \
+			done; \
+			echo ""; \
+			echo "⚠️  Force fixes completed - review changes carefully!" ;; \
+		status) \
+			echo "🔍 Security vulnerability status summary..."; \
+			echo ""; \
+			has_issues=0; \
+			for module in . app firewall vpc shared; do \
+				if [ -f "$$module/package.json" ]; then \
+					echo "📦 Checking $$module..."; \
+					cd "$$module"; \
+					if yarn npm audit --severity moderate 2>/dev/null | grep -q "No audit suggestions"; then \
+						echo "  ✅ No vulnerabilities found"; \
+					else \
+						echo "  ⚠️  Vulnerabilities detected"; \
+						has_issues=1; \
+					fi; \
+					cd - > /dev/null; \
+				fi; \
+			done; \
+			echo ""; \
+			if [ $$has_issues -eq 0 ]; then \
+				echo "🎉 All clear! No security vulnerabilities found."; \
+			else \
+				echo "⚠️  Vulnerabilities found. Run 'make security:fix' to resolve."; \
+				echo "   For details: make security:nodejs"; \
+			fi ;; \
+		*) \
+			echo "Unknown security target: $*"; \
+			echo "Available: scan, python, nodejs, cdk, secrets, fix, fix-force, status"; \
+			exit 1 ;; \
+	esac
 
 audit:
 	@echo "🔍 Running security audit on all modules..."
-	yarn security:audit
-
-security-suppress:
-	@echo "🔇 Managing vulnerability suppressions..."
-	@echo "Current suppressions in .npmauditrc:"
-	@if [ -f ".npmauditrc" ]; then \
-		cat .npmauditrc | jq -r '.advisories | to_entries[] | "  \(.key): \(.value.reason)"' 2>/dev/null || echo "  (Invalid JSON format)"; \
-	else \
-		echo "  No suppressions configured"; \
-	fi
-	@echo ""
-	@echo "To suppress a vulnerability:"
-	@echo "  1. Run 'npm audit --json' to get advisory IDs"
-	@echo "  2. Edit .npmauditrc to add the advisory ID with reason and expiry"
-	@echo "  3. Run 'make audit-clean' to verify suppression works"
-
-security-unsuppress:
-	@echo "🔊 Removing all vulnerability suppressions..."
-	@if [ -f ".npmauditrc" ]; then \
-		echo "Backing up current .npmauditrc to .npmauditrc.backup"; \
-		cp .npmauditrc .npmauditrc.backup; \
-		rm .npmauditrc; \
-		echo "✅ All suppressions removed"; \
-	else \
-		echo "No suppressions to remove"; \
-	fi
-
-audit-clean:
-	@echo "🔍 Running npm audit with suppressions applied..."
-	@echo ""
-	@for module in . app firewall vpc shared; do \
-		if [ -f "$module/package.json" ]; then \
-			echo "📦 Auditing $module..."; \
-			cd "$module"; \
-			if [ -f "../.npmauditrc" ] && [ "$module" != "." ]; then \
-				cp ../.npmauditrc .npmauditrc 2>/dev/null || true; \
-			fi; \
-			npm audit --audit-level=moderate 2>/dev/null || echo "  ⚠️  Vulnerabilities found (check if suppressed)"; \
-			if [ -f ".npmauditrc" ] && [ "$module" != "." ]; then \
-				rm .npmauditrc 2>/dev/null || true; \
-			fi; \
-			cd - > /dev/null; \
-		fi; \
-	done
-	@echo ""
-	@echo "✅ Audit completed with suppressions applied"
+	./scripts/security-scan.sh nodejs
 
 # Module-specific commands
 build\:%:
@@ -220,7 +176,7 @@ commit:
 
 validate-commit:
 	@echo "✅ Validating last commit message..."
-	git log -1 --pretty=format:"%s" | yarn commitlint
+	git log -1 --pretty=format:"%s" | yarn exec commitlint
 
 # Deployment commands
 deploy: build	
@@ -239,4 +195,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format security-scan security-python security-nodejs security-cdk security-containers security-fix security-fix-force security-status security-suppress security-unsuppress audit audit-clean setup commit validate-commit deploy clean update
+.PHONY: all help build test lint lint-fix format audit setup commit validate-commit deploy clean update
