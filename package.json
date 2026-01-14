@@ -98,9 +98,6 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.py": [
-      "python3 -m py_compile"
-    ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
