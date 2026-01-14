@@ -42,8 +42,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         // Verify app config is loaded and has expected structure
         expect(typeof config.appConfig).toBe('object');
         expect(config.appConfig).not.toBeNull();
-
-        console.log('✅ App module configuration loaded successfully');
       } catch (error) {
         if (error instanceof ConfigurationError) {
           console.warn('App configuration not available for testing:', error.message);
@@ -75,8 +73,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         // Verify firewall config is loaded
         expect(typeof config.fwConfig).toBe('object');
         expect(config.fwConfig).not.toBeNull();
-
-        console.log('✅ Firewall module configuration loaded successfully');
       } catch (error) {
         if (error instanceof ConfigurationError) {
           console.warn('Firewall configuration not available for testing:', error.message);
@@ -107,8 +103,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         // Verify vpc config is loaded
         expect(typeof config.vpcConfig).toBe('object');
         expect(config.vpcConfig).not.toBeNull();
-
-        console.log('✅ VPC module configuration loaded successfully');
       } catch (error) {
         if (error instanceof ConfigurationError) {
           console.warn('VPC configuration not available for testing:', error.message);
@@ -143,8 +137,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
           } else {
             expect(validation.isValid).toBe(true);
           }
-
-          console.log(`✅ ${module} sample configuration validation completed`);
         } else {
           console.warn(`Sample or schema file not found for ${module} module`);
         }
@@ -232,8 +224,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
           if (!validation.isValid) {
             console.error(`${module} validation errors:`, validation.errors);
           }
-
-          console.log(`✅ ${module} schema validation works correctly`);
         } else {
           console.warn(`Schema file not found for ${module} module`);
         }
@@ -256,7 +246,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         // This is expected when neither SSM nor files exist for the test stage
         expect(error).toBeInstanceOf(ConfigurationError);
         expect((error as ConfigurationError).message).toContain('Global configuration not found');
-        console.log('✅ SSM fallback behavior works correctly');
       }
     });
 
@@ -274,8 +263,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         const detailedMessage = (error as ConfigurationError).getDetailedMessage();
         expect(detailedMessage).toContain('SSM parameter');
         expect(detailedMessage).toContain('file');
-
-        console.log('✅ Error messages provide helpful troubleshooting information');
       }
     });
   });
@@ -327,8 +314,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
       // Verify new regions were added
       expect(merged['us-west-2']).toBeDefined();
       expect(merged['us-west-2'].vpc_id).toBe('vpc-west');
-
-      console.log('✅ Configuration merging works correctly');
     });
 
     it('should provide detailed validation errors for invalid configurations', () => {
@@ -354,8 +339,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         expect(errorMessages.some(msg => msg.includes('pattern') || msg.includes('vpc'))).toBe(
           true
         );
-
-        console.log('✅ Validation provides detailed error messages');
       } else {
         console.warn('App schema not found, skipping validation test');
       }
@@ -392,8 +375,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         expect(vpcConfig).toHaveProperty('vpcConfig');
         expect(vpcConfig).not.toHaveProperty('appConfig');
         expect(vpcConfig).not.toHaveProperty('fwConfig');
-
-        console.log('✅ StackConfig structure is backward compatible');
       } catch (error) {
         if (error instanceof ConfigurationError) {
           console.warn('Configuration not available for backward compatibility test');
@@ -422,8 +403,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
           // Expected to fail since test-env-stage doesn't exist
           expect(error).toBeInstanceOf(ConfigurationError);
         }
-
-        console.log('✅ Environment variable compatibility maintained');
       } finally {
         // Restore original environment variables
         if (originalStage !== undefined) {
@@ -451,8 +430,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
         // The error message will be about module configuration not found since invalid-module doesn't exist
         expect((error as ConfigurationError).message).toContain('Module configuration not found');
         expect((error as ConfigurationError).message).toContain('invalid-module');
-
-        console.log('✅ Invalid module error provides clear guidance');
       }
     });
 
@@ -479,8 +456,6 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
       expect(validation.isValid).toBe(false);
       expect(validation.errors.length).toBeGreaterThan(0);
       expect(validation.errors[0].message).toContain('string');
-
-      console.log('✅ Schema validation errors are handled gracefully');
     });
   });
 });

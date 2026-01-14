@@ -45,6 +45,14 @@ export default [
     },
   },
 
+  // Allow console.log in test files
+  {
+    files: ['**/test/**/*.js', '**/*.test.js', '**/tests/**/*.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
   // Configuration for TypeScript files
   {
     files: ['**/*.ts'],
@@ -88,6 +96,22 @@ export default [
       'no-var': 'error',
       'no-unused-vars': 'off', // Turn off base rule for TypeScript
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+
+  // Allow console.log in test files
+  {
+    files: ['**/test/**/*.ts', '**/*.test.ts', '**/tests/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  // Allow console.log in config_loader.ts (used during CDK synth)
+  {
+    files: ['**/shared/lib/config_loader.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 
