@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Sample Auto-scaled Web App used to perform load testing"
+Description: 'Sample Auto-scaled Web App used to perform load testing'
 
 Parameters:
   InstanceProfileName:
@@ -14,7 +14,7 @@ Parameters:
       - t3.micro
       - t3.small
       - t3.medium
-   LatestAmiId:
+  LatestAmiId:
     Description: The latest Amazon Linux 2 AMI from the Parameter Store
     Type: String
     Default: 'ami-0499632f10efc5a62'
@@ -40,14 +40,14 @@ Resources:
       GroupDescription: ELB Security Group
       VpcId: !Ref VPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
 
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -55,20 +55,20 @@ Resources:
       GroupDescription: EC2 Security Group
       VpcId: !Ref VPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        SourceSecurityGroupId:
-          Fn::GetAtt:
-          - ELBSecurityGroup
-          - GroupId
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        SourceSecurityGroupId:
-          Fn::GetAtt:
-          - ELBSecurityGroup
-          - GroupId
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId:
+            Fn::GetAtt:
+              - ELBSecurityGroup
+              - GroupId
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId:
+            Fn::GetAtt:
+              - ELBSecurityGroup
+              - GroupId
 
   EC2TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -83,8 +83,8 @@ Resources:
       Port: 80
       Protocol: HTTP
       TargetGroupAttributes:
-      - Key: deregistration_delay.timeout_seconds
-        Value: '20'
+        - Key: deregistration_delay.timeout_seconds
+          Value: '20'
       UnhealthyThresholdCount: 3
       VpcId: !Ref VPC
 
@@ -108,7 +108,7 @@ Resources:
 
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
-    Properties: 
+    Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
       LaunchTemplateData:
         ImageId: !Ref LatestAmiId
@@ -116,7 +116,7 @@ Resources:
         IamInstanceProfile:
           Name: !Ref InstanceProfileName
         # KeyName: !Ref KeyName
-        SecurityGroupIds: 
+        SecurityGroupIds:
           - !Ref EC2SecurityGroup
         UserData: !Base64 |
           #!/bin/bash
@@ -146,7 +146,13 @@ Resources:
       HealthCheckType: ELB
       NotificationConfigurations:
         - TopicARN: !Ref NotificationTopic
-          NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR', 'autoscaling:EC2_INSTANCE_TERMINATE', 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR']
+          NotificationTypes:
+            [
+              'autoscaling:EC2_INSTANCE_LAUNCH',
+              'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
+              'autoscaling:EC2_INSTANCE_TERMINATE',
+              'autoscaling:EC2_INSTANCE_TERMINATE_ERROR',
+            ]
       TargetGroupARNs:
         - !Ref EC2TargetGroup
       VPCZoneIdentifier: !Ref PrivateSubnets

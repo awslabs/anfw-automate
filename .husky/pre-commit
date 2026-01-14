@@ -5,8 +5,23 @@ echo "🔍 Running pre-commit checks..."
 # Validate branch name
 yarn validate:branch
 
-# Run lint-staged (formatting)
-yarn exec lint-staged
+# Run linting on all modules (same as CI)
+echo "🔍 Running linting..."
+if ! make lint; then
+    echo "❌ Linting failed. Fix issues before committing."
+    exit 1
+fi
+echo "✅ Linting passed"
+
+# Check Prettier formatting on all files (same as CI)
+echo "🎨 Checking code formatting..."
+if ! yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore; then
+    echo ""
+    echo "❌ Formatting issues detected!"
+    echo "   Run 'make format' or 'yarn exec prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"' to fix"
+    exit 1
+fi
+echo "✅ Formatting passed"
 
 # Scan for secrets with gitleaks (critical - must catch before commit)
 echo "🔒 Scanning for secrets..."

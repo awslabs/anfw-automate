@@ -70,15 +70,6 @@
   ],
   "author": "AWS Network Firewall Team",
   "license": "Apache-2.0",
-  "lint-staged": {
-    "*.{ts,js}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
   "validate-branch-name": {
     "pattern": "^(main|dev|feature/.+|hotfix/.+|release/.+)$",
     "errorMsg": "Branch name must follow the pattern: main, dev, feature/*, hotfix/*, or release/*"
