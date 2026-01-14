@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 echo "📝 Validating commit message..."
 
 # Run our comprehensive commit validator
