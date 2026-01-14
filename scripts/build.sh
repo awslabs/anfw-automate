@@ -200,6 +200,10 @@ build_typescript_components() {
     if [ "${BUILD_MODE}" = "workspace" ]; then
         print_status "Building TypeScript components in workspace mode..."
         
+        # Enable corepack for Yarn 4
+        print_status "Enabling corepack..."
+        corepack enable
+        
         # Ensure all dependencies are installed at workspace level
         print_status "Installing workspace dependencies..."
         yarn install
@@ -238,6 +242,10 @@ build_typescript_components() {
     else
         # Module mode - build in current directory
         print_status "Building TypeScript components for ${MODULE_NAME}..."
+        
+        # Enable corepack for Yarn 4
+        print_status "Enabling corepack..."
+        corepack enable
         
         # Install npm dependencies
         if [ -f "package.json" ]; then

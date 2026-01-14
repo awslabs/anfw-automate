@@ -163,6 +163,7 @@ deploy\:%:
 # Setup and environment commands
 setup:
 	@echo "🔧 Setting up development environment..."
+	corepack enable
 	yarn install
 	yarn prepare
 	@echo "✅ Development environment ready!"

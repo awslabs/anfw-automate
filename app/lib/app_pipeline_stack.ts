@@ -43,7 +43,7 @@ export class AppPipelineStack extends TaggedStack {
 
     const synthStep = new CodeBuildStep('Synth', {
       input: sourceCode,
-      commands: ['cd app', 'make'],
+      commands: ['corepack enable', 'cd app', 'make'],
       primaryOutputDirectory: 'app/cdk.out',
       env: {
         STAGE: props.stage,

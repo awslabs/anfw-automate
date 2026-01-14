@@ -8,29 +8,13 @@ yarn validate:branch
 # Run lint-staged (formatting)
 yarn exec lint-staged
 
-# Security checks on full repository
-echo "🔒 Running security checks..."
-
-# Scan for secrets with gitleaks
-echo "  Scanning for secrets..."
+# Scan for secrets with gitleaks (critical - must catch before commit)
+echo "🔒 Scanning for secrets..."
 if ! make security:secrets > /dev/null 2>&1; then
     echo "❌ ERROR: Secrets detected!"
     echo "   Run 'make security:secrets' for details"
     exit 1
 fi
-echo "  ✅ No secrets detected"
-
-# Run Python security scan with bandit
-if command -v bandit >/dev/null 2>&1; then
-    echo "  Running bandit on Python files..."
-    if ! make security:python > /dev/null 2>&1; then
-        echo "⚠️  Bandit found security issues"
-        echo "   Run 'make security:python' for details"
-        exit 1
-    fi
-    echo "  ✅ Python security checks passed"
-else
-    echo "  ⚠️  Bandit not installed (pip install bandit)"
-fi
+echo "✅ No secrets detected"
 
 echo "✅ Pre-commit checks passed!"

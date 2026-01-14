@@ -22,6 +22,9 @@ jobs:
           node-version: '20'
           cache: 'yarn'
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
         run: yarn install --immutable
 
@@ -48,6 +51,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -87,6 +93,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
         run: yarn install --immutable
 
@@ -116,6 +125,9 @@ jobs:
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable

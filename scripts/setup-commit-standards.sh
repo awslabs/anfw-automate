@@ -42,6 +42,9 @@ install_dependencies() {
         exit 1
     fi
     
+    print_status "Enabling corepack..."
+    corepack enable
+    
     print_status "Installing Yarn dependencies..."
     yarn install
     
