@@ -80,106 +80,37 @@ yarn global add @commitlint/cli @commitlint/config-conventional
 
 ### Prerequisites
 
-- Docker and Docker Compose
 - Node.js 20.8.1+
 - Yarn 4.0.0+ (install with `corepack enable`)
 - Python 3.11+
 - Poetry (Python package manager)
-- AWS CLI (optional, for cloud testing)
+- AWS CLI (for AWS deployment)
 
 ### Quick Setup
 
 ```bash
-# Complete local development setup (one command!)
-make local
+# Install all project dependencies and setup commit standards
+yarn install
 ```
 
 This single command:
 
 - Installs all project dependencies
 - Sets up commit standards and git hooks automatically
-- Configures LocalStack for local AWS simulation
-- Creates local configuration files
-- Starts LocalStack containers
-- Provides helpful next steps
+- Configures the development environment
 
-### Manual Setup (if needed)
+### Building the Project
 
-If you prefer step-by-step setup:
+After installation, build all modules:
 
 ```bash
-# 1. Install dependencies (sets up commit standards)
-yarn install
+# Build all modules using yarn workspaces
+make build
 
-# 2. Setup local environment
-make local-setup
-
-# 3. Start LocalStack
-make local-start
-```
-
-### Manual Setup
-
-1. **Start LocalStack**:
-
-```bash
-docker-compose -f docker-compose.local.yml up -d
-```
-
-2. **Source local environment**:
-
-```bash
-source deploy_vars.local.sh
-```
-
-3. **Install dependencies**:
-
-```bash
-# Install shared module
-cd shared && yarn install && yarn build && cd ..
-
-# Install module dependencies
-for module in app firewall vpc; do
-    cd $module
-    yarn install
-    # Install Python dependencies if they exist
-    if [ -d "src" ]; then
-        cd src && poetry install --no-root && cd ..
-    fi
-    cd ..
-done
-```
-
-### Local Configuration
-
-#### Environment Variables (`deploy_vars.local.sh`)
-
-```bash
-export AWS_PROFILE=localstack
-export STAGE=local
-export AWS_REGION=us-east-1
-export AWS_ENDPOINT_URL=http://localhost:4566
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-```
-
-#### Application Configuration (`conf/local.json`)
-
-```json
-{
-  "account": {
-    "res": "000000000000",
-    "prod": "000000000000"
-  },
-  "region": "us-east-1",
-  "stage": "local",
-  "vpc": {
-    "cidr": "10.0.0.0/16"
-  },
-  "firewall": {
-    "name": "anfw-local"
-  }
-}
+# Or build individual modules
+cd app && make build
+cd firewall && make build
+cd vpc && make build
 ```
 
 ### Enhanced Configuration Management
@@ -199,21 +130,22 @@ The project uses an enhanced configuration management system that provides:
    - Module: `/anfw-automate/{stage}/{module}/config`
    - Overrides: `/anfw-automate/{stage}/{module}/overrides`
 
-2. **JSON Files** (Fallback - for local development)
+2. **JSON Files** (Fallback)
    - Global: `conf/{stage}.json`
    - Module: `{module}/conf/{stage}.json`
    - Overrides: `{module}/conf/{stage}-overrides.json`
 
-#### Local Development Configuration
+#### Development Configuration
 
-For local development, the system automatically falls back to file-based
-configuration when AWS credentials are not available. You'll see messages like:
+The system automatically falls back to file-based configuration when AWS
+credentials are not available. This allows you to build and test code locally
+without AWS credentials. You'll see messages like:
 
 ```
-SSM parameter '/anfw-automate/local/global/config' not accessible (no AWS credentials), falling back to file-based config.
+SSM parameter '/anfw-automate/dev/global/config' not accessible (no AWS credentials), falling back to file-based config.
 ```
 
-This is expected behavior and allows seamless local development without AWS
+This is expected behavior and allows seamless development without AWS
 credentials.
 
 ## Development Workflow
@@ -232,7 +164,8 @@ credentials.
 ```bash
 git clone <repository-url>
 cd anfw-automate
-make local  # Complete setup: dependencies + LocalStack + commit standards
+yarn install  # Install dependencies and setup commit standards
+make build    # Build all modules
 ```
 
 2. **Create feature branch**:
@@ -248,13 +181,12 @@ git checkout -b feature/your-feature-name
 ```bash
 # Build and test
 make build                 # Build all modules using yarn workspaces
-make build-make           # Alternative: build using individual Makefiles
+make test                  # Run all tests
 
-# Deploy to LocalStack
-make local-deploy
-
-# Run integration tests
-make integration-test
+# For AWS deployment (requires AWS credentials)
+# Configure deploy_vars.sh with your AWS settings
+source deploy_vars.sh
+make deploy
 ```
 
 4. **Commit with proper format**:
@@ -301,18 +233,17 @@ cd app && yarn test         # Specific module
 
 ### Environment Progression
 
-1. **Local** (`local`): LocalStack development
-2. **Development** (`dev`): AWS development account
-3. **Production** (`prod`): AWS production account
+1. **Development** (`dev`): AWS development account
+2. **Production** (`prod`): AWS production account
 
 ### Deployment Commands
 
 ```bash
-# Local deployment
-source deploy_vars.local.sh
+# Manual deployment to AWS (requires AWS credentials)
+source deploy_vars.sh
 make deploy
 
-# Environment deployment (via CodePipeline)
+# Automated deployment (via CodePipeline)
 # Triggered automatically on branch push:
 # - dev branch → dev environment
 # - main branch → prod environment
@@ -355,21 +286,21 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 
 ### Common Issues
 
-1. **LocalStack not starting**:
-   - Check Docker daemon is running
-   - Verify port 4566 is available
-   - Check Docker Compose logs
-
-2. **Build failures**:
-   - Verify all dependencies are installed
+1. **Build failures**:
+   - Verify all dependencies are installed with `yarn install`
    - Check Python virtual environment
    - No environment variables required for builds (STACK_NAME auto-detected)
-   - Validate TypeScript compilation
+   - Validate TypeScript compilation with `make build`
+
+2. **Test failures**:
+   - Ensure all modules are built before running tests
+   - Check Python dependencies are installed with Poetry
+   - Review test output for specific error messages
 
 3. **Deployment issues**:
-   - Verify AWS credentials
+   - Verify AWS credentials are configured
    - Check CloudFormation stack status
-   - Review pipeline logs
+   - Review pipeline logs in AWS CodePipeline
 
 ### Getting Help
 
@@ -384,6 +315,7 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 # Development
 make build                 # Build all modules using yarn workspaces
 make build-make           # Alternative: build using individual Makefiles
+make test                  # Run all tests
 make clean                 # Clean build artifacts
 make update                # Update dependencies
 
@@ -391,15 +323,12 @@ make update                # Update dependencies
 cd app && make build       # Build specific module
 cd app && make test        # Test specific module
 
-# Local testing
-docker-compose -f docker-compose.local.yml up -d    # Start LocalStack
-docker-compose -f docker-compose.local.yml down     # Stop LocalStack
-
 # Git workflow
 git config commit.template .gitmessage              # Set commit template
+make commit                                         # Interactive commit helper
 git log --oneline --graph                           # View commit history
 
-# AWS operations
-aws --endpoint-url=http://localhost:4566 s3 ls      # LocalStack S3
+# AWS operations (requires AWS credentials)
 aws cloudformation describe-stacks                   # Check stack status
+aws logs tail /aws/lambda/function-name --follow    # View Lambda logs
 ```

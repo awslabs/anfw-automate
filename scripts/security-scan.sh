@@ -86,17 +86,6 @@ run_container_scan() {
         return 0
     fi
     
-    # Scan images from docker-compose files
-    if [ -f "docker-compose.local.yml" ]; then
-        images=$(grep -E "^\s*image:" docker-compose.local.yml | sed 's/.*image:\s*//' | sed 's/["\s]*$//')
-        for image in $images; do
-            if [ -n "$image" ]; then
-                print_status "Scanning container image: $image"
-                trivy image --exit-code 1 --severity HIGH,CRITICAL "$image"
-            fi
-        done
-    fi
-    
     print_success "Container security scan passed"
 }
 
