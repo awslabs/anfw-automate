@@ -1,24 +1,29 @@
 /**
- * Enhanced Configuration Loader with SSM Parameter Store Support
+ * Configuration Loader with SSM Parameter Store Support
  *
- * This module provides production-ready configuration loading that supports:
- * 1. JSON files committed to the repository (original behavior)
- * 2. AWS SSM Parameter Store parameters in the format:
- *    - Global config: /anfw-automate/{env}/global/config
- *    - Module config: /anfw-automate/{env}/{module}/config
- * 3. Environment-specific configuration overrides
- * 4. Module-specific configuration isolation
- * 5. Comprehensive validation with detailed error messages
- * 6. Configuration merging capabilities
+ * Loads configuration from SSM Parameter Store (primary) or JSON files (fallback).
  *
- * The loader tries SSM parameters first, then falls back to JSON files if parameters
- * are not found. This allows for seamless migration from file-based to SSM-based
- * configuration management.
+ * USAGE (for developers):
+ * ```typescript
+ * import { loadDeploymentConfig } from '../../shared/lib/config_loader';
  *
- * Usage:
- * - Use loadDeploymentConfig() for new async implementations
- * - loadDeploymentConfigSync() is deprecated but maintained for backward compatibility
- * - Use ConfigurationManager for enhanced functionality
+ * // In your CDK stack entry point (bin/*.ts):
+ * const config = await loadDeploymentConfig(__dirname, stage, 'app');
+ * // That's it! Config is loaded, validated, and ready to use.
+ * ```
+ *
+ * CONFIGURATION SOURCES (tried in order):
+ * 1. SSM Parameter Store:
+ *    - Global: /anfw-automate/{stage}/global/config
+ *    - Module: /anfw-automate/{stage}/{module}/config
+ * 2. JSON files (fallback):
+ *    - Global: conf/{stage}.json
+ *    - Module: {module}/conf/{stage}.json
+ *
+ * VALIDATION:
+ * - Automatically validates against conf/schema.json and {module}/conf/schema.json
+ * - Provides detailed error messages if validation fails
+ * - Exits with clear troubleshooting guidance on errors
  */
 
 import * as fs from 'fs';
@@ -377,9 +382,12 @@ export class EnhancedConfigurationManager implements ConfigurationManager {
         if (config) {
           const validation = this.validateGlobalConfig(config);
           if (validation.isValid) {
-            console.log(
-              `✅ Global configuration loaded successfully from ${source.type}: ${sourceName}`
-            );
+            // Only log in non-test environments
+            if (process.env.NODE_ENV !== 'test') {
+              console.log(
+                `✅ Global configuration loaded successfully from ${source.type}: ${sourceName}`
+              );
+            }
             return config as GlobalConfig;
           } else {
             const validationError = `Configuration validation failed: ${validation.errors.map(e => e.message).join(', ')}`;
@@ -482,9 +490,12 @@ export class EnhancedConfigurationManager implements ConfigurationManager {
         }
       } catch (error) {
         // Overrides are optional, so we don't throw errors
-        console.log(
-          `No environment overrides found for ${source.type}: ${error instanceof Error ? error.message : String(error)}`
-        );
+        // Only log in non-test environments
+        if (process.env.NODE_ENV !== 'test') {
+          console.log(
+            `No environment overrides found for ${source.type}: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
       }
     }
 
@@ -530,9 +541,12 @@ export class EnhancedConfigurationManager implements ConfigurationManager {
         error.message?.includes('dynamic import callback') ||
         error.message?.includes('experimental-vm-modules')
       ) {
-        console.log(
-          `SSM parameter '${parameterName}' not accessible (no AWS credentials), falling back to file-based config`
-        );
+        // Only log in non-test environments
+        if (process.env.NODE_ENV !== 'test') {
+          console.log(
+            `SSM parameter '${parameterName}' not accessible (no AWS credentials), falling back to file-based config`
+          );
+        }
         return null;
       }
 
@@ -690,7 +704,11 @@ async function loadConfigFromSSM(parameterName: string): Promise<StackConfig | n
     return JSON.parse(response.Parameter.Value) as StackConfig;
   } catch (err: any) {
     if (err.name === 'ParameterNotFound') {
-      console.log(`SSM parameter '${parameterName}' not found, falling back to file-based config.`);
+      if (process.env.NODE_ENV !== 'test') {
+        console.log(
+          `SSM parameter '${parameterName}' not found, falling back to file-based config.`
+        );
+      }
       return null;
     }
 
@@ -702,9 +720,11 @@ async function loadConfigFromSSM(parameterName: string): Promise<StackConfig | n
       err.message?.includes('dynamic import callback') ||
       err.message?.includes('experimental-vm-modules')
     ) {
-      console.log(
-        `SSM parameter '${parameterName}' not accessible (no AWS credentials), falling back to file-based config.`
-      );
+      if (process.env.NODE_ENV !== 'test') {
+        console.log(
+          `SSM parameter '${parameterName}' not accessible (no AWS credentials), falling back to file-based config.`
+        );
+      }
       return null;
     }
 
@@ -715,7 +735,6 @@ async function loadConfigFromSSM(parameterName: string): Promise<StackConfig | n
 
 function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig | null {
   if (!fs.existsSync(configPath)) {
-    // eslint-disable-next-line no-console
     console.error(`JSON file does not exist at path '${configPath}'.`);
     return null;
   }
@@ -725,7 +744,6 @@ function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig
   try {
     schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(`Error reading/parsing JSON schema at path '${schemaPath}':`, err);
     return null;
   }
@@ -735,7 +753,6 @@ function loadConfigFromFile(configPath: string, schemaPath: string): StackConfig
   try {
     data = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(`Error reading/parsing JSON at path '${configPath}':`, err);
     return null;
   }
@@ -824,17 +841,30 @@ function validateConfig(data: StackConfig, schema: any, sourceName: string): Sta
       }
     }) || ['Unknown validation error'];
 
-    // eslint-disable-next-line no-console
     console.error(`Configuration validation failed for ${sourceName}:`);
     errorMessages.forEach(msg => console.error(`  - ${msg}`));
     return null;
   } else {
-    // eslint-disable-next-line no-console
-    console.log(`Configuration validation successful for ${sourceName}`);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Configuration validation successful for ${sourceName}`);
+    }
     return data;
   }
 }
 
+/**
+ * Load and validate deployment configuration
+ *
+ * @param configBasePath - Path to the module's bin directory (use __dirname)
+ * @param stage - Environment stage (dev, prod, etc.)
+ * @param stackType - Module type ('app', 'firewall', or 'vpc')
+ * @returns Validated configuration object or exits on error
+ *
+ * @example
+ * // In app/bin/app.ts:
+ * const config = await loadDeploymentConfig(__dirname, 'dev', 'app');
+ * // Returns: { stage, globalConfig, appConfig }
+ */
 export async function loadDeploymentConfig(
   configBasePath: string,
   stage: string,
@@ -881,7 +911,6 @@ export async function loadDeploymentConfig(
   }
 
   if (globalConfig === null) {
-    // eslint-disable-next-line no-console
     console.error(`Error loading global configuration for stage '${stage}'.`);
     console.error(`Attempted sources: ${globalConfigAttempts.join(', ')}`);
     console.error('Please ensure at least one of the following exists:');
@@ -910,7 +939,6 @@ export async function loadDeploymentConfig(
   }
 
   if (loadedConfig === null) {
-    // eslint-disable-next-line no-console
     console.error(`Error loading ${stackType} module configuration for stage '${stage}'.`);
     console.error(`Attempted sources: ${moduleConfigAttempts.join(', ')}`);
     console.error('Please ensure at least one of the following exists:');
@@ -940,7 +968,6 @@ export async function loadDeploymentConfig(
       };
 
     default:
-      // eslint-disable-next-line no-console
       console.error(`Invalid stack type: '${stackType}'. Valid types are: app, firewall, vpc`);
       process.exit(1);
   }
