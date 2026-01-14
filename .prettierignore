@@ -52,3 +52,6 @@ __pycache__/
 # Generated files
 *.d.ts
 !src/**/*.d.ts
+
+# Test data files (non-JSON/YAML content with JSON/YAML extensions)
+app/src/tests/sample_events/sample-rule-group.json

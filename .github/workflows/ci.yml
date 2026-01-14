@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -48,7 +48,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -83,7 +83,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -91,7 +91,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -100,7 +100,7 @@ jobs:
         run: make lint
 
       - name: Check Prettier formatting
-        run: yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore
+        run: yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore
 
   security-scan:
     name: Security Scan
@@ -112,7 +112,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -120,13 +120,20 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
 
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         run: yarn install --immutable
+
+      - name: Install Python dependencies
+        run: |
+          # Install bandit and other security tools for Python scanning
+          cd app/src && poetry install --only test
+          cd ../../firewall/lambda/delete_routes && poetry install --only test
+          cd ../fetch_vpc_endpoints && poetry install --only test
 
       - name: Run comprehensive security scan
         run: make security:scan
