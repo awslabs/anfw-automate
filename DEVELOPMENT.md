@@ -302,6 +302,19 @@ Each module (app, firewall, vpc) has its own CodePipeline:
    - Check CloudFormation stack status
    - Review pipeline logs in AWS CodePipeline
 
+4. **CDK synth requires Docker authentication**:
+   - CDK may need to pull images from AWS ECR Public
+   - If you encounter Docker authentication errors during `cdk synth`, login to
+     ECR Public:
+
+   ```bash
+   aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+   ```
+
+   - Ensure Docker Desktop is running before running CDK commands
+   - This is required when CDK needs to bundle Lambda functions or pull base
+     images
+
 ### Getting Help
 
 1. Check existing documentation

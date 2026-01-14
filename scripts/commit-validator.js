@@ -263,6 +263,7 @@ function formatValidationMessage(validation) {
   if (validation.valid) {
     message += '✅ COMMIT MESSAGE IS VALID\n\n';
   } else {
+    message += '� TIP: Use `make commit` for guided commit creation\n\n';
     message += '📝 CONVENTIONAL COMMIT FORMAT:\n';
     message += '   type(scope): description\n\n';
     message += '   [optional body]\n\n';
