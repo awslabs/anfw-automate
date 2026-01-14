@@ -3254,6 +3254,7 @@ __metadata:
     eslint: "npm:^9.39.2"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-prettier: "npm:^5.5.4"
+    gitleaks: "npm:^1.0.0"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.2.7"
     prettier: "npm:^3.7.4"
@@ -3358,11 +3359,17 @@ __metadata:
     "@aws-cdk/aws-lambda-python-alpha": "npm:^2.233.0-alpha.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:25.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
+    "@typescript-eslint/parser": "npm:^8.50.1"
     aws-cdk: "npm:2.1100.1"
     aws-cdk-lib: "npm:2.233.0"
     cdk-nag: "npm:^2.37.55"
     constructs: "npm:^10.4.4"
+    eslint: "npm:^9.39.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-prettier: "npm:^5.5.4"
     jest: "npm:^29.7.0"
+    prettier: "npm:^3.7.4"
     shared: "npm:*"
     source-map-support: "npm:^0.5.21"
     ts-jest: "npm:^29.4.6"
@@ -5044,11 +5051,17 @@ __metadata:
     "@aws-cdk/aws-lambda-python-alpha": "npm:^2.233.0-alpha.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:25.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
+    "@typescript-eslint/parser": "npm:^8.50.1"
     aws-cdk: "npm:2.1100.1"
     aws-cdk-lib: "npm:2.233.0"
     cdk-nag: "npm:^2.37.55"
     constructs: "npm:^10.4.4"
+    eslint: "npm:^9.39.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-prettier: "npm:^5.5.4"
     jest: "npm:^29.7.0"
+    prettier: "npm:^3.7.4"
     shared: "npm:*"
     source-map-support: "npm:^0.5.21"
     ts-jest: "npm:^29.4.6"
@@ -5291,6 +5304,13 @@ __metadata:
   bin:
     git-raw-commits: cli.mjs
   checksum: 10c0/ab51335d9e55692fce8e42788013dba7a7e7bf9f5bf0622c8cd7ddc9206489e66bb939563fca4edb3aa87477e2118f052702aad1933b13c6fa738af7f29884f0
+  languageName: node
+  linkType: hard
+
+"gitleaks@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "gitleaks@npm:1.0.0"
+  checksum: 10c0/126d819495f6f5cb91390a67d2e41ff4f1140412b46501ae2e25f73de1282e94233ca8874946651dc0a70cb0bc346a58fdc292150520451efad6e71ef791dd25
   languageName: node
   linkType: hard
 
@@ -8945,11 +8965,17 @@ __metadata:
     "@aws-sdk/client-ssm": "npm:^3.0.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:25.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
+    "@typescript-eslint/parser": "npm:^8.50.1"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"
     constructs: "npm:^10.4.4"
+    eslint: "npm:^9.39.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-prettier: "npm:^5.5.4"
     fast-check: "npm:^4.5.3"
     jest: "npm:^29.7.0"
+    prettier: "npm:^3.7.4"
     ts-jest: "npm:^29.4.6"
     typescript: "npm:~5.9.3"
   peerDependencies:
@@ -10012,11 +10038,17 @@ __metadata:
   dependencies:
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:25.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
+    "@typescript-eslint/parser": "npm:^8.50.1"
     aws-cdk: "npm:2.1100.1"
     aws-cdk-lib: "npm:2.233.0"
     cdk-nag: "npm:^2.37.55"
     constructs: "npm:^10.4.4"
+    eslint: "npm:^9.39.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-prettier: "npm:^5.5.4"
     jest: "npm:^29.7.0"
+    prettier: "npm:^3.7.4"
     shared: "npm:*"
     source-map-support: "npm:^0.5.21"
     ts-jest: "npm:^29.4.6"
