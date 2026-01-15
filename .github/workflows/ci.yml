@@ -131,9 +131,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           # Install bandit and other security tools for Python scanning
-          cd app/src && poetry install --only test
-          cd ../../firewall/lambda/delete_routes && poetry install --only test
-          cd ../fetch_vpc_endpoints && poetry install --only test
+          cd app/src && poetry install --only test --no-root
+          cd ../../firewall/lambda/delete_routes && poetry install --only test --no-root
+          cd ../fetch_vpc_endpoints && poetry install --only test --no-root
 
       - name: Run comprehensive security scan
         run: make security:scan
