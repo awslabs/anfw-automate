@@ -3,6 +3,7 @@ description = "Lambda function to delete all routes for VPC before adding new ro
 name = "delete-routes"
 authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.de>"]
 version = "1.0.18"
+package-mode = false
 
 [tool.poetry.dependencies]
 cfnresponse = "^1.1.5"
