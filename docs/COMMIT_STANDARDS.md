@@ -229,7 +229,7 @@ git branch -m feature/your-feature-name
 # Error: Linting or formatting issues
 # Solution: Fix issues automatically
 yarn lint-fix
-yarn prettier --write .
+make format
 ```
 
 #### Tests Fail on Push

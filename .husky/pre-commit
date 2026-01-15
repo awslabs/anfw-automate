@@ -18,7 +18,7 @@ echo "🎨 Checking code formatting..."
 if ! yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore; then
     echo ""
     echo "❌ Formatting issues detected!"
-    echo "   Run 'make format' or 'yarn exec prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"' to fix"
+    echo "   Run 'make format' or 'yarn exec prettier --write \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .prettierignore' to fix"
     exit 1
 fi
 echo "✅ Formatting passed"

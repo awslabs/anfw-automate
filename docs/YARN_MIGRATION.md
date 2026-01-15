@@ -46,14 +46,14 @@ yarn install
 
 ### 3. Update Your Workflow
 
-| **Old (npm)**            | **New (Yarn)**            |
-| ------------------------ | ------------------------- |
-| `npm install`            | `yarn install`            |
-| `npm test`               | `yarn test`               |
-| `npm run build`          | `yarn build`              |
-| `npm run commit`         | `yarn commit`             |
-| `npm run lint-fix`       | `yarn lint-fix`           |
-| `npx prettier --write .` | `yarn prettier --write .` |
+| **Old (npm)**            | **New (Yarn)**  |
+| ------------------------ | --------------- |
+| `npm install`            | `yarn install`  |
+| `npm test`               | `yarn test`     |
+| `npm run build`          | `yarn build`    |
+| `npm run commit`         | `yarn commit`   |
+| `npm run lint-fix`       | `yarn lint-fix` |
+| `npx prettier --write .` | `make format`   |
 
 ### 4. Make Commands Still Work
 
