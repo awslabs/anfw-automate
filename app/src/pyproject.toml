@@ -3,6 +3,7 @@ description = "Lambda Functions for automate rule management in AWS Network Fire
 name = "app"
 version = "2.0.2"
 authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 aws-lambda-powertools = "^2.43.1"
