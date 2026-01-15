@@ -68,7 +68,7 @@ lint-fix:
 
 format:
 	@echo "🎨 Formatting code with Prettier..."
-	yarn prettier --write "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .gitignore
+	yarn prettier --write "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore
 
 # Security commands (pattern rule)
 security\:%:
