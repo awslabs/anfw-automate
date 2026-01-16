@@ -1,66 +1,42 @@
 {
-    "eu-west-1": {
-        "vpc_id": "vpc-xxx",
-        "rule_order": "DEFAULT_ACTION_ORDER",
-        "supported_regions": [
-            "eu-west-1",
-            "eu-central-1"
-        ],
-        "firewall_policy_arns": {
-            "eu-west-1": [
-                "arn:aws:network-firewall:region:account-id:policy/policy-id-1"
-            ],
-            "eu-central-1": [
-                "arn:aws:network-firewall:region:account-id:policy/policy-id-2"
-            ]
-        },
-        "stackset": {
-            "permission_model": "SERVICE_MANAGED",
-            "auto_deployment": true,
-            "account_filter_type": "NONE",
-            "organizational_unit_ids": [
-                "ou-tbtc-xxxxx"
-            ],
-            "failure_tolerance_percentage": 0,
-            "max_concurrent_percentage": 100,
-            "region_concurrency_type": "PARALLEL",
-            "call_as": "DELEGATED_ADMIN",
-            "stack_regions": [
-                "eu-west-1",
-                "eu-central-1"
-            ]
-        }
+  "eu-west-1": {
+    "vpc_id": "vpc-xxx",
+    "rule_order": "DEFAULT_ACTION_ORDER",
+    "supported_regions": ["eu-west-1", "eu-central-1"],
+    "firewall_policy_arns": {
+      "eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"],
+      "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]
     },
-    "eu-central-1": {
-        "vpc_id": "vpc-yyy",
-        "rule_order": "STRICT_ORDER",
-        "supported_regions": [
-            "eu-west-1",
-            "eu-central-1"
-        ],
-        "firewall_policy_arns": {
-            "eu-west-1": [
-                "arn:aws:network-firewall:region:account-id:policy/policy-id-1"
-            ],
-            "eu-central-1": [
-                "arn:aws:network-firewall:region:account-id:policy/policy-id-2"
-            ]
-        },
-        "stackset": {
-            "permission_model": "SERVICE_MANAGED",
-            "auto_deployment": true,
-            "account_filter_type": "NONE",
-            "organizational_unit_ids": [
-                "ou-tbtc-yyyyy"
-            ],
-            "failure_tolerance_percentage": 0,
-            "max_concurrent_percentage": 100,
-            "region_concurrency_type": "PARALLEL",
-            "call_as": "DELEGATED_ADMIN",
-            "stack_regions": [
-                "eu-west-1",
-                "eu-central-1"
-            ]
-        }
+    "stackset": {
+      "permission_model": "SERVICE_MANAGED",
+      "auto_deployment": true,
+      "account_filter_type": "NONE",
+      "organizational_unit_ids": ["ou-tbtc-xxxxx"],
+      "failure_tolerance_percentage": 0,
+      "max_concurrent_percentage": 100,
+      "region_concurrency_type": "PARALLEL",
+      "call_as": "DELEGATED_ADMIN",
+      "stack_regions": ["eu-west-1", "eu-central-1"]
     }
+  },
+  "eu-central-1": {
+    "vpc_id": "vpc-yyy",
+    "rule_order": "STRICT_ORDER",
+    "supported_regions": ["eu-west-1", "eu-central-1"],
+    "firewall_policy_arns": {
+      "eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"],
+      "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]
+    },
+    "stackset": {
+      "permission_model": "SERVICE_MANAGED",
+      "auto_deployment": true,
+      "account_filter_type": "NONE",
+      "organizational_unit_ids": ["ou-tbtc-yyyyy"],
+      "failure_tolerance_percentage": 0,
+      "max_concurrent_percentage": 100,
+      "region_concurrency_type": "PARALLEL",
+      "call_as": "DELEGATED_ADMIN",
+      "stack_regions": ["eu-west-1", "eu-central-1"]
+    }
+  }
 }

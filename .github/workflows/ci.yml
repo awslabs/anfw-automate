@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  validate-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Validate commit messages
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, check all commits in the PR
+            yarn exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          else
+            # For direct pushes, check the last commit
+            make validate-commit
+          fi
+
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Validate branch name
+        run: |
+          branch_name="${{ github.head_ref }}"
+          echo "Validating branch name: $branch_name"
+
+          if [[ ! "$branch_name" =~ ^(feature|hotfix|release)/.+ ]]; then
+            echo "❌ Branch name '$branch_name' does not follow the required pattern."
+            echo "   Branch names must follow: feature/*, hotfix/*, or release/*"
+            echo "   Examples:"
+            echo "   - feature/add-new-validation"
+            echo "   - hotfix/fix-critical-bug"
+            echo "   - release/v2.1.0"
+            exit 1
+          fi
+
+          echo "✅ Branch name is valid!"
+
+  lint-and-format:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run linting
+        run: make lint
+
+      - name: Check Prettier formatting
+        run: yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: make setup
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Run security scan
+        run: make security:scan
+
+  enforce-pr-title:
+    name: Enforce PR Title Format
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate PR title
+        run: |
+          pr_title="${{ github.event.pull_request.title }}"
+          echo "Validating PR title: $pr_title"
+
+          # Check if PR title follows conventional commit format
+          if [[ ! "$pr_title" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+ ]]; then
+            echo "❌ PR title '$pr_title' does not follow conventional commit format."
+            echo "   PR titles must follow: type(scope): description"
+            echo "   Examples:"
+            echo "   - feat(app): add new validation feature"
+            echo "   - fix(firewall): resolve routing issue"
+            echo "   - docs: update deployment guide"
+            exit 1
+          fi
+
+          echo "✅ PR title is valid!"

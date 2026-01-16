@@ -1,15 +1,74 @@
+# Compiled JavaScript (but keep config files)
 *.js
 !jest.config.js
-*.d.ts
+!eslint.config.js
+!scripts/*.js
+!**/config/*.js
+!**/*.config.js
+!**/conf/sample.json
+!**/conf/schema.json
+.kiro
+.yarn
 
+# TypeScript build artifacts
+*.d.ts
+*.tsbuildinfo
+
+# Dependencies
 **/node_modules
+package-lock.json
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Build outputs
 archives
 dist
-**/.venv
-.cdk.staging
+build
 cdk.out
+.cdk.staging
+
+# Python
+**/.venv
 .hypothesis
 .pytest_cache
 __pycache__
-.vscode
+*.pyc
+*.pyo
+*.pyd
+
+# Testing
+coverage/
+.nyc_output/
+test-results.xml
+junit.xml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 **/.DS_Store
+Thumbs.db
+
+# Project specific - exclude conf but allow specific files
+**/conf/**
+!**/conf/sample.json
+!**/conf/schema.json
+build-report.json
+NOTICE

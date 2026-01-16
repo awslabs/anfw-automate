@@ -1,90 +1,82 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
-    "$ref": "#/definitions/FirewallConfig",
-    "definitions": {
-        "FirewallConfig": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "Version": {
-                    "type": "string"
-                },
-                "Description": {
-                    "type": "string"
-                },
-                "Config": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Config"
-                    }
-                }
-            },
-            "required": [
-                "Config",
-                "Description",
-                "Version"
-            ],
-            "title": "FirewallConfig"
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/FirewallConfig",
+  "definitions": {
+    "FirewallConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Version": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
         },
         "Config": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "VPC": {
-                    "type": "string",
-                    "pattern": "^vpc-[0-9a-zA-Z]{8,17}$"
-                },
-                "Type": {
-                    "type": "string"
-                },
-                "Properties": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Property"
-                    }
-                }
-            },
-            "required": [
-                "Properties",
-                "Type",
-                "VPC"
-            ],
-            "title": "Config"
-        },
-        "Property": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "HTTPS": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})?$)"
-                    }
-                },
-                "HTTP": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})?$)"
-                    }
-                },
-                "TLS": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})$)"
-                    }
-                },
-                "CUSTOM": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            },
-            "required": [],
-            "title": "Property"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Config"
+          }
         }
+      },
+      "required": ["Config", "Description", "Version"],
+      "title": "FirewallConfig"
+    },
+    "Config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "VPC": {
+          "type": "string",
+          "pattern": "^vpc-[0-9a-zA-Z]{8,17}$"
+        },
+        "Type": {
+          "type": "string"
+        },
+        "Properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Property"
+          }
+        }
+      },
+      "required": ["Properties", "Type", "VPC"],
+      "title": "Config"
+    },
+    "Property": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "HTTPS": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})?$)"
+          }
+        },
+        "HTTP": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})?$)"
+          }
+        },
+        "TLS": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "((^\\.?)(((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63})(:\\d{1,5})$)"
+          }
+        },
+        "CUSTOM": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [],
+      "title": "Property"
     }
+  }
 }

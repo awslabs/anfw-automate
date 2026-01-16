@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: yarn npm audit signatures
+
+      - name: Build project
+        env:
+          STAGE: dev
+        run: make build
+
+      - name: Run tests
+        run: make test
+
+  release:
+    name: Release (Requires Approval)
+    runs-on: ubuntu-latest
+    environment: production
+    needs: test
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          HUSKY: 0 # Disable Husky in CI
+        run: yarn exec semantic-release

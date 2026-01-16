@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+echo "🔍 Running pre-commit checks..."
+
+# Validate branch name
+yarn validate:branch
+
+# Scan for secrets with gitleaks using make command
+echo "🔒 Scanning for secrets with gitleaks..."
+if ! make security:secrets; then
+    exit 1
+fi
+
+# Check Prettier formatting on all files (same as CI)
+echo "🎨 Checking code formatting..."
+if ! yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore; then
+    echo ""
+    echo "❌ Formatting issues detected!"
+    echo "   Run 'make format' or 'yarn exec prettier --write \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .prettierignore' to fix"
+    exit 1
+fi
+echo "✅ Formatting passed"
+
+echo "✅ Pre-commit checks passed!"
+
