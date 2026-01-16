@@ -34,9 +34,10 @@ make security:scan         # Run all security scans
 make security:secrets      # Scan for secrets (gitleaks)
 make security:python       # Python security (bandit)
 make security:nodejs       # Node.js audit
-make security:cdk          # CDK compliance (cdk-nag)
 make security:fix          # Fix vulnerabilities
-make security:status       # Show vulnerability status
+make security:fix-force    # Force fix (may break compatibility)
+
+# Note: CDK NAG compliance checks run automatically during 'make build'
 ```
 
 ### Development Commands
@@ -231,14 +232,6 @@ Audits Node.js dependencies for known vulnerabilities.
 make security:nodejs
 ```
 
-#### `make security:cdk`
-
-Validates CDK infrastructure against AWS best practices using cdk-nag.
-
-```bash
-make security:cdk
-```
-
 #### `make security:fix`
 
 Attempts to fix vulnerable dependencies by updating them.
@@ -255,22 +248,6 @@ Force updates all dependencies (may introduce breaking changes).
 
 ```bash
 make security:fix-force
-```
-
-#### `make security:status`
-
-Shows a summary of security vulnerabilities across all modules.
-
-```bash
-make security:status
-```
-
-#### `make audit`
-
-Alias for `make security:nodejs`.
-
-```bash
-make audit
 ```
 
 ### Git & Commit Commands
@@ -433,9 +410,6 @@ If security scans fail:
 make security:secrets
 make security:python
 make security:nodejs
-
-# View detailed status
-make security:status
 
 # Attempt to fix
 make security:fix

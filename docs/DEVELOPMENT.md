@@ -308,12 +308,11 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 3. **Enable security scanning in pipelines**
    - Python: `make security:python` (bandit)
    - Node.js: `make security:nodejs` (yarn audit)
-   - CDK: `make security:cdk` (cdk-nag)
    - Secrets: `make security:secrets` (gitleaks)
    - All: `make security:scan`
+   - Note: CDK NAG compliance checks run automatically during `make build`
 4. **Regular dependency updates**
    - Run `make security:fix` to update dependencies
-   - Check status with `make security:status`
 
 ### Performance
 
