@@ -118,17 +118,15 @@ main() {
             run_bandit_scan
             echo ""
             run_npm_audit
-            echo ""
-            run_cdk_nag
             ;;
         *)
             echo "Usage: $0 [all|python|nodejs|cdk]"
             echo "  all:     Run all security scans (default)"
             echo "  python:  Run Python security scan with bandit"
             echo "  nodejs:  Run Node.js security audit"
-            echo "  cdk:     Run CDK NAG compliance checks"
+            echo "  cdk:     Run CDK NAG compliance checks (requires valid config)"
             echo ""
-            echo "Note: Secret scanning (gitleaks) is handled by pre-commit framework and GitHub Actions"
+            echo "Note: Secret scanning (gitleaks) is handled by pre-commit hook"
             exit 1
             ;;
     esac
