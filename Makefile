@@ -18,11 +18,10 @@ help:
 	@echo "  security:secrets - Scan for hardcoded secrets with gitleaks (Docker)"
 	@echo "  security:python  - Run Python security scan with bandit"
 	@echo "  security:nodejs  - Run Node.js security audit"
-	@echo "  security:cdk     - Run CDK NAG compliance checks (requires valid config)"
 	@echo "  security:fix     - Fix security vulnerabilities"
 	@echo "  security:fix-force - Force fix vulnerabilities (may break compatibility)"
-	@echo "  security:status  - Show security vulnerability status summary"
-	@echo "  audit            - Run yarn audit on all modules"
+	@echo ""
+	@echo "ℹ️  Note: CDK NAG compliance checks run automatically during 'make build'"
 	@echo ""
 	@echo "🚀 Deployment Commands:"
 	@echo "  deploy           - Deploy all modules to AWS"
@@ -82,9 +81,6 @@ security\:%:
 		nodejs) \
 			echo "📦 Running Node.js security audit..."; \
 			./scripts/security-scan.sh nodejs ;; \
-		cdk) \
-			echo "☁️  Running CDK NAG compliance checks..."; \
-			./scripts/security-scan.sh cdk ;; \
 		secrets) \
 			echo "🔐 Scanning for hardcoded secrets with gitleaks..."; \
 			if ! command -v docker &> /dev/null; then \
@@ -118,39 +114,11 @@ security\:%:
 			done; \
 			echo ""; \
 			echo "⚠️  Force fixes completed - review changes carefully!" ;; \
-		status) \
-			echo "🔍 Security vulnerability status summary..."; \
-			echo ""; \
-			has_issues=0; \
-			for module in . app firewall vpc shared; do \
-				if [ -f "$$module/package.json" ]; then \
-					echo "📦 Checking $$module..."; \
-					cd "$$module"; \
-					if yarn npm audit --severity moderate 2>/dev/null | grep -q "No audit suggestions"; then \
-						echo "  ✅ No vulnerabilities found"; \
-					else \
-						echo "  ⚠️  Vulnerabilities detected"; \
-						has_issues=1; \
-					fi; \
-					cd - > /dev/null; \
-				fi; \
-			done; \
-			echo ""; \
-			if [ $$has_issues -eq 0 ]; then \
-				echo "🎉 All clear! No security vulnerabilities found."; \
-			else \
-				echo "⚠️  Vulnerabilities found. Run 'make security:fix' to resolve."; \
-				echo "   For details: make security:nodejs"; \
-			fi ;; \
 		*) \
 			echo "Unknown security target: $*"; \
-			echo "Available: scan, python, nodejs, cdk, secrets, fix, fix-force, status"; \
+			echo "Available: scan, python, nodejs, secrets, fix, fix-force"; \
 			exit 1 ;; \
 	esac
-
-audit:
-	@echo "🔍 Running security audit on all modules..."
-	./scripts/security-scan.sh nodejs
 
 # Module-specific commands
 build\:%:
@@ -203,4 +171,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format audit setup commit validate-commit deploy clean update
+.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update

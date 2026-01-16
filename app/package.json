@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "bin": "bin/app.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cdk synth",
     "watch": "tsc -w",
     "test": "jest",
     "lint": "eslint . --ext .js,.ts",
