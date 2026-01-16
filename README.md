@@ -371,9 +371,7 @@ make security:scan         # Run all security scans
 make security:secrets      # Scan for hardcoded secrets (gitleaks)
 make security:python       # Python security scan (bandit)
 make security:nodejs       # Node.js dependency audit
-make security:cdk          # CDK compliance checks (cdk-nag)
 make security:fix          # Fix vulnerable dependencies
-make security:status       # Show vulnerability status
 make audit                 # Alias for security:nodejs
 ```
 
@@ -467,7 +465,6 @@ make security:scan        # Run all security scans
 make security:secrets     # Scan for hardcoded secrets (gitleaks)
 make security:python      # Scan Python code (bandit)
 make security:nodejs      # Check Node.js dependencies (yarn audit)
-make security:cdk         # Validate CDK compliance (cdk-nag)
 make security:fix         # Fix vulnerable dependencies
 ```
 

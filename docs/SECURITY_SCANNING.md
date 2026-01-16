@@ -22,7 +22,8 @@ make security:scan
 make security:secrets    # gitleaks
 make security:python     # bandit
 make security:nodejs     # yarn audit
-make security:cdk        # cdk-nag
+
+# Note: CDK NAG compliance checks run automatically during 'make build'
 ```
 
 ## Automated Scanning
