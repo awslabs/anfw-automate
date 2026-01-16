@@ -5,6 +5,12 @@ echo "🔍 Running pre-commit checks..."
 # Validate branch name
 yarn validate:branch
 
+# Scan for secrets with gitleaks using make command
+echo "🔒 Scanning for secrets with gitleaks..."
+if ! make security:secrets; then
+    exit 1
+fi
+
 # Check Prettier formatting on all files (same as CI)
 echo "🎨 Checking code formatting..."
 if ! yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .prettierignore; then
@@ -15,13 +21,5 @@ if ! yarn exec prettier --check "**/*.{ts,js,json,md,yml,yaml}" --ignore-path .p
 fi
 echo "✅ Formatting passed"
 
-# Scan for secrets with gitleaks (critical - must catch before commit)
-echo "🔒 Scanning for secrets..."
-if ! make security:secrets > /dev/null 2>&1; then
-    echo "❌ ERROR: Secrets detected!"
-    echo "   Run 'make security:secrets' for details"
-    exit 1
-fi
-echo "✅ No secrets detected"
-
 echo "✅ Pre-commit checks passed!"
+

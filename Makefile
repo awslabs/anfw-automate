@@ -14,11 +14,11 @@ help:
 	@echo "  format           - Format code with Prettier"
 	@echo ""
 	@echo "🔒 Security Commands:"
-	@echo "  security:scan    - Run comprehensive security scanning"
+	@echo "  security:scan    - Run comprehensive security scanning (secrets, Python, Node.js, CDK)"
+	@echo "  security:secrets - Scan for hardcoded secrets with gitleaks (Docker)"
 	@echo "  security:python  - Run Python security scan with bandit"
 	@echo "  security:nodejs  - Run Node.js security audit"
 	@echo "  security:cdk     - Run CDK NAG compliance checks"
-	@echo "  security:secrets - Scan for hardcoded secrets with gitleaks"
 	@echo "  security:fix     - Fix security vulnerabilities"
 	@echo "  security:fix-force - Force fix vulnerabilities (may break compatibility)"
 	@echo "  security:status  - Show security vulnerability status summary"
@@ -86,8 +86,13 @@ security\:%:
 			echo "☁️  Running CDK NAG compliance checks..."; \
 			./scripts/security-scan.sh cdk ;; \
 		secrets) \
-			echo "🔐 Scanning for hardcoded secrets..."; \
-			./scripts/security-scan.sh secrets ;; \
+			echo "🔐 Scanning for hardcoded secrets with gitleaks..."; \
+			if ! command -v docker &> /dev/null; then \
+				echo "❌ ERROR: Docker is required for gitleaks"; \
+				echo "   Install Docker: https://docs.docker.com/get-docker/"; \
+				exit 1; \
+			fi; \
+			docker run --rm -v "$$(pwd):/path" zricethezav/gitleaks:latest detect --source /path --no-git --config /path/.gitleaks.toml --verbose ;; \
 		fix) \
 			echo "🔧 Fixing security vulnerabilities..."; \
 			echo "📋 Note: Bundled npm dependencies cannot be auto-fixed and require npm updates"; \
@@ -167,6 +172,8 @@ setup:
 	yarn install
 	yarn prepare
 	@echo "✅ Development environment ready!"
+	@echo ""
+	@echo "ℹ️  Note: Docker is required for gitleaks (make security:secrets)"
 
 # Git and commit commands
 commit:

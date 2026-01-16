@@ -107,11 +107,14 @@ main() {
             run_cdk_nag
             ;;
         "secrets"|"git-secrets")
-            run_secret_scan
+            print_error "Secret scanning with gitleaks is no longer supported via this script"
+            print_error "Gitleaks runs automatically:"
+            print_error "  - Pre-commit: Docker container (no installation needed)"
+            print_error "  - CI: GitHub Actions workflow"
+            print_error "  - Manual: docker run --rm -v \"\$(pwd):/path\" zricethezav/gitleaks:latest detect --source /path --no-git --config /path/.gitleaks.toml"
+            exit 1
             ;;
         "all")
-            run_secret_scan
-            echo ""
             run_bandit_scan
             echo ""
             run_npm_audit
@@ -119,12 +122,13 @@ main() {
             run_cdk_nag
             ;;
         *)
-            echo "Usage: $0 [all|python|nodejs|cdk|secrets]"
+            echo "Usage: $0 [all|python|nodejs|cdk]"
             echo "  all:     Run all security scans (default)"
             echo "  python:  Run Python security scan with bandit"
             echo "  nodejs:  Run Node.js security audit"
             echo "  cdk:     Run CDK NAG compliance checks"
-            echo "  secrets: Scan for hardcoded secrets with gitleaks"
+            echo ""
+            echo "Note: Secret scanning (gitleaks) is handled by pre-commit framework and GitHub Actions"
             exit 1
             ;;
     esac
