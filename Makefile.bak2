@@ -116,7 +116,7 @@ security\:%:
 			echo "⚠️  Force fixes completed - review changes carefully!" ;; \
 		*) \
 			echo "Unknown security target: $*"; \
-			echo "Available: scan, python, nodejs, secrets, fix, fix-force"; \
+			echo "Available: scan, python, nodejs, secrets, fix, fix-force, status"; \
 			exit 1 ;; \
 	esac
 

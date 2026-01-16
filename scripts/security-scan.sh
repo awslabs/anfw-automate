@@ -53,20 +53,6 @@ run_npm_audit() {
     print_success "Yarn audit passed"
 }
 
-# CDK NAG Compliance Checking
-run_cdk_nag() {
-    print_status "Running CDK NAG compliance checks..."
-    
-    for module in app firewall vpc; do
-        if [ -f "$module/cdk.json" ]; then
-            print_status "Checking $module..."
-            (cd "$module" && yarn build > /dev/null 2>&1 && yarn exec cdk synth > /dev/null)
-        fi
-    done
-    
-    print_success "CDK NAG compliance checks passed"
-}
-
 # Secret Scanning with gitleaks
 run_secret_scan() {
     print_status "Scanning for hardcoded secrets with gitleaks..."
@@ -103,9 +89,6 @@ main() {
         "nodejs"|"npm"|"yarn")
             run_npm_audit
             ;;
-        "cdk"|"nag")
-            run_cdk_nag
-            ;;
         "secrets"|"git-secrets")
             print_error "Secret scanning with gitleaks is no longer supported via this script"
             print_error "Gitleaks runs automatically:"
@@ -120,13 +103,13 @@ main() {
             run_npm_audit
             ;;
         *)
-            echo "Usage: $0 [all|python|nodejs|cdk]"
+            echo "Usage: $0 [all|python|nodejs]"
             echo "  all:     Run all security scans (default)"
             echo "  python:  Run Python security scan with bandit"
             echo "  nodejs:  Run Node.js security audit"
-            echo "  cdk:     Run CDK NAG compliance checks (requires valid config)"
             echo ""
             echo "Note: Secret scanning (gitleaks) is handled by pre-commit hook"
+            echo "Note: CDK NAG compliance checks run automatically during 'make build'"
             exit 1
             ;;
     esac
