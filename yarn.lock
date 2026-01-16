@@ -3254,7 +3254,6 @@ __metadata:
     eslint: "npm:^9.39.2"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-prettier: "npm:^5.5.4"
-    gitleaks: "npm:^1.0.0"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.2.7"
     prettier: "npm:^3.7.4"
@@ -5304,13 +5303,6 @@ __metadata:
   bin:
     git-raw-commits: cli.mjs
   checksum: 10c0/ab51335d9e55692fce8e42788013dba7a7e7bf9f5bf0622c8cd7ddc9206489e66bb939563fca4edb3aa87477e2118f052702aad1933b13c6fa738af7f29884f0
-  languageName: node
-  linkType: hard
-
-"gitleaks@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "gitleaks@npm:1.0.0"
-  checksum: 10c0/126d819495f6f5cb91390a67d2e41ff4f1140412b46501ae2e25f73de1282e94233ca8874946651dc0a70cb0bc346a58fdc292150520451efad6e71ef791dd25
   languageName: node
   linkType: hard
 

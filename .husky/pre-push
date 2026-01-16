@@ -26,9 +26,9 @@ if ! make lint; then
     exit 1
 fi
 
-# Run comprehensive security scan
-echo "🔒 Running comprehensive security scan..."
-if ! make security:scan; then
+# Run comprehensive security scan (bandit, yarn audit, cdk-nag)
+echo "🔒 Running security scan..."
+if ! make security:python || ! make security:nodejs || ! make security:cdk; then
     echo ""
     echo "❌ Security scan failed. Fix issues before pushing."
     exit 1

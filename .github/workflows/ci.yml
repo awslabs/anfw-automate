@@ -7,6 +7,18 @@ on:
     branches: [main, dev]
 
 jobs:
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        run: make security:secrets
+
   validate-commits:
     name: Validate Commit Messages
     runs-on: ubuntu-latest
@@ -125,18 +137,20 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
 
-      - name: Install Node.js dependencies
-        run: yarn install --immutable
+      - name: Install dependencies
+        run: make setup
 
       - name: Install Python dependencies
         run: |
-          # Install bandit and other security tools for Python scanning
           cd app/src && poetry install --only test --no-root
           cd ../../firewall/lambda/delete_routes && poetry install --only test --no-root
           cd ../fetch_vpc_endpoints && poetry install --only test --no-root
 
-      - name: Run comprehensive security scan
-        run: make security:scan
+      - name: Run security scan
+        run: |
+          make security:python
+          make security:nodejs
+          make security:cdk
 
   enforce-pr-title:
     name: Enforce PR Title Format
