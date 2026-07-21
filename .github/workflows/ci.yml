@@ -57,12 +57,12 @@ jobs:
         run: yarn install --immutable
 
       - name: Validate branch name
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
         run: |
-          branch_name="${{ github.head_ref }}"
-          echo "Validating branch name: $branch_name"
-
-          if [[ ! "$branch_name" =~ ^(feature|hotfix|release)/.+ ]]; then
-            echo "❌ Branch name '$branch_name' does not follow the required pattern."
+          echo "Validating branch name: $BRANCH_NAME"
+          if [[ ! "$BRANCH_NAME" =~ ^(feature|hotfix|release)/.+ ]]; then
+            echo "❌ Branch name '$BRANCH_NAME' does not follow the required pattern."
             echo "   Branch names must follow: feature/*, hotfix/*, or release/*"
             echo "   Examples:"
             echo "   - feature/add-new-validation"
@@ -70,7 +70,6 @@ jobs:
             echo "   - release/v2.1.0"
             exit 1
           fi
-
           echo "✅ Branch name is valid!"
 
   lint-and-format:
@@ -130,26 +129,27 @@ jobs:
 
       - name: Run security scan
         run: make security:scan
-
+  
   enforce-pr-title:
     name: Enforce PR Title Format
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
     steps:
-      - name: Validate PR title
-        run: |
-          pr_title="${{ github.event.pull_request.title }}"
-          echo "Validating PR title: $pr_title"
-
-          # Check if PR title follows conventional commit format
-          if [[ ! "$pr_title" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+ ]]; then
-            echo "❌ PR title '$pr_title' does not follow conventional commit format."
-            echo "   PR titles must follow: type(scope): description"
-            echo "   Examples:"
-            echo "   - feat(app): add new validation feature"
-            echo "   - fix(firewall): resolve routing issue"
-            echo "   - docs: update deployment guide"
-            exit 1
-          fi
-
-          echo "✅ PR title is valid!"
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
