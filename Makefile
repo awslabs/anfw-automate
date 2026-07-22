@@ -1,5 +1,14 @@
 all: build
 
+# ---------------------------------------------------------------------------
+# DVP Configuration
+# ---------------------------------------------------------------------------
+# Minimum coverage threshold resolved from scripts/velocity/config.toml via the
+# coverage-ratchet script. The ratchet rejects any configured value lower than
+# the most recently committed threshold (Requirement 3.7).
+# Override on the command line: make unit COV_MIN=60
+COV_MIN ?= $(shell python3 scripts/velocity/coverage_ratchet.py 2>/dev/null || echo 40)
+
 help: 
 	@echo "Available targets:"
 	@echo ""
@@ -12,6 +21,14 @@ help:
 	@echo "  lint             - Run linting on all modules"
 	@echo "  lint-fix         - Fix lint issues on all modules"
 	@echo "  format           - Format code with Prettier"
+	@echo ""
+	@echo "🧪 DVP Gate Commands:"
+	@echo "  unit             - Run all unit tests (Python + CDK)"
+	@echo "  unit:python      - Run Python unit/property tests with coverage"
+	@echo "  unit:cdk         - Run CDK Jest assertion tests"
+	@echo "  int              - Run integration tests against INT account"
+	@echo "  promote          - Run the promotion flow (unit → INT → prod)"
+	@echo "  gate             - Alias for unit (pre-merge gate)"
 	@echo ""
 	@echo "🔒 Security Commands:"
 	@echo "  security:scan    - Run comprehensive security scanning (secrets, Python, Node.js)"
@@ -39,7 +56,51 @@ help:
 	@echo "  test:<module>    - Test specific module"
 	@echo "  deploy:<module>  - Deploy specific module"
 
+# ---------------------------------------------------------------------------
+# DVP Gate Targets
+# ---------------------------------------------------------------------------
+
+## Validate coverage ratchet (COV_MIN cannot decrease)
+cov-ratchet:
+	@echo "🔒 Checking coverage ratchet..."
+	@python3 scripts/velocity/coverage_ratchet.py >/dev/null
+
+## Run all unit tests (Python + CDK); emit gate marker on success (fail-closed)
+unit:
+	@$(MAKE) cov-ratchet
+	@$(MAKE) unit:python
+	@$(MAKE) unit:cdk
+	@echo "🎯 All unit tests passed. Emitting gate marker..."
+	@COV=$$(cd app/src && uv run pytest -m "not integration" --cov=. --cov-report=term-missing -q 2>/dev/null | grep -E "^TOTAL\s" | awk '{print $$NF}' | tr -d '%'); \
+	if [ -z "$$COV" ]; then COV="0"; fi; \
+	python3 scripts/velocity/gate_marker.py --kind unit --coverage "$$COV"
+
+## Run Python unit and property tests with coverage enforcement
+unit\:python:
+	@echo "🐍 Running Python unit/property tests..."
+	cd app/src && uv run pytest -m "not integration" --cov=. --cov-report=term-missing --cov-fail-under=$(COV_MIN)
+
+## Run CDK Jest assertion tests
+unit\:cdk:
+	@echo "🏗️  Running CDK assertion tests..."
+	yarn workspace app test
+
+## Run integration tests against the INT account
+int:
+	@echo "🔬 Running integration tests..."
+	bash scripts/velocity/int-run.sh
+
+## Run the promotion flow (unit → INT → prod)
+promote:
+	@echo "🚀 Running promotion flow..."
+	bash scripts/velocity/promote.sh
+
+## Pre-merge gate (alias for unit)
+gate: unit
+
+# ---------------------------------------------------------------------------
 # Core build and test commands (delegate to yarn workspaces)
+# ---------------------------------------------------------------------------
 build:
 	@echo "🏗️  Building all modules..."
 	yarn build
@@ -171,4 +232,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update
+.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update unit unit\:python unit\:cdk int promote gate cov-ratchet

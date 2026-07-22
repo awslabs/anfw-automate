@@ -31,8 +31,19 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Install dependencies
         run: yarn install --immutable
+
+      - name: Install Python dependencies
+        run: cd app/src && uv sync
 
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: yarn npm audit signatures
@@ -42,8 +53,8 @@ jobs:
           STAGE: dev
         run: make build
 
-      - name: Run tests
-        run: make test
+      - name: Run unit tests
+        run: make unit
 
   release:
     name: Release (Requires Approval)
