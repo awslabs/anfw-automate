@@ -29,6 +29,7 @@ help:
 	@echo "  int              - Run integration tests against INT account"
 	@echo "  promote          - Run the promotion flow (unit → INT → prod)"
 	@echo "  gate             - Alias for unit (pre-merge gate)"
+	@echo "  ecr-login        - Log in to ECR Public (for Docker bundling)"
 	@echo ""
 	@echo "🔒 Security Commands:"
 	@echo "  security:scan    - Run comprehensive security scanning (secrets, Python, Node.js)"
@@ -59,6 +60,11 @@ help:
 # ---------------------------------------------------------------------------
 # DVP Gate Targets
 # ---------------------------------------------------------------------------
+
+## Log in to ECR Public (required for Docker-based Lambda bundling)
+ecr-login:
+	@echo "🔑 Logging in to ECR Public..."
+	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 
 ## Validate coverage ratchet (COV_MIN cannot decrease)
 cov-ratchet:
@@ -232,4 +238,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update unit unit\:python unit\:cdk int promote gate cov-ratchet
+.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update unit unit\:python unit\:cdk int promote gate cov-ratchet ecr-login
