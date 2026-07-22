@@ -20,7 +20,7 @@
 # -----------------------------------------------------------------------------
 [int_account]
 # PLACEHOLDER — replace with the real 12-digit AWS account id before Phase 2/3.
-account_id = "PLACEHOLDER_INT_ACCOUNT_ID"
+account_id = "537622539377"
 
 # The account MUST carry this tag for the guardrail to accept it.
 expected_tag_key = "env"

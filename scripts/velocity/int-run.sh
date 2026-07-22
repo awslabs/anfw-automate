@@ -69,6 +69,7 @@ echo ""
 
 cd app/src
 if uv run pytest -m "integration" \
+    --timeout=90 \
     --tb=short \
     --junitxml="../../.velocity/reports/int-junit.xml" \
     "../../tests/integration/cases/" 2>&1; then
