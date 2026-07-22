@@ -26,6 +26,7 @@ test = [
     "bandit>=1.9.2,<2",
     "pip-audit>=2.10.0,<3",
     "pip-licenses>=4.5.1,<5",
+    "pytest-timeout>=2.4.0",
 ]
 
 [tool.uv]
