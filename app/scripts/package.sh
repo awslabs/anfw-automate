@@ -19,7 +19,8 @@ echo "requirements.txt generated at app/src/requirements.txt"
 cd ..
 
 # ─── Package the source code ──────────────────────────────────────────────────
-rm -r dist/* || mkdir -p dist
+rm -rf dist
+mkdir -p dist
 cp -r src/* dist/
 cp -r dist/data dist/RuleCollect/data && cp -r dist/lib dist/RuleCollect/lib
 cp -r dist/data dist/RuleExecute/data && cp -r dist/lib dist/RuleExecute/lib
