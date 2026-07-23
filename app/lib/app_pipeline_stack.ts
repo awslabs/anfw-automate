@@ -125,6 +125,32 @@ export class AppPipelineStack extends TaggedStack {
       }
     });
 
+    // ─── Integration Test Stage ───────────────────────────────────────────
+    // Runs after all deploy waves complete. Executes `make unit` (refresh gate
+    // marker) then `make int` (integration tests against the just-deployed stacks).
+    // This replaces the GitHub Actions INT job — the pipeline owns the full
+    // deploy → test → promote flow.
+    const intTestStep = new CodeBuildStep('IntegrationTests', {
+      commands: [
+        'corepack enable',
+        'yarn install --immutable',
+        'pip install uv',
+        'cd app/src && uv sync && cd ../..',
+        'make unit',
+        'make int',
+      ],
+      env: {
+        STAGE: props.stage,
+      },
+      buildEnvironment: {
+        privileged: true,
+      },
+    });
+
+    const intTestWave = pipeline.addWave('IntegrationTests', {
+      post: [intTestStep],
+    });
+
     pipeline.buildPipeline();
 
     NagSuppressions.addStackSuppressions(this as unknown as cdk.Stack, [
