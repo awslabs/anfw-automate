@@ -270,6 +270,53 @@ SSM parameter '/anfw-automate/dev/global/config' not accessible (no AWS credenti
 This ensures the system works seamlessly in both AWS environments (with SSM) and
 local development environments (with files).
 
+#### Migrating JSON Config Files to SSM Parameter Store
+
+To migrate from local JSON config files to SSM Parameter Store (recommended for
+deployed environments):
+
+```bash
+# Upload global config (conf/{stage}.json → SSM)
+aws ssm put-parameter \
+  --name "/anfw-automate/{stage}/global/config" \
+  --type "String" \
+  --value file://conf/{stage}.json \
+  --overwrite
+
+# Upload app module config (app/conf/{stage}.json → SSM)
+aws ssm put-parameter \
+  --name "/anfw-automate/{stage}/app/config" \
+  --type "String" \
+  --value file://app/conf/{stage}.json \
+  --overwrite
+```
+
+**Example for `int` stage:**
+
+```bash
+aws ssm put-parameter \
+  --name "/anfw-automate/int/global/config" \
+  --type "String" \
+  --value file://conf/int.json \
+  --overwrite
+
+aws ssm put-parameter \
+  --name "/anfw-automate/int/app/config" \
+  --type "String" \
+  --value file://app/conf/int.json \
+  --overwrite
+```
+
+**Verify:**
+
+```bash
+aws ssm get-parameter --name "/anfw-automate/int/global/config" --query "Parameter.Value" --output text | python3 -m json.tool
+aws ssm get-parameter --name "/anfw-automate/int/app/config" --query "Parameter.Value" --output text | python3 -m json.tool
+```
+
+Once SSM parameters are in place, the local JSON files are no longer needed for
+that stage (they serve as fallback only).
+
 ### Environment Configuration
 
 Create `deploy_vars.sh` in the root directory:
