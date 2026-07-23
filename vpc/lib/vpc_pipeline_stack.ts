@@ -28,7 +28,12 @@ export class VpcPipelineStack extends TaggedStack {
 
     const synthStep = new CodeBuildStep('Synth', {
       input: sourceCode,
-      commands: ['corepack enable', 'cd vpc', 'make'],
+      commands: [
+        'corepack enable',
+        'yarn install --immutable',
+        'cd vpc',
+        'make',
+      ],
       primaryOutputDirectory: 'vpc/cdk.out',
       env: {
         STAGE: props.stage,
