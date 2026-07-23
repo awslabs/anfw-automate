@@ -189,6 +189,7 @@ class StableEnvResolver:
         Requirements 6.5, 6.6
         """
         name_prefix = self._load_name_prefix()
+        stage = self._load_stage()
 
         # Determine account_id and region from the session
         try:
@@ -204,13 +205,16 @@ class StableEnvResolver:
         # Read CloudFormation exports
         export_map = self._read_cfn_exports(name_prefix, region)
 
-        # Map export names to IntEnv fields
+        # Map export names to IntEnv fields. These match the consolidated
+        # IntBaseStack exports (stage-suffixed). `vpc_id` is the dummy tenant's
+        # TGW-attached workload VPC — the VPC that gets onboarded and whose
+        # TGW attachment RuleCollect verifies.
         required_handles = {
-            "config_bucket": f"{name_prefix}-int-config-bucket-name",
-            "vpc_id": f"{name_prefix}-int-vpc-id",
-            "firewall_policy_arn": f"{name_prefix}-int-firewall-policy-arn",
-            "xaccount_role_arn": f"{name_prefix}-int-xaccount-role-arn",
-            "event_bus_arn": f"{name_prefix}-int-event-bus-arn",
+            "config_bucket": f"{name_prefix}-int-config-bucket-name-{stage}",
+            "vpc_id": f"{name_prefix}-int-tenant-vpc-id-{stage}",
+            "firewall_policy_arn": f"{name_prefix}-int-firewall-policy-arn-{stage}",
+            "xaccount_role_arn": f"{name_prefix}-int-xaccount-role-arn-{stage}",
+            "event_bus_arn": f"{name_prefix}-int-event-bus-arn-{stage}",
         }
 
         resolved: dict[str, str] = {}
@@ -368,6 +372,16 @@ class StableEnvResolver:
             config = tomllib.load(f)
 
         return config.get("int_account", {}).get("name_prefix", "anfw")
+
+    def _load_stage(self) -> str:
+        """Read the stage from config.toml, defaulting to 'int'."""
+        if not self._config_path.exists():
+            return "int"
+
+        with open(self._config_path, "rb") as f:
+            config = tomllib.load(f)
+
+        return config.get("int_account", {}).get("stage", "int")
 
     def _read_cfn_exports(self, name_prefix: str, region: str) -> dict[str, str]:
         """Read all CloudFormation exports and return those matching the name prefix.
