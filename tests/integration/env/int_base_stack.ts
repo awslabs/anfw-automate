@@ -1,222 +1,287 @@
-import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as networkfirewall from 'aws-cdk-lib/aws-networkfirewall';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as events from 'aws-cdk-lib/aws-events';
-import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 export interface IntBaseStackProps extends StackProps {
-  /**
-   * The name prefix used consistently across the project.
-   * @default 'anfw'
-   */
+  /** Resource naming prefix (matches the app deployment, e.g. "anfw"). */
   readonly namePrefix?: string;
-
+  /** Deployment stage. Defaults to "int". */
+  readonly stage?: string;
   /**
-   * The account IDs allowed to assume the cross-account role.
-   * These are the accounts where the Lambdas (RuleCollect/RuleExecute) run.
+   * The central (firewall/automation) account id that runs RuleCollect/RuleExecute.
+   * In single-account INT this equals the current account. Used for the tenant
+   * cross-account role trust and the central event bus target.
    */
-  readonly trustedAccountIds?: string[];
+  readonly centralAccountId?: string;
 }
 
 /**
- * IntBaseStack — Long-lived CDK stack for integration test prerequisites.
+ * IntBaseStack — consolidated, prod-representative INT environment (single account).
  *
- * Deployed once to the INT account and kept warm. Never destroyed/recreated per
- * test run. Provides:
- * - A VPC attached to a Transit Gateway (RuleCollect skips VPCs not attached to a TGW)
- * - A Network Firewall policy ARN to associate rule groups with
- * - An S3 config bucket with EventBridge notifications enabled
- * - A cross-account role the Lambdas assume
+ * Models the full centralized ANFW + TGW topology in one stack:
  *
- * All handles are exposed as CloudFormation outputs for StableEnvResolver to read.
+ *   Shared Transit Gateway (hub)
+ *    ├─ Inspection side: Network Firewall POLICY (rule groups attach here).
+ *    │   (Automation tests validate rule materialization in this policy; actual
+ *    │    firewall endpoints/routing are not needed to test the control plane.)
+ *    └─ Dummy tenant (mirrors spoke-serverless-stack.yaml + the VPC a real spoke
+ *        account already has):
+ *          - Workload VPC attached to the shared TGW (passes RuleCollect's
+ *            _is_vpc_attached_to_transit_gateway check)
+ *          - S3 config bucket (anfw-allowlist-<region>-<account>-<stage>)
+ *          - Cross-account role the central Lambdas assume to read the bucket
+ *          - EventBridge role + rules forwarding S3/VPC-delete events to the
+ *            central bus (ARN derived by naming convention — no deploy ordering
+ *            dependency on the app pipeline)
+ *          - DLQ + customer log group
+ *
+ * All handles are exposed as CloudFormation exports and resolved at runtime by
+ * the integration conftest (StableEnvResolver). Deployed once, kept warm.
  */
 export class IntBaseStack extends Stack {
-  public readonly vpc: ec2.Vpc;
-  public readonly transitGatewayAttachment: ec2.CfnTransitGatewayAttachment;
+  public readonly tenantVpc: ec2.Vpc;
+  public readonly tgwAttachment: ec2.CfnTransitGatewayAttachment;
   public readonly firewallPolicy: networkfirewall.CfnFirewallPolicy;
   public readonly configBucket: s3.Bucket;
   public readonly crossAccountRole: iam.Role;
-  public readonly eventBus: events.EventBus;
 
   constructor(scope: Construct, id: string, props: IntBaseStackProps = {}) {
     super(scope, id, props);
 
     const namePrefix = props.namePrefix ?? 'anfw';
-    const trustedAccountIds = props.trustedAccountIds ?? [Stack.of(this).account];
+    const stage = props.stage ?? 'int';
+    const namedotprefix = namePrefix.replace(/-/g, '.');
+    const account = Stack.of(this).account;
+    const region = Stack.of(this).region;
+    const centralAccountId = props.centralAccountId ?? account;
+
+    // Central event bus ARN, derived by naming convention from the app's
+    // ServerlessStack (`eb-<prefix>-ConfigEventBus-<stage>`). Deriving it avoids
+    // a hard deploy-ordering dependency between this stack and the app pipeline.
+    const centralEventBusName = `eb-${namePrefix}-ConfigEventBus-${stage}`;
+    const centralEventBusArn = `arn:aws:events:${region}:${centralAccountId}:event-bus/${centralEventBusName}`;
 
     // -------------------------------------------------------------------------
-    // VPC with public/private subnets (for TGW attachment)
-    // -------------------------------------------------------------------------
-    this.vpc = new ec2.Vpc(this, 'IntVpc', {
-      vpcName: `${namePrefix}-int-vpc`,
-      maxAzs: 2,
-      subnetConfiguration: [
-        {
-          cidrMask: 24,
-          name: 'Public',
-          subnetType: ec2.SubnetType.PUBLIC,
-        },
-        {
-          cidrMask: 24,
-          name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-        },
-      ],
-    });
-
-    // -------------------------------------------------------------------------
-    // Transit Gateway + VPC Attachment
-    // RuleCollect skips VPCs not attached to a TGW, so this is required.
+    // Shared Transit Gateway (hub) — connects the tenant VPC to the central
+    // inspection side. Same TGW for everything, per the centralized model.
     // -------------------------------------------------------------------------
     const transitGateway = new ec2.CfnTransitGateway(this, 'IntTransitGateway', {
       description: `${namePrefix}-int-tgw`,
       defaultRouteTableAssociation: 'enable',
       defaultRouteTablePropagation: 'enable',
-      tags: [{ key: 'Name', value: `${namePrefix}-int-tgw` }],
+      tags: [{ key: 'Name', value: `${namePrefix}-int-tgw-${stage}` }],
     });
 
-    this.transitGatewayAttachment = new ec2.CfnTransitGatewayAttachment(
-      this,
-      'IntTgwAttachment',
-      {
-        transitGatewayId: transitGateway.ref,
-        vpcId: this.vpc.vpcId,
-        subnetIds: this.vpc.privateSubnets.map((subnet) => subnet.subnetId),
-        tags: [{ key: 'Name', value: `${namePrefix}-int-tgw-attachment` }],
-      }
-    );
+    // -------------------------------------------------------------------------
+    // Network Firewall policy (inspection side) — rule groups attach here.
+    // -------------------------------------------------------------------------
+    this.firewallPolicy = new networkfirewall.CfnFirewallPolicy(this, 'IntFirewallPolicy', {
+      firewallPolicyName: `plc-${namePrefix}-int-strict-${stage}`,
+      firewallPolicy: {
+        statelessDefaultActions: ['aws:forward_to_sfe'],
+        statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+        statefulEngineOptions: { ruleOrder: 'STRICT_ORDER' },
+        statefulDefaultActions: ['aws:drop_strict', 'aws:alert_strict'],
+      },
+      tags: [{ key: 'Name', value: `plc-${namePrefix}-int-strict-${stage}` }],
+    });
 
     // -------------------------------------------------------------------------
-    // Network Firewall Policy (stateful)
+    // Dummy tenant workload VPC + TGW attachment
     // -------------------------------------------------------------------------
-    this.firewallPolicy = new networkfirewall.CfnFirewallPolicy(
-      this,
-      'IntFirewallPolicy',
-      {
-        firewallPolicyName: `${namePrefix}-int-firewall-policy`,
-        firewallPolicy: {
-          statelessDefaultActions: ['aws:forward_to_sfe'],
-          statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
-          statefulEngineOptions: {
-            ruleOrder: 'STRICT_ORDER',
-          },
-          statefulDefaultActions: ['aws:drop_strict', 'aws:alert_strict'],
-        },
-        tags: [{ key: 'Name', value: `${namePrefix}-int-firewall-policy` }],
-      }
-    );
+    this.tenantVpc = new ec2.Vpc(this, 'TenantWorkloadVpc', {
+      vpcName: `${namePrefix}-tenant-vpc-${stage}`,
+      ipAddresses: ec2.IpAddresses.cidr('10.20.0.0/24'),
+      maxAzs: 2,
+      natGateways: 0,
+      subnetConfiguration: [
+        { cidrMask: 26, name: 'Workload', subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      ],
+    });
+
+    this.tgwAttachment = new ec2.CfnTransitGatewayAttachment(this, 'TenantTgwAttachment', {
+      transitGatewayId: transitGateway.ref,
+      vpcId: this.tenantVpc.vpcId,
+      subnetIds: this.tenantVpc.isolatedSubnets.map((s) => s.subnetId),
+      tags: [{ key: 'Name', value: `${namePrefix}-tenant-tgw-attachment-${stage}` }],
+    });
 
     // -------------------------------------------------------------------------
-    // S3 Config Bucket with EventBridge notifications
+    // Tenant S3 config bucket (mirrors spoke-serverless-stack.yaml ConfigBucket)
     // -------------------------------------------------------------------------
-    this.configBucket = new s3.Bucket(this, 'IntConfigBucket', {
-      bucketName: `${namePrefix}-int-config-${Stack.of(this).account}-${Stack.of(this).region}`,
-      eventBridgeEnabled: true,
-      removalPolicy: RemovalPolicy.RETAIN,
+    this.configBucket = new s3.Bucket(this, 'ConfigBucket', {
+      bucketName: `anfw-allowlist-${region}-${account}-${stage}`,
       versioned: true,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
+      eventBridgeEnabled: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
     // -------------------------------------------------------------------------
-    // EventBridge Bus for config events
+    // Cross-account role the central Lambdas assume (mirrors CrossTargetAccountRole).
+    // Single-account INT → same-account assume-role, identical code path to prod.
     // -------------------------------------------------------------------------
-    this.eventBus = new events.EventBus(this, 'IntConfigEventBus', {
-      eventBusName: `${namePrefix}-int-ConfigEventBus`,
+    this.crossAccountRole = new iam.Role(this, 'CrossTargetAccountRole', {
+      roleName: `rle.${namedotprefix}.xaccount.lmb.${region}.${stage}`,
+      assumedBy: new iam.AccountPrincipal(centralAccountId),
+      path: '/',
     });
-
-    // EventBridge rule to forward S3 object events to the event bus
-    new events.Rule(this, 'IntS3EventRule', {
-      eventBus: events.EventBus.fromEventBusArn(
-        this,
-        'DefaultBus',
-        `arn:aws:events:${Stack.of(this).region}:${Stack.of(this).account}:event-bus/default`
-      ),
-      ruleName: `${namePrefix}-int-s3-config-event`,
-      eventPattern: {
-        source: ['aws.s3'],
-        detailType: ['Object Created', 'Object Deleted'],
-        detail: {
-          bucket: {
-            name: [this.configBucket.bucketName],
-          },
-        },
-      },
-      targets: [new targets.EventBus(this.eventBus)],
-    });
-
-    // -------------------------------------------------------------------------
-    // Cross-account IAM Role
-    // -------------------------------------------------------------------------
-    this.crossAccountRole = new iam.Role(this, 'IntXAccountRole', {
-      roleName: `rle.${namePrefix.replace(/-/g, '.')}.xaccount.lmb.${Stack.of(this).region}.int`,
-      assumedBy: new iam.CompositePrincipal(
-        ...trustedAccountIds.map(
-          (accountId) => new iam.AccountPrincipal(accountId)
-        )
-      ),
-      description:
-        'Cross-account role assumed by RuleCollect/RuleExecute Lambdas during INT tests',
-    });
-
-    // Grant the cross-account role permissions to read from the config bucket
-    this.configBucket.grantRead(this.crossAccountRole);
-
-    // Grant the cross-account role permissions to describe EC2/VPC resources
     this.crossAccountRole.addToPolicy(
       new iam.PolicyStatement({
-        sid: 'DescribeVpcResources',
+        sid: 'ValidationPerms',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:Get*', 's3:List*', 's3:PutBucketNotification'],
+        resources: [this.configBucket.bucketArn, `${this.configBucket.bucketArn}/*`],
+      })
+    );
+    this.crossAccountRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['ec2:DescribeVpcs', 'ec2:DescribeVpcAttribute', 'ec2:DescribeTransitGatewayAttachments'],
+        resources: ['*'],
+      })
+    );
+    this.crossAccountRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'LoggerPerms',
         effect: iam.Effect.ALLOW,
         actions: [
-          'ec2:DescribeVpcs',
-          'ec2:DescribeTransitGatewayAttachments',
-          'ec2:DescribeTransitGatewayVpcAttachments',
+          'logs:Describe*', 'logs:List*', 'logs:GetLogEvents',
+          'logs:CreateLogGroup', 'logs:CreateExportTask', 'logs:CreateLogStream', 'logs:PutLogEvents',
         ],
         resources: ['*'],
       })
     );
 
     // -------------------------------------------------------------------------
-    // CloudFormation Outputs — handles for StableEnvResolver
+    // EventBridge forwarding role + rules (spoke default bus → central bus)
     // -------------------------------------------------------------------------
-    new CfnOutput(this, 'IntVpcId', {
-      description: 'VPC ID of the TGW-attached INT VPC',
-      value: this.vpc.vpcId,
-      exportName: `${namePrefix}-int-vpc-id`,
+    const eventBridgeRole = new iam.Role(this, 'EventBridgeIAMrole', {
+      roleName: `rle.${namedotprefix}.eb.${region}.${stage}`,
+      assumedBy: new iam.ServicePrincipal('events.amazonaws.com'),
+      path: '/',
+    });
+    eventBridgeRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['events:PutEvents'],
+        resources: [centralEventBusArn],
+      })
+    );
+
+    const dlq = new sqs.Queue(this, 'EBDLQueue', {
+      queueName: `dlq-${namePrefix}-ConfigEventBus-${stage}`,
+      enforceSSL: true,
     });
 
+    const s3ObjectRule = new events.Rule(this, 'S3ObjectEventRule', {
+      ruleName: `DoNotDelete-S3ObjectRule-${namePrefix}-${stage}`,
+      description: 'Routes tenant S3 object events to the central event bus',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: [
+          'Object Created', 'Object Deleted',
+          'Object Restore Completed', 'Object Restore Expired', 'Object Restore Initiated',
+        ],
+        detail: { bucket: { name: [this.configBucket.bucketName] } },
+      },
+    });
+    const s3BucketRule = new events.Rule(this, 'S3BucketEventRule', {
+      ruleName: `DoNotDelete-S3BucketRule-${namePrefix}-${stage}`,
+      description: 'Routes tenant S3 bucket delete to the central event bus',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: ['AWS API Call via CloudTrail'],
+        detail: {
+          eventSource: ['s3.amazonaws.com'],
+          eventName: ['DeleteBucket'],
+          requestParameters: { bucketName: [this.configBucket.bucketName] },
+        },
+      },
+    });
+    const vpcDeleteRule = new events.Rule(this, 'VPCDeleteEventRule', {
+      ruleName: `DoNotDelete-VPCDeleteRule-${namePrefix}-${stage}`,
+      description: 'Routes VPC delete events to the central event bus',
+      eventPattern: {
+        source: ['aws.ec2'],
+        detailType: ['AWS API Call via CloudTrail'],
+        detail: { eventSource: ['ec2.amazonaws.com'], eventName: ['DeleteVpc'] },
+      },
+    });
+
+    for (const rule of [s3ObjectRule, s3BucketRule, vpcDeleteRule]) {
+      const cfnRule = rule.node.defaultChild as events.CfnRule;
+      cfnRule.targets = [
+        {
+          arn: centralEventBusArn,
+          id: centralEventBusName,
+          roleArn: eventBridgeRole.roleArn,
+          deadLetterConfig: { arn: dlq.queueArn },
+        },
+      ];
+    }
+
+    dlq.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ServicePrincipal('events.amazonaws.com')],
+        actions: ['sqs:SendMessage'],
+        resources: [dlq.queueArn],
+        conditions: {
+          'ForAnyValue:ArnEquals': {
+            'aws:SourceArn': [s3ObjectRule.ruleArn, s3BucketRule.ruleArn, vpcDeleteRule.ruleArn],
+          },
+        },
+      })
+    );
+
+    new logs.LogGroup(this, 'CustomerLogGroup', {
+      logGroupName: `cw-${namePrefix}-CustomerLog-${stage}`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    // -------------------------------------------------------------------------
+    // CloudFormation exports — resolved at runtime by StableEnvResolver.
+    // -------------------------------------------------------------------------
+    new CfnOutput(this, 'IntTransitGatewayId', {
+      value: transitGateway.ref,
+      description: 'Shared Transit Gateway id',
+      exportName: `${namePrefix}-int-tgw-id-${stage}`,
+    });
+    new CfnOutput(this, 'IntTenantVpcId', {
+      value: this.tenantVpc.vpcId,
+      description: 'Dummy tenant workload VPC id (TGW-attached)',
+      exportName: `${namePrefix}-int-tenant-vpc-id-${stage}`,
+    });
     new CfnOutput(this, 'IntFirewallPolicyArn', {
-      description: 'ARN of the INT Network Firewall policy',
       value: this.firewallPolicy.attrFirewallPolicyArn,
-      exportName: `${namePrefix}-int-firewall-policy-arn`,
+      description: 'Central Network Firewall policy ARN',
+      exportName: `${namePrefix}-int-firewall-policy-arn-${stage}`,
     });
-
     new CfnOutput(this, 'IntConfigBucketName', {
-      description: 'Name of the INT S3 config bucket',
       value: this.configBucket.bucketName,
-      exportName: `${namePrefix}-int-config-bucket-name`,
+      description: 'Tenant S3 config bucket name',
+      exportName: `${namePrefix}-int-config-bucket-name-${stage}`,
     });
-
-    new CfnOutput(this, 'IntConfigBucketArn', {
-      description: 'ARN of the INT S3 config bucket',
-      value: this.configBucket.bucketArn,
-      exportName: `${namePrefix}-int-config-bucket-arn`,
-    });
-
     new CfnOutput(this, 'IntXAccountRoleArn', {
-      description: 'ARN of the cross-account role for Lambda assumption',
       value: this.crossAccountRole.roleArn,
-      exportName: `${namePrefix}-int-xaccount-role-arn`,
+      description: 'Cross-account role ARN assumed by the central Lambdas',
+      exportName: `${namePrefix}-int-xaccount-role-arn-${stage}`,
     });
-
-    new CfnOutput(this, 'IntEventBusArn', {
-      description: 'ARN of the INT EventBridge event bus',
-      value: this.eventBus.eventBusArn,
-      exportName: `${namePrefix}-int-event-bus-arn`,
+    new CfnOutput(this, 'IntCentralEventBusArn', {
+      value: centralEventBusArn,
+      description: 'Central event bus ARN (by convention) the tenant forwards to',
+      exportName: `${namePrefix}-int-event-bus-arn-${stage}`,
     });
   }
 }

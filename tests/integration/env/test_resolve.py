@@ -55,13 +55,13 @@ def _make_exports_response(
     """Build a mock list_exports paginator response with all required exports."""
     omit = omit or []
     all_exports = [
-        {"Name": f"{_NAME_PREFIX}-int-vpc-id", "Value": vpc_id},
-        {"Name": f"{_NAME_PREFIX}-int-firewall-policy-arn", "Value": firewall_policy_arn},
-        {"Name": f"{_NAME_PREFIX}-int-config-bucket-name", "Value": config_bucket},
-        {"Name": f"{_NAME_PREFIX}-int-xaccount-role-arn", "Value": xaccount_role_arn},
-        {"Name": f"{_NAME_PREFIX}-int-event-bus-arn", "Value": event_bus_arn},
+        {"Name": f"{_NAME_PREFIX}-int-tenant-vpc-id-int", "Value": vpc_id},
+        {"Name": f"{_NAME_PREFIX}-int-firewall-policy-arn-int", "Value": firewall_policy_arn},
+        {"Name": f"{_NAME_PREFIX}-int-config-bucket-name-int", "Value": config_bucket},
+        {"Name": f"{_NAME_PREFIX}-int-xaccount-role-arn-int", "Value": xaccount_role_arn},
+        {"Name": f"{_NAME_PREFIX}-int-event-bus-arn-int", "Value": event_bus_arn},
         # Extra export that should be ignored (not required)
-        {"Name": f"{_NAME_PREFIX}-int-config-bucket-arn", "Value": "arn:aws:s3:::bucket"},
+        {"Name": f"{_NAME_PREFIX}-int-tgw-id-int", "Value": "tgw-123"},
     ]
     exports = [e for e in all_exports if e["Name"] not in omit]
     return [{"Exports": exports}]
@@ -183,7 +183,7 @@ class TestResolveMissingHandle:
         mock_cfn = MagicMock()
         mock_paginator = MagicMock()
         mock_paginator.paginate.return_value = _make_exports_response(
-            omit=[f"{_NAME_PREFIX}-int-vpc-id"]
+            omit=[f"{_NAME_PREFIX}-int-tenant-vpc-id-int"]
         )
         mock_cfn.get_paginator.return_value = mock_paginator
 
@@ -202,7 +202,7 @@ class TestResolveMissingHandle:
 
         resolver = StableEnvResolver(config_path=config_file)
 
-        with pytest.raises(ResolveError, match="anfw-int-vpc-id"):
+        with pytest.raises(ResolveError, match="anfw-int-tenant-vpc-id-int"):
             resolver.resolve(_RUN_ID)
 
     @patch("tests.integration.env.stable.boto3.session.Session")
@@ -221,8 +221,8 @@ class TestResolveMissingHandle:
         # Omit multiple handles
         mock_paginator.paginate.return_value = _make_exports_response(
             omit=[
-                f"{_NAME_PREFIX}-int-vpc-id",
-                f"{_NAME_PREFIX}-int-event-bus-arn",
+                f"{_NAME_PREFIX}-int-tenant-vpc-id-int",
+                f"{_NAME_PREFIX}-int-event-bus-arn-int",
             ]
         )
         mock_cfn.get_paginator.return_value = mock_paginator
@@ -246,8 +246,8 @@ class TestResolveMissingHandle:
             resolver.resolve(_RUN_ID)
 
         msg = str(exc_info.value)
-        assert "anfw-int-vpc-id" in msg
-        assert "anfw-int-event-bus-arn" in msg
+        assert "anfw-int-tenant-vpc-id-int" in msg
+        assert "anfw-int-event-bus-arn-int" in msg
 
     @patch("tests.integration.env.stable.boto3.session.Session")
     @patch("tests.integration.env.stable.boto3.client")
