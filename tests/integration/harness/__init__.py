@@ -1,29 +1,22 @@
 """Integration test harness components.
 
-Provides utilities for driving the real event path and asserting real
-Network Firewall state during integration test runs.
+Provides utilities for driving the real event path and asserting
+tenant-observable outcomes (CloudWatch logs and network reachability).
 """
 
 from tests.integration.harness.config_publisher import (
     ConfigPublisher,
     ConfigPublishError,
 )
-from tests.integration.harness.firewall_inspector import FirewallInspector
-from tests.integration.harness.polling import (
-    TimeoutError,
-    wait_until,
-)
-from tests.integration.harness.report import (
-    IntRunReport,
-    TestResult,
-)
+from tests.integration.harness.tenant_logs import TenantLogChecker
+from tests.integration.harness.reachability import ReachabilityChecker
+from tests.integration.harness.polling import TimeoutError, wait_until
 
 __all__ = [
     "ConfigPublisher",
     "ConfigPublishError",
-    "FirewallInspector",
-    "IntRunReport",
-    "TestResult",
+    "TenantLogChecker",
+    "ReachabilityChecker",
     "TimeoutError",
     "wait_until",
 ]
