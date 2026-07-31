@@ -16,7 +16,7 @@ NOT emitted, blocking promotion.
 | Stable tier health | CloudFormation console | IntBaseStack + app stacks in `UPDATE_COMPLETE` |
 | Ephemeral cleanup | IntRunReport | `mutations_reverted: false` means leaked artifacts |
 | Timeouts | Test output | `wait_until` timeout failures (predicate unmet in 240s) |
-| Network Firewall state | NF console / `FirewallInspector` | Run-id rule groups present or absent |
+| Network Firewall state | NF console / customer logs | Rule processing outcomes in tenant CW logs |
 
 ## Actions
 

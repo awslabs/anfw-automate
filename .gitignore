@@ -44,6 +44,8 @@ app/src/requirements.txt
 # Testing
 coverage/
 .coverage
+__pycache__/
+*.pyc
 .nyc_output/
 test-results.xml
 junit.xml

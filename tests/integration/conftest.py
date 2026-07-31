@@ -2,7 +2,7 @@
 
 Provides tenant-identity fixtures using the tenant-observable outcomes
 model. Cleanup is handled by deleting configs from S3 (triggering the
-real delete flow) rather than a manual MutationCleaner.
+real delete flow) in the fixture teardown.
 
 Fixtures:
 - boto3_session: authenticated session for the INT account
