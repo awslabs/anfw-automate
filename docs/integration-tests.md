@@ -149,6 +149,7 @@ Per-run (ephemeral — created and reverted each run):
 └── Network Firewall rule groups (run-id scoped)
 ```
 
-The integration tests mutate only the ephemeral tier. The `MutationCleaner`
-reverts everything regardless of test outcome (pass/fail/error). The stable
-tier is never destroyed or recreated per run.
+The integration tests upload configs to the tenant's real S3 bucket and verify
+outcomes via customer CloudWatch logs and network reachability probes. Cleanup
+is handled by deleting configs from S3 in fixture teardown, triggering the
+real delete flow.

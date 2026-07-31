@@ -61,9 +61,8 @@ echo ""
 # --- Step 2: Run integration tests ---
 # The conftest.py handles:
 #   - Account guardrail (assert_is_int_account)
-#   - RunScope creation
-#   - Baseline capture
-#   - Guaranteed revert in finally block
+#   - Tenant config resolution from CFN exports
+#   - Config cleanup in fixture teardown
 echo "▶ Step 2: Running integration tests..."
 echo ""
 
