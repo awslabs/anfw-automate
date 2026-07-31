@@ -1,44 +1,61 @@
 """Integration test session fixtures.
 
-Provides run-id, boto3 sessions, resolved IntEnv, serial-execution default,
-and a finally-wrapped revert-on-failure fixture that always calls
-MutationCleaner.
+Provides tenant-identity fixtures using the tenant-observable outcomes
+model. Cleanup is handled by deleting configs from S3 (triggering the
+real delete flow) rather than a manual MutationCleaner.
 
-Requirements: 7.1, 10.1, 10.6
+Fixtures:
+- boto3_session: authenticated session for the INT account
+- tenant_config: resolved from IntBaseStack CFN exports (bucket, vpc, log group)
+- config_publisher: publishes/deletes configs to tenant S3
+- log_checker: polls customer CloudWatch logs
+- reachability: checks network reachability from tenant VPC via probe Lambda
 """
 
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 import boto3
 import pytest
 
-from tests.integration.env.mutation_cleaner import MutationCleaner, RevertResult
-from tests.integration.env.run_scope import RunScope
-from tests.integration.env.stable import IntEnv, StableEnvResolver
+from tests.integration.env.stable import StableEnvResolver
+from tests.integration.harness.config_publisher import ConfigPublisher
+from tests.integration.harness.tenant_logs import TenantLogChecker
+from tests.integration.harness.reachability import ReachabilityChecker
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Serial execution marker — integration tests run serially by default (Req 10.6)
+# Serial execution marker — integration tests run serially by default
 # ---------------------------------------------------------------------------
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Mark all integration test items for serial execution.
-
-    By default, integration tests run one at a time against the shared stable
-    firewall policy to avoid Network Firewall API rate-limit pressure and
-    shared-policy contention.
-
-    If pytest-xdist is installed, this applies the ``serial`` marker so xdist
-    does not parallelize them. Without xdist, tests already run sequentially.
-    """
+    """Mark all integration test items for serial execution."""
     for item in items:
         if "integration" in str(item.fspath):
             item.add_marker(pytest.mark.serial)
+
+
+# ---------------------------------------------------------------------------
+# Data model for resolved tenant config
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class TenantConfig:
+    """Immutable handle set resolved from the deployed IntBaseStack."""
+
+    account_id: str
+    region: str
+    config_bucket: str
+    vpc_id: str
+    log_group_name: str
+    probe_function_name: str
+    firewall_policy_arn: str
 
 
 # ---------------------------------------------------------------------------
@@ -48,88 +65,87 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 @pytest.fixture(scope="session")
 def boto3_session() -> boto3.Session:
-    """Provide a boto3.Session configured for the INT account.
-
-    Uses the default credential chain (env vars, instance profile, or
-    AWS config profile) which should resolve to the allowlisted INT account.
-    """
+    """Provide a boto3.Session for the INT account."""
     return boto3.Session()
 
 
 @pytest.fixture(scope="session")
-def int_env(boto3_session: boto3.Session) -> IntEnv:
-    """Resolve the IntEnv from stable stacks via StableEnvResolver.
+def tenant_config(boto3_session: boto3.Session) -> TenantConfig:
+    """Resolve tenant config from IntBaseStack CFN exports.
 
-    Calls assert_is_int_account() before resolving to guarantee we are
-    operating against the allowlisted INT account and never against production.
-
-    The resolved IntEnv is immutable and shared across all integration tests
-    in the session.
+    Calls assert_is_int_account() first to guarantee safety.
     """
     resolver = StableEnvResolver()
     resolver.assert_is_int_account()
 
-    # Create a RunScope to get the run_id for resolution
-    scope = RunScope.create()
-    return resolver.resolve(run_id=scope.run_id)
+    name_prefix = resolver._load_name_prefix()
+    stage = resolver._load_stage()
+    region = boto3_session.region_name or "eu-west-1"
+
+    sts = boto3_session.client("sts")
+    account_id = sts.get_caller_identity()["Account"]
+
+    export_map = resolver._read_cfn_exports(name_prefix, region)
+
+    config_bucket = export_map.get(f"{name_prefix}-int-config-bucket-name-{stage}", "")
+    vpc_id = export_map.get(f"{name_prefix}-int-tenant-vpc-id-{stage}", "")
+    firewall_policy_arn = export_map.get(f"{name_prefix}-int-firewall-policy-arn-{stage}", "")
+    probe_function_name = export_map.get(f"{name_prefix}-int-probe-function-name-{stage}", "")
+    log_group_name = f"cw-{name_prefix}-CustomerLog-{stage}"
+
+    assert config_bucket, f"Missing export: {name_prefix}-int-config-bucket-name-{stage}"
+    assert vpc_id, f"Missing export: {name_prefix}-int-tenant-vpc-id-{stage}"
+
+    return TenantConfig(
+        account_id=account_id,
+        region=region,
+        config_bucket=config_bucket,
+        vpc_id=vpc_id,
+        log_group_name=log_group_name,
+        probe_function_name=probe_function_name,
+        firewall_policy_arn=firewall_policy_arn,
+    )
 
 
-@pytest.fixture(scope="session")
-def run_scope() -> RunScope:
-    """Create a fresh RunScope with a unique Run_Id for this session.
-
-    The Run_Id follows the format ``int-<shortsha>-<epoch>`` and is used to
-    isolate this run's ephemeral artifacts (S3 config keys and rule group
-    names) within the shared stable infrastructure.
-
-    Validates: Requirement 7.1
-    """
-    return RunScope.create()
+# ---------------------------------------------------------------------------
+# Function-scoped fixtures (per-test isolation via config cleanup)
+# ---------------------------------------------------------------------------
 
 
-@pytest.fixture(scope="session")
-def mutation_cleaner(
-    int_env: IntEnv,
-    run_scope: RunScope,
+@pytest.fixture
+def config_publisher(
     boto3_session: boto3.Session,
-) -> MutationCleaner:
-    """Create a MutationCleaner that captures baseline and always reverts.
+    tenant_config: TenantConfig,
+) -> ConfigPublisher:
+    """Provide a ConfigPublisher that auto-cleans up after each test."""
+    publisher = ConfigPublisher(
+        session=boto3_session,
+        bucket_name=tenant_config.config_bucket,
+    )
+    yield publisher
+    logger.info("config_publisher teardown: cleaning up uploaded configs")
+    publisher.cleanup_all()
 
-    Lifecycle:
-    1. Creates the MutationCleaner with the resolved IntEnv and boto3 session.
-    2. Captures the firewall policy baseline BEFORE any test mutations.
-    3. Yields the cleaner for tests to use (artifacts tracked via RunScope).
-    4. In the finally block: ALWAYS calls revert(run_scope) regardless of
-       test outcome (pass/fail/error) to restore baseline.
 
-    Validates: Requirements 10.1, 10.6
-    """
-    cleaner = MutationCleaner(env=int_env, session=boto3_session)
-    cleaner.capture_baseline()
+@pytest.fixture
+def log_checker(
+    boto3_session: boto3.Session,
+    tenant_config: TenantConfig,
+) -> TenantLogChecker:
+    """Provide a TenantLogChecker for the customer log group."""
+    return TenantLogChecker(
+        session=boto3_session,
+        log_group_name=tenant_config.log_group_name,
+    )
 
-    try:
-        yield cleaner
-    finally:
-        logger.info(
-            "mutation_cleaner teardown: reverting run '%s' mutations",
-            run_scope.run_id,
-        )
-        result: RevertResult = cleaner.revert(run_scope)
 
-        if result.mutations_reverted and result.baseline_restored:
-            logger.info(
-                "Revert complete for run '%s': mutations_reverted=%s, "
-                "baseline_restored=%s",
-                run_scope.run_id,
-                result.mutations_reverted,
-                result.baseline_restored,
-            )
-        else:
-            logger.error(
-                "Revert INCOMPLETE for run '%s': mutations_reverted=%s, "
-                "baseline_restored=%s, failed_artifacts=%s",
-                run_scope.run_id,
-                result.mutations_reverted,
-                result.baseline_restored,
-                result.failed_artifacts,
-            )
+@pytest.fixture
+def reachability(
+    boto3_session: boto3.Session,
+    tenant_config: TenantConfig,
+) -> ReachabilityChecker:
+    """Provide a ReachabilityChecker using the probe Lambda in the tenant VPC."""
+    return ReachabilityChecker(
+        session=boto3_session,
+        checker_function_name=tenant_config.probe_function_name,
+    )

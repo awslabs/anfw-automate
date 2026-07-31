@@ -100,15 +100,6 @@ class IntEnv:
     event_bus_arn: str
 
 
-@dataclass
-class RunScope:
-    """Tracks the ephemeral artifacts created during a single integration run."""
-
-    run_id: str
-    config_keys: list[str] = field(default_factory=list)
-    rule_group_names: list[str] = field(default_factory=list)
-
-
 # ---------------------------------------------------------------------------
 # StableEnvResolver
 # ---------------------------------------------------------------------------
