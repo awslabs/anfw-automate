@@ -1,0 +1,99 @@
+# =============================================================================
+# DVP Configuration — Maintainer-Confirmed Open Items
+# =============================================================================
+#
+# This file records decisions that were explicitly confirmed by the maintainer
+# and are referenced by the DVP phases. Each section maps to a Task 1.x sub-task
+# from the implementation plan.
+#
+# Values marked PLACEHOLDER require the maintainer to replace them with real
+# values before the dependent phase can run. All other values are confirmed and
+# final.
+#
+# Requirement traceability is noted per section.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1.1 INT Account Identity and Allowlist
+# Blocks: Phase 2/3
+# Requirements: 5.5, 6.1
+# -----------------------------------------------------------------------------
+[int_account]
+# PLACEHOLDER — replace with the real 12-digit AWS account id before Phase 2/3.
+account_id = "537622539377"
+
+# The account MUST carry this tag for the guardrail to accept it.
+expected_tag_key = "env"
+expected_tag_value = "int"
+
+# Stacks that are (or will be) deployed once in this account as the stable tier.
+stable_stacks = ["IntBaseStack", "app", "firewall", "vpc"]
+
+# Confirmed: IntBaseStack + app/firewall/vpc stacks will be deployed once and
+# kept warm (never destroyed/recreated per run).
+
+# -----------------------------------------------------------------------------
+# 1.2 INT Run Cadence
+# Blocks: Phase 3/4 CI wiring
+# Requirements: 3.1, 11.9
+# -----------------------------------------------------------------------------
+[int_cadence]
+# Confirmed: INT runs only on PRs targeting main (not on every PR to dev, not
+# on a schedule).
+trigger = "pr_to_main"
+
+# CI job ordering: unit-gate → int → release, expressed via `needs:` in GitHub
+# Actions. The INT job is only triggered when the PR targets main.
+
+# -----------------------------------------------------------------------------
+# 1.3 Prod Canary Depth
+# Blocks: Phase 4
+# Requirements: 11.4
+# -----------------------------------------------------------------------------
+[prod_canary]
+# Confirmed: Health-only canary (KISS/YAGNI). No guarded synthetic config in a
+# sacrificial VPC at this time.
+depth = "health_only"
+
+# The canary performs a read-only health check after deployment — no customer-rule
+# mutations, no synthetic VPC config. This is the simplest approach and can be
+# deepened later if needed.
+
+# -----------------------------------------------------------------------------
+# 1.4 Coverage Threshold and Ratchet Schedule
+# Blocks: Phase 0/1 coverage wiring
+# Requirements: 3.3, 3.7
+# -----------------------------------------------------------------------------
+[coverage]
+# Confirmed starting threshold (percentage).
+cov_min = 40
+
+# Ratchet schedule — COV_MIN increases by 10% per phase.
+# The Coverage_Ratchet mechanism rejects any configured value lower than the
+# most recently committed threshold (one-way ratchet).
+[coverage.ratchet]
+phase_0 = 40
+phase_1 = 50
+phase_2 = 60
+phase_3 = 70
+phase_4 = 80
+
+# -----------------------------------------------------------------------------
+# 1.5 Promotion Timing Thresholds
+# Blocks: Phase 4
+# Requirements: 11.1, 11.4, 11.8
+# -----------------------------------------------------------------------------
+[promotion_timing]
+# Gate_Marker freshness: a marker is considered stale if generated more than
+# this many minutes before the promotion attempt.
+freshness_window_minutes = 60
+
+# Canary budget: the read-only post-deploy canary must complete within this
+# many seconds or trigger a rollback.
+canary_budget_seconds = 300
+
+# Rollback budget: if a triggered rollback does not restore the previous
+# version within this many seconds, halt and alert.
+rollback_budget_seconds = 600
+
+# All three values are the design defaults, confirmed against team SLAs.

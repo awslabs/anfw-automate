@@ -1,51 +1,72 @@
- Name                       Version      License                                         
- CacheControl               0.14.0       Apache Software License                         
- PyYAML                     6.0.2        MIT License                                     
- Pygments                   2.18.0       BSD License                                     
- attrs                      24.2.0       MIT License                                     
- aws-lambda-powertools      2.43.1       MIT License; MIT No Attribution License (MIT-0) 
- aws-xray-sdk               2.14.0       Apache Software License                         
- bandit                     1.7.9        Apache Software License                         
- boolean.py                 4.0          BSD-2-Clause                                    
- boto3                      1.35.9       Apache Software License                         
- botocore                   1.35.9       Apache Software License                         
- certifi                    2024.8.30    Mozilla Public License 2.0 (MPL 2.0)            
- charset-normalizer         3.3.2        MIT License                                     
- colorama                   0.4.6        BSD License                                     
- cyclonedx-python-lib       7.6.0        Apache Software License                         
- defusedxml                 0.7.1        Python Software Foundation License              
- filelock                   3.15.4       The Unlicense (Unlicense)                       
- html5lib                   1.1          MIT License                                     
- idna                       3.8          BSD License                                     
- iniconfig                  2.0.0        MIT License                                     
- jmespath                   1.0.1        MIT License                                     
- jsonschema                 4.23.0       MIT License                                     
- jsonschema-specifications  2023.12.1    MIT License                                     
- license-expression         30.3.1       Apache-2.0                                      
- markdown-it-py             3.0.0        MIT License                                     
- mdurl                      0.1.2        MIT License                                     
- msgpack                    1.0.8        Apache Software License                         
- packageurl-python          0.15.6       MIT License                                     
- packaging                  24.1         Apache Software License; BSD License            
- pbr                        6.1.0        Apache Software License                         
- pip-api                    0.0.34       Apache Software License                         
- pip-requirements-parser    32.0.1       MIT                                             
- pip_audit                  2.7.3        Apache Software License                         
- pluggy                     1.5.0        MIT License                                     
- py-serializable            1.1.0        Apache Software License                         
- pyparsing                  3.1.4        MIT License                                     
- pytest                     8.3.2        MIT License                                     
- python-dateutil            2.9.0.post0  Apache Software License; BSD License            
- referencing                0.35.1       MIT License                                     
- requests                   2.32.3       Apache Software License                         
- rich                       13.8.0       MIT License                                     
- rpds-py                    0.20.0       MIT License                                     
- s3transfer                 0.10.2       Apache Software License                         
- six                        1.16.0       MIT License                                     
- sortedcontainers           2.4.0        Apache Software License                         
- stevedore                  5.3.0        Apache Software License                         
- toml                       0.10.2       MIT License                                     
- typing_extensions          4.12.2       Python Software Foundation License              
- urllib3                    2.2.2        MIT License                                     
- webencodings               0.5.1        BSD License                                     
- wrapt                      1.16.0       BSD License                                     
+ Name                       Version      License                                                                       
+ CacheControl               0.14.4       UNKNOWN                                                                       
+ PyYAML                     6.0.3        MIT License                                                                   
+ Pygments                   2.19.2       BSD License                                                                   
+ attrs                      25.4.0       UNKNOWN                                                                       
+ aws-lambda-powertools      2.43.1       MIT License; MIT No Attribution License (MIT-0)                               
+ aws-xray-sdk               2.15.0       Apache Software License                                                       
+ bandit                     1.9.2        Apache-2.0                                                                    
+ boolean.py                 5.0          BSD-2-Clause                                                                  
+ boto3                      1.42.15      Apache-2.0                                                                    
+ botocore                   1.42.15      Apache-2.0                                                                    
+ certifi                    2025.11.12   Mozilla Public License 2.0 (MPL 2.0)                                          
+ charset-normalizer         3.4.4        MIT                                                                           
+ cyclonedx-python-lib       11.6.0       Apache Software License                                                       
+ defusedxml                 0.7.1        Python Software Foundation License                                            
+ filelock                   3.20.1       The Unlicense (Unlicense)                                                     
+ idna                       3.11         UNKNOWN                                                                       
+ iniconfig                  2.3.0        UNKNOWN                                                                       
+ jmespath                   1.0.1        MIT License                                                                   
+ jsonschema                 4.25.1       UNKNOWN                                                                       
+ jsonschema-specifications  2025.9.1     UNKNOWN                                                                       
+ license-expression         30.4.4       Apache-2.0                                                                    
+ markdown-it-py             4.0.0        MIT License                                                                   
+ mdurl                      0.1.2        MIT License                                                                   
+ msgpack                    1.1.2        UNKNOWN                                                                       
+ packageurl-python          0.17.6       MIT License                                                                   
+ packaging                  25.0         Apache Software License; BSD License                                          
+ pip-api                    0.0.34       Apache Software License                                                       
+ pip-requirements-parser    32.0.1       MIT                                                                           
+ pip_audit                  2.10.0       Apache Software License                                                       
+ platformdirs               4.5.1        MIT License                                                                   
+ pluggy                     1.6.0        MIT License                                                                   
+ py-serializable            2.1.0        Apache Software License                                                       
+ pyparsing                  3.3.1        UNKNOWN                                                                       
+ pytest                     8.4.2        MIT License                                                                   
+ python-dateutil            2.9.0.post0  Apache Software License; BSD License                                          
+ referencing                0.37.0       UNKNOWN                                                                       
+ requests                   2.32.5       Apache Software License                                                       
+ rich                       14.2.0       MIT License                                                                   
+ rpds-py                    0.30.0       UNKNOWN                                                                       
+ s3transfer                 0.16.0       Apache Software License                                                       
+ six                        1.17.0       MIT License                                                                   
+ sortedcontainers           2.4.0        Apache Software License                                                       
+ stevedore                  5.6.0        Apache Software License                                                       
+ tomli_w                    1.2.0        MIT License                                                                   
+ typing_extensions          4.15.0       UNKNOWN                                                                       
+ urllib3                    2.6.2        UNKNOWN                                                                       
+ wrapt                      2.0.1        Copyright (c) 2013-2025, Graham Dumpleton                                     
+                                         All rights reserved.                                                          
+                                                                                                                       
+                                         Redistribution and use in source and binary forms, with or without            
+                                         modification, are permitted provided that the following conditions are met:   
+                                                                                                                       
+                                         * Redistributions of source code must retain the above copyright notice, this 
+                                           list of conditions and the following disclaimer.                            
+                                                                                                                       
+                                         * Redistributions in binary form must reproduce the above copyright notice,   
+                                           this list of conditions and the following disclaimer in the documentation   
+                                           and/or other materials provided with the distribution.                      
+                                                                                                                       
+                                         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"   
+                                         AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE     
+                                         IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE    
+                                         ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE     
+                                         LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR           
+                                         CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF          
+                                         SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS      
+                                         INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN       
+                                         CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)       
+                                         ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE    
+                                         POSSIBILITY OF SUCH DAMAGE.                                                   
+                                                                                                                       

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+echo "📝 Validating commit message..."
+
+# Run our comprehensive commit validator
+node scripts/commit-validator.js $1
+
+# Also run commitlint for additional validation
+yarn exec commitlint --edit $1
+
+# echo "✅ Commit message is valid!"

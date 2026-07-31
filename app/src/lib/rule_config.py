@@ -309,7 +309,7 @@ class ConfigEntry:
         :type domainstring: str
         """
 
-        return not bool(re.match(rf"^\.[a-zA-Z]{2,}$", domainstring))
+        return not bool(re.match(r"^\.[a-zA-Z]{2,}$", domainstring))
 
     class FormatError(Exception):
         """Exception for invalid format"""
