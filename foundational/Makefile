@@ -1,10 +1,10 @@
 all: build
 
-help: 
-	@echo "Available targets for vpc module:"
+help:
+	@echo "Available targets for foundational module:"
 	@echo ""
 	@echo "🏗️  Build & Test Commands:"
-	@echo "  build            - Build this module"
+	@echo "  build            - Build this module (tsc + cdk synth)"
 	@echo "  test             - Run tests"
 	@echo "  lint             - Run linting"
 	@echo "  lint-fix         - Fix lint issues"
@@ -16,32 +16,32 @@ help:
 	@echo "  clean            - Clean build artifacts"
 	@echo "  update           - Update dependencies"
 
-build: 
-	@echo "🏗️  Building vpc module..."
+build:
+	@echo "🏗️  Building foundational module..."
 	yarn build
 
 test:
-	@echo "🧪 Running vpc module tests..."
+	@echo "🧪 Running foundational module tests..."
 	yarn test
 
 lint:
-	@echo "🔍 Running vpc module linting..."
+	@echo "🔍 Running foundational module linting..."
 	yarn lint
 
 lint-fix:
-	@echo "🔧 Fixing vpc module lint issues..."
+	@echo "🔧 Fixing foundational module lint issues..."
 	yarn lint-fix
 
 deploy: build
-	@echo "🚀 Deploying vpc module..."
+	@echo "🚀 Deploying foundational module..."
 	yarn exec cdk deploy --all
 
 clean:
-	@echo "🧹 Cleaning vpc module artifacts..."
+	@echo "🧹 Cleaning foundational module artifacts..."
 	yarn clean
 
-update: 
-	@echo "📦 Updating vpc module dependencies..."
+update:
+	@echo "📦 Updating foundational module dependencies..."
 	yarn up '*'
 
 .PHONY: all help build test lint lint-fix deploy clean update

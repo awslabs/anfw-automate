@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -30,7 +31,7 @@ export class RoutingStack extends TaggedStack {
 
     // Create Lambda function for custom resource
     const deleteRoutesLambda = new pylambda.PythonFunction(this, 'DeleteRoutesFunction', {
-      entry: 'lambda/delete_routes',
+      entry: path.join(__dirname, 'lambda', 'delete_routes'),
       runtime: Runtime.PYTHON_3_11,
       index: 'delete_routes.py',
       timeout: Duration.seconds(60) as any,
@@ -67,7 +68,7 @@ export class RoutingStack extends TaggedStack {
 
     // Create custom resource for fetching VPC endpoint IDs
     const fetchAnfwVpceLambda = new pylambda.PythonFunction(this, 'FetchVpcEndpointsFunction', {
-      entry: 'lambda/fetch_vpc_endpoints',
+      entry: path.join(__dirname, 'lambda', 'fetch_vpc_endpoints'),
       runtime: Runtime.PYTHON_3_11,
       index: 'fetch_vpc_endpoints.py',
       timeout: Duration.seconds(30) as any,

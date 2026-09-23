@@ -5043,34 +5043,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"firewall@workspace:firewall":
-  version: 0.0.0-use.local
-  resolution: "firewall@workspace:firewall"
-  dependencies:
-    "@aws-cdk/aws-lambda-python-alpha": "npm:^2.233.0-alpha.0"
-    "@types/jest": "npm:^29.5.14"
-    "@types/node": "npm:25.0.3"
-    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
-    "@typescript-eslint/parser": "npm:^8.50.1"
-    aws-cdk: "npm:2.1100.1"
-    aws-cdk-lib: "npm:2.233.0"
-    cdk-nag: "npm:^2.37.55"
-    constructs: "npm:^10.4.4"
-    eslint: "npm:^9.39.2"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-plugin-prettier: "npm:^5.5.4"
-    jest: "npm:^29.7.0"
-    prettier: "npm:^3.7.4"
-    shared: "npm:*"
-    source-map-support: "npm:^0.5.21"
-    ts-jest: "npm:^29.4.6"
-    ts-node: "npm:^10.9.2"
-    typescript: "npm:~5.9.3"
-  bin:
-    firewall: bin/firewall.js
-  languageName: unknown
-  linkType: soft
-
 "flat-cache@npm:^4.0.0":
   version: 4.0.1
   resolution: "flat-cache@npm:4.0.1"
@@ -5097,6 +5069,34 @@ __metadata:
   checksum: 10c0/8986e4af2430896e65bc2788d6679067294d6aee9545daefc84923a0a4b399ad9c7a3ea7bd8c0b2b80fdf4a92de4c69df3f628233ff3224260e9c1541a9e9ed3
   languageName: node
   linkType: hard
+
+"foundational@workspace:foundational":
+  version: 0.0.0-use.local
+  resolution: "foundational@workspace:foundational"
+  dependencies:
+    "@aws-cdk/aws-lambda-python-alpha": "npm:^2.233.0-alpha.0"
+    "@types/jest": "npm:^29.5.14"
+    "@types/node": "npm:25.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
+    "@typescript-eslint/parser": "npm:^8.50.1"
+    aws-cdk: "npm:2.1100.1"
+    aws-cdk-lib: "npm:2.233.0"
+    cdk-nag: "npm:^2.37.55"
+    constructs: "npm:^10.4.4"
+    eslint: "npm:^9.39.2"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-prettier: "npm:^5.5.4"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.7.4"
+    shared: "npm:*"
+    source-map-support: "npm:^0.5.21"
+    ts-jest: "npm:^29.4.6"
+    ts-node: "npm:^10.9.2"
+    typescript: "npm:~5.9.3"
+  bin:
+    foundational: bin/foundational.js
+  languageName: unknown
+  linkType: soft
 
 "from2@npm:^2.3.0":
   version: 2.3.0
@@ -10023,33 +10023,6 @@ __metadata:
   checksum: 10c0/903e738f7387404bb72f7ac34e45d7010c877abd2803dc2d614612527927a40a6d024420033132e667b1bade94544b8a1f65c9431a4eb30d0ce0d80093cd1f74
   languageName: node
   linkType: hard
-
-"vpc@workspace:vpc":
-  version: 0.0.0-use.local
-  resolution: "vpc@workspace:vpc"
-  dependencies:
-    "@types/jest": "npm:^29.5.14"
-    "@types/node": "npm:25.0.3"
-    "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
-    "@typescript-eslint/parser": "npm:^8.50.1"
-    aws-cdk: "npm:2.1100.1"
-    aws-cdk-lib: "npm:2.233.0"
-    cdk-nag: "npm:^2.37.55"
-    constructs: "npm:^10.4.4"
-    eslint: "npm:^9.39.2"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-plugin-prettier: "npm:^5.5.4"
-    jest: "npm:^29.7.0"
-    prettier: "npm:^3.7.4"
-    shared: "npm:*"
-    source-map-support: "npm:^0.5.21"
-    ts-jest: "npm:^29.4.6"
-    ts-node: "npm:^10.9.2"
-    typescript: "npm:~5.9.3"
-  bin:
-    vpc: bin/vpc.js
-  languageName: unknown
-  linkType: soft
 
 "walk-up-path@npm:^3.0.1":
   version: 3.0.1
