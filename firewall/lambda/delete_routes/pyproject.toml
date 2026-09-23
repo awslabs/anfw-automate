@@ -1,19 +1,23 @@
-[tool.poetry]
-description = "Lambda function to delete all routes for VPC before adding new routes"
+[project]
 name = "delete-routes"
-authors = ["Ajinkya Patil <ajupatil@amazon.com>","Stephan Traub <traubst@amazon.de>"]
 version = "1.0.18"
+description = "Lambda function to delete all routes for VPC before adding new routes"
+authors = [
+    { name = "Ajinkya Patil", email = "ajupatil@amazon.com" },
+    { name = "Stephan Traub", email = "traubst@amazon.de" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "cfnresponse>=1.1.5,<2",
+]
 
-[tool.poetry.dependencies]
-cfnresponse = "^1.1.5"
-python = "^3.11"
+[dependency-groups]
+test = [
+    "bandit>=1.9.2,<2",
+    "pip-audit>=2.10.0,<3",
+    "pip-licenses>=4.5.1,<5",
+    "pytest>=8.4.2,<9",
+]
 
-[tool.poetry.group.test.dependencies]
-bandit = "^1.9.2"
-pip-audit = "^2.10.0"
-pip-licenses = "^4.5.1"
-pytest = "^8.4.2"
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
+[tool.uv]
+package = false
