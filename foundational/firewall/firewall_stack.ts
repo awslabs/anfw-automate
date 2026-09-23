@@ -4,6 +4,8 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { aws_networkfirewall as anfw } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
 
 type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
@@ -23,7 +25,7 @@ export class NetworkFirewallStack extends TaggedStack {
 
     const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
     const namedotprefix = namePrefix.replace(/-/g, '.');
-    const absoluteFilePath = `policy/${props.ruleOrder}.json`;
+    const absoluteFilePath = path.join(__dirname, 'policy', `${props.ruleOrder}.json`);
 
     // Create subnet mappings based on the provided dictionary
     const subnetMappingList: anfw.CfnFirewall.SubnetMappingProperty[] = [];
@@ -125,6 +127,18 @@ export class NetworkFirewallStack extends TaggedStack {
       description: 'AWS Network Firewall ARN',
       exportName: `nfw-arn-${stage}`,
       value: firewall.attrFirewallArn,
+    });
+
+    // Cross-account handles for consumers (e.g. the int-environment spec), published
+    // IN ADDITION to the CloudFormation exports above (which stay byte-identical).
+    // CloudFormation exports do not cross account boundaries; shared SSM parameters do.
+    new ssm.StringParameter(this, 'FirewallPolicyArnParam', {
+      parameterName: `/anfw-automate/${stage}/foundational/firewall-policy-arn`,
+      stringValue: firewallPolicy.attrFirewallPolicyArn,
+    });
+    new ssm.StringParameter(this, 'FirewallArnParam', {
+      parameterName: `/anfw-automate/${stage}/foundational/nfw-arn`,
+      stringValue: firewall.attrFirewallArn,
     });
   }
 }

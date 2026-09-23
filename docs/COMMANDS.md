@@ -361,7 +361,7 @@ use Make commands instead.
 
 - `yarn build` - Orchestrates workspace builds
 - `yarn build:shared` - Builds shared module
-- `yarn build:modules` - Builds app/firewall/vpc modules
+- `yarn build:modules` - Builds app/foundational modules
 
 ### Utility Scripts
 

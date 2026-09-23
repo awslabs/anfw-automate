@@ -404,7 +404,7 @@ make setup                 # Setup development environment
 ### Build & Test Commands
 
 ```bash
-make build                 # Build all modules (shared first, then app/firewall/vpc)
+make build                 # Build all modules (shared first, then app/foundational)
 make test                  # Run all tests
 make lint                  # Run linting
 make lint-fix              # Fix lint issues

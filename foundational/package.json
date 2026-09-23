@@ -1,7 +1,7 @@
 {
-  "name": "vpc",
+  "name": "foundational",
   "version": "2.1.0",
-  "bin": "bin/vpc.js",
+  "bin": "bin/foundational.js",
   "scripts": {
     "build": "tsc && cdk synth",
     "watch": "tsc -w",
@@ -27,6 +27,7 @@
     "typescript": "~5.9.3"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda-python-alpha": "^2.233.0-alpha.0",
     "aws-cdk-lib": "2.233.0",
     "cdk-nag": "^2.37.55",
     "constructs": "^10.4.4",

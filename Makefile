@@ -53,7 +53,7 @@ help:
 	@echo "  update           - Update all dependencies"
 	@echo ""
 	@echo "📦 Module Commands:"
-	@echo "  build:<module>   - Build specific module (app, firewall, vpc, shared)"
+	@echo "  build:<module>   - Build specific module (app, foundational, shared)"
 	@echo "  test:<module>    - Test specific module"
 	@echo "  deploy:<module>  - Deploy specific module"
 
@@ -93,6 +93,7 @@ unit\:python:
 unit\:cdk: app-package
 	@echo "🏗️  Running CDK assertion tests..."
 	yarn workspace app test
+	yarn workspace foundational test
 
 ## Produce the app dist/ Lambda asset bundles required by CDK synth/tests
 app-package:
@@ -121,21 +122,21 @@ build:
 
 test:
 	@echo "🧪 Running all tests..."
-	@for module in shared app firewall vpc; do \
+	@for module in shared app foundational; do \
 		echo "Testing $$module..."; \
 		(cd "$$module" && make test); \
 	done
 
 lint:
 	@echo "🔍 Running linting on all modules..."
-	@for module in shared app firewall vpc; do \
+	@for module in shared app foundational; do \
 		echo "Linting $$module..."; \
 		(cd "$$module" && make lint); \
 	done
 
 lint-fix:
 	@echo "🔧 Fixing lint issues on all modules..."
-	@for module in shared app firewall vpc; do \
+	@for module in shared app foundational; do \
 		echo "Fixing $$module..."; \
 		(cd "$$module" && make lint-fix); \
 	done
@@ -168,7 +169,7 @@ security\:%:
 			echo "🔧 Fixing security vulnerabilities..."; \
 			echo "📋 Note: Bundled npm dependencies cannot be auto-fixed and require npm updates"; \
 			echo ""; \
-			for module in . app firewall vpc shared; do \
+			for module in . app foundational shared; do \
 				if [ -f "$$module/package.json" ]; then \
 					echo "  📦 Fixing $$module..."; \
 					(cd "$$module" && yarn up '*' --mode=update-lockfile) || true; \
@@ -181,7 +182,7 @@ security\:%:
 			echo "🔧 Force fixing security vulnerabilities (may introduce breaking changes)..."; \
 			echo "⚠️  This will attempt to force-fix all vulnerabilities, including major version updates"; \
 			echo ""; \
-			for module in . app firewall vpc shared; do \
+			for module in . app foundational shared; do \
 				if [ -f "$$module/package.json" ]; then \
 					echo "  📦 Force fixing $$module..."; \
 					(cd "$$module" && yarn up '*' --force) || true; \
@@ -232,7 +233,7 @@ validate-commit:
 # Deployment commands
 deploy: build	
 	@echo "🚀 Deploying all modules..."
-	@for module in app firewall vpc; do \
+	@for module in app foundational; do \
 		echo "Deploying $$module..."; \
 		(cd "$$module" && make deploy); \
 	done

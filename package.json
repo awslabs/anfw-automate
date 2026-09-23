@@ -7,14 +7,13 @@
   "packageManager": "yarn@4.12.0",
   "workspaces": [
     "app",
-    "firewall",
-    "vpc",
+    "foundational",
     "shared"
   ],
   "scripts": {
     "build": "yarn build:shared && yarn build:modules",
     "build:shared": "yarn workspace shared build",
-    "build:modules": "yarn workspace app build && yarn workspace firewall build && yarn workspace vpc build",
+    "build:modules": "yarn workspace app build && yarn workspace foundational build",
     "clean": "yarn workspaces foreach --all run clean && rm -rf build-report.json",
     "prepare": "husky install && chmod +x .husky/* || true",
     "commit": "node scripts/commit.js",

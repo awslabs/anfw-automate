@@ -43,7 +43,7 @@ run_npm_audit() {
     print_status "Running Node.js security audit..."
     
     # Scan root and all modules with moderate+ severity (ignores low severity bundled deps)
-    for dir in . app firewall vpc shared; do
+    for dir in . app foundational shared; do
         if [ -f "$dir/package.json" ]; then
             print_status "Scanning $dir..."
             (cd "$dir" && yarn npm audit --severity moderate)
