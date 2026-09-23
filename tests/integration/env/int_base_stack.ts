@@ -1,11 +1,13 @@
 import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import * as path from 'path';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as networkfirewall from 'aws-cdk-lib/aws-networkfirewall';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
 export interface IntBaseStackProps extends StackProps {
@@ -26,14 +28,19 @@ export interface IntBaseStackProps extends StackProps {
  *
  * Models the full centralized ANFW + TGW topology in one stack:
  *
- *   Shared Transit Gateway (hub)
- *    ├─ Inspection side: Network Firewall POLICY (rule groups attach here).
- *    │   (Automation tests validate rule materialization in this policy; actual
- *    │    firewall endpoints/routing are not needed to test the control plane.)
+ *   Shared Transit Gateway (hub) — created once by the foundational
+ *   TransitGatewayStack (network account) and RAM-shared here; resolved from
+ *   SSM `/anfw-automate/shared/tgw-id`. NOT created by this stack.
+ *    ├─ Inspection side: the int-stage foundational Network Firewall + policy
+ *    │   (firewall account). This stack does NOT create a firewall/policy; it
+ *    │   resolves the policy ARN from SSM so rule groups attach to the REAL
+ *    │   foundational policy that probe traffic is actually inspected by.
  *    └─ Dummy tenant (mirrors spoke-serverless-stack.yaml + the VPC a real spoke
  *        account already has):
  *          - Workload VPC attached to the shared TGW (passes RuleCollect's
- *            _is_vpc_attached_to_transit_gateway check)
+ *            _is_vpc_attached_to_transit_gateway check), egress 0.0.0.0/0 → TGW
+ *          - Reachability probe Lambda in the isolated subnets (data-plane
+ *            enforcement assertion channel)
  *          - S3 config bucket (anfw-allowlist-<region>-<account>-<stage>)
  *          - Cross-account role the central Lambdas assume to read the bucket
  *          - EventBridge role + rules forwarding S3/VPC-delete events to the
@@ -47,9 +54,9 @@ export interface IntBaseStackProps extends StackProps {
 export class IntBaseStack extends Stack {
   public readonly tenantVpc: ec2.Vpc;
   public readonly tgwAttachment: ec2.CfnTransitGatewayAttachment;
-  public readonly firewallPolicy: networkfirewall.CfnFirewallPolicy;
   public readonly configBucket: s3.Bucket;
   public readonly crossAccountRole: iam.Role;
+  public readonly probeFunction: lambda.Function;
 
   constructor(scope: Construct, id: string, props: IntBaseStackProps = {}) {
     super(scope, id, props);
@@ -68,32 +75,25 @@ export class IntBaseStack extends Stack {
     const centralEventBusArn = `arn:aws:events:${region}:${centralAccountId}:event-bus/${centralEventBusName}`;
 
     // -------------------------------------------------------------------------
-    // Shared Transit Gateway (hub) — connects the tenant VPC to the central
-    // inspection side. Same TGW for everything, per the centralized model.
+    // Shared Transit Gateway (hub) — resolved from SSM.
+    //
+    // The TGW is a shared-once, foundational-owned resource created by the
+    // network-account TransitGatewayStack and RAM-shared into this account. Its
+    // id is published to `/anfw-automate/shared/tgw-id`. We read it here rather
+    // than creating a TGW (the INT env no longer owns the hub).
     // -------------------------------------------------------------------------
-    const transitGateway = new ec2.CfnTransitGateway(this, 'IntTransitGateway', {
-      description: `${namePrefix}-int-tgw`,
-      defaultRouteTableAssociation: 'enable',
-      defaultRouteTablePropagation: 'enable',
-      tags: [{ key: 'Name', value: `${namePrefix}-int-tgw-${stage}` }],
-    });
+    const sharedTgwId = ssm.StringParameter.valueForStringParameter(
+      this,
+      '/anfw-automate/shared/tgw-id'
+    );
 
     // -------------------------------------------------------------------------
-    // Network Firewall policy (inspection side) — rule groups attach here.
-    // -------------------------------------------------------------------------
-    this.firewallPolicy = new networkfirewall.CfnFirewallPolicy(this, 'IntFirewallPolicy', {
-      firewallPolicyName: `plc-${namePrefix}-int-strict-${stage}`,
-      firewallPolicy: {
-        statelessDefaultActions: ['aws:forward_to_sfe'],
-        statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
-        statefulEngineOptions: { ruleOrder: 'STRICT_ORDER' },
-        statefulDefaultActions: ['aws:drop_strict', 'aws:alert_strict'],
-      },
-      tags: [{ key: 'Name', value: `plc-${namePrefix}-int-strict-${stage}` }],
-    });
-
-    // -------------------------------------------------------------------------
-    // Dummy tenant workload VPC + TGW attachment
+    // Dummy tenant workload VPC + TGW attachment.
+    //
+    // The tenant VPC has NO NAT/IGW of its own. All egress is steered to the
+    // shared TGW, which routes to the int-stage foundational Network Firewall
+    // for inspection/enforcement. This is what makes probe reachability reflect
+    // real NFW enforcement (full fidelity).
     // -------------------------------------------------------------------------
     this.tenantVpc = new ec2.Vpc(this, 'TenantWorkloadVpc', {
       vpcName: `${namePrefix}-tenant-vpc-${stage}`,
@@ -106,10 +106,28 @@ export class IntBaseStack extends Stack {
     });
 
     this.tgwAttachment = new ec2.CfnTransitGatewayAttachment(this, 'TenantTgwAttachment', {
-      transitGatewayId: transitGateway.ref,
+      transitGatewayId: sharedTgwId,
       vpcId: this.tenantVpc.vpcId,
-      subnetIds: this.tenantVpc.isolatedSubnets.map((s) => s.subnetId),
+      subnetIds: this.tenantVpc.isolatedSubnets.map(s => s.subnetId),
       tags: [{ key: 'Name', value: `${namePrefix}-tenant-tgw-attachment-${stage}` }],
+    });
+
+    // -------------------------------------------------------------------------
+    // Tenant egress routing: default route → shared TGW.
+    //
+    // Each isolated workload subnet's route table gets 0.0.0.0/0 → TGW so that
+    // outbound traffic from the probe Lambda is carried to the central
+    // inspection side (foundational firewall). Return routing on the firewall
+    // side is owned by the foundational RoutingStack.
+    // -------------------------------------------------------------------------
+    this.tenantVpc.isolatedSubnets.forEach((subnet, idx) => {
+      const route = new ec2.CfnRoute(this, `TenantEgressRoute${idx}`, {
+        routeTableId: subnet.routeTable.routeTableId,
+        destinationCidrBlock: '0.0.0.0/0',
+        transitGatewayId: sharedTgwId,
+      });
+      // The route cannot be created until the VPC is attached to the TGW.
+      route.addDependency(this.tgwAttachment);
     });
 
     // -------------------------------------------------------------------------
@@ -146,7 +164,11 @@ export class IntBaseStack extends Stack {
     this.crossAccountRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['ec2:DescribeVpcs', 'ec2:DescribeVpcAttribute', 'ec2:DescribeTransitGatewayAttachments'],
+        actions: [
+          'ec2:DescribeVpcs',
+          'ec2:DescribeVpcAttribute',
+          'ec2:DescribeTransitGatewayAttachments',
+        ],
         resources: ['*'],
       })
     );
@@ -155,8 +177,13 @@ export class IntBaseStack extends Stack {
         sid: 'LoggerPerms',
         effect: iam.Effect.ALLOW,
         actions: [
-          'logs:Describe*', 'logs:List*', 'logs:GetLogEvents',
-          'logs:CreateLogGroup', 'logs:CreateExportTask', 'logs:CreateLogStream', 'logs:PutLogEvents',
+          'logs:Describe*',
+          'logs:List*',
+          'logs:GetLogEvents',
+          'logs:CreateLogGroup',
+          'logs:CreateExportTask',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
         ],
         resources: ['*'],
       })
@@ -189,8 +216,11 @@ export class IntBaseStack extends Stack {
       eventPattern: {
         source: ['aws.s3'],
         detailType: [
-          'Object Created', 'Object Deleted',
-          'Object Restore Completed', 'Object Restore Expired', 'Object Restore Initiated',
+          'Object Created',
+          'Object Deleted',
+          'Object Restore Completed',
+          'Object Restore Expired',
+          'Object Restore Initiated',
         ],
         detail: { bucket: { name: [this.configBucket.bucketName] } },
       },
@@ -251,11 +281,35 @@ export class IntBaseStack extends Stack {
     });
 
     // -------------------------------------------------------------------------
+    // Reachability probe Lambda — deployed IN the tenant VPC's isolated subnets.
+    //
+    // The integration ReachabilityChecker invokes this to attempt a TCP connect
+    // to a domain:port. Because the tenant VPC's only egress is 0.0.0.0/0 → TGW
+    // → foundational Network Firewall, a successful connect proves the NFW rules
+    // allow the traffic, and a failed connect proves default-deny/drop. This is
+    // the data-plane (full-fidelity) assertion channel.
+    //
+    // The function name is exported so the harness can invoke it by name.
+    // -------------------------------------------------------------------------
+    this.probeFunction = new lambda.Function(this, 'ReachabilityProbe', {
+      functionName: `lmb-${namePrefix}-int-probe-${stage}`,
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'probe_lambda')),
+      timeout: Duration.seconds(30),
+      vpc: this.tenantVpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      description:
+        'INT reachability probe: TCP connect from the tenant VPC through the ' +
+        'foundational NFW to assert allow/deny enforcement.',
+    });
+
+    // -------------------------------------------------------------------------
     // CloudFormation exports — resolved at runtime by StableEnvResolver.
     // -------------------------------------------------------------------------
     new CfnOutput(this, 'IntTransitGatewayId', {
-      value: transitGateway.ref,
-      description: 'Shared Transit Gateway id',
+      value: sharedTgwId,
+      description: 'Shared Transit Gateway id (resolved from SSM /anfw-automate/shared/tgw-id)',
       exportName: `${namePrefix}-int-tgw-id-${stage}`,
     });
     new CfnOutput(this, 'IntTenantVpcId', {
@@ -264,9 +318,21 @@ export class IntBaseStack extends Stack {
       exportName: `${namePrefix}-int-tenant-vpc-id-${stage}`,
     });
     new CfnOutput(this, 'IntFirewallPolicyArn', {
-      value: this.firewallPolicy.attrFirewallPolicyArn,
-      description: 'Central Network Firewall policy ARN',
+      // Resolved from the int-stage foundational fabric (firewall account) via
+      // the shared SSM parameter it publishes. The INT env no longer creates a
+      // standalone/fake firewall policy — rule groups attach to the real
+      // foundational policy that the probe traffic is actually inspected by.
+      value: ssm.StringParameter.valueForStringParameter(
+        this,
+        `/anfw-automate/${stage}/foundational/firewall-policy-arn`
+      ),
+      description: 'Int-stage foundational Network Firewall policy ARN (from SSM)',
       exportName: `${namePrefix}-int-firewall-policy-arn-${stage}`,
+    });
+    new CfnOutput(this, 'IntProbeFunctionName', {
+      value: this.probeFunction.functionName,
+      description: 'Reachability probe Lambda function name (invoked by the harness)',
+      exportName: `${namePrefix}-int-probe-function-name-${stage}`,
     });
     new CfnOutput(this, 'IntConfigBucketName', {
       value: this.configBucket.bucketName,
