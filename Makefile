@@ -87,9 +87,17 @@ unit\:python:
 	cd app/src && uv run pytest -m "not integration" --cov=. --cov-report=term-missing --cov-fail-under=$(COV_MIN)
 
 ## Run CDK Jest assertion tests
-unit\:cdk:
+## Depends on the app pre-synth packaging: the CDK tests synthesize LambdaStack,
+## which resolves lambda.Code.fromAsset('dist/RuleCollect'|'dist/RuleExecute').
+## Without dist/ present the tests fail on a clean checkout, so package first.
+unit\:cdk: app-package
 	@echo "🏗️  Running CDK assertion tests..."
 	yarn workspace app test
+
+## Produce the app dist/ Lambda asset bundles required by CDK synth/tests
+app-package:
+	@echo "📦 Packaging app Lambda assets (pre-synth)..."
+	@$(MAKE) -C app pre-synth
 
 ## Run integration tests against the INT account
 int:
@@ -238,4 +246,4 @@ update:
 	@echo "📦 Updating all dependencies..."
 	yarn up '*'
 
-.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update unit unit\:python unit\:cdk int promote gate cov-ratchet ecr-login
+.PHONY: all help build test lint lint-fix format setup commit validate-commit deploy clean update unit unit\:python unit\:cdk app-package int promote gate cov-ratchet ecr-login
