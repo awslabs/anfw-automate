@@ -59,7 +59,7 @@ def test_delete_config_removes_rules(
     )
 
     # Step 1-2: Upload and wait for success
-    key = config_publisher.put_config(region, config)
+    config_publisher.put_config(region, config)
     log_checker.wait_for_success_log(key=f"{region}-config.yaml")
 
     # Step 3: Verify domain is reachable
@@ -68,7 +68,7 @@ def test_delete_config_removes_rules(
     )
 
     # Step 4: Delete the config
-    config_publisher.delete_config(region, key)
+    config_publisher.delete_config(region)
 
     # Step 5: Wait for delete-flow log confirmation
     log_checker.wait_for_success_log(key="delete")
