@@ -32,8 +32,49 @@ a breaking change that requires action from all contributors and users.
 See [docs/YARN_MIGRATION.md](docs/YARN_MIGRATION.md) for complete migration
 guide.
 
+**Foundational Stack Consolidation (supporting infrastructure only)**
+
+The standalone `vpc/` and `firewall/` CDK modules have been consolidated into a
+single `foundational/` module, and their CodePipeline wrappers removed in favor of
+manual `cdk deploy`. This affects operators who deploy the network fabric. It does
+**not** change the rule-management solution in `app/` — the upload/config schema,
+S3 key pattern, rule naming, reserved rule group, and cross-account role behavior
+are unchanged, so **consumers of the solution need take no action.**
+
+**Required Actions (infrastructure operators):**
+
+1. Deploy the shared Transit Gateway via `foundational/bin/transit_gateway.ts`
+   (create-once, network account).
+2. Deploy the per-stage fabric with `STAGE=<stage> yarn exec cdk deploy --all` from
+   `foundational/` (this replaces the old `vpc`/`firewall` pipelines).
+3. Move configuration to `foundational/vpc/conf/` and `foundational/firewall/conf/`.
+4. Retire the old `vpc-*` / `firewall-*` pipelines and stacks. The old flow-log
+   bucket and firewall log groups are retained (orphaned) and need manual cleanup.
+5. Update any external references to the old stack names (now
+   `{stackType}-{namePrefix}-{regionKey}-{stage}`) and firewall log group names
+   (now auto-generated).
+
+See [docs/FOUNDATIONAL_MIGRATION.md](docs/FOUNDATIONAL_MIGRATION.md) for the
+complete guide.
+
+### Added
+
+- Consolidated `foundational/` CDK module (VPC + Network Firewall + base routing +
+  routing) with a single multi-region, stage-parameterized entry point.
+- Code-owned shared Transit Gateway (`foundational/bin/transit_gateway.ts`) with RAM
+  sharing and a `/anfw-automate/shared/tgw-id` SSM handle for cross-account use.
+- Cross-account foundational handles published to SSM (e.g.
+  `/anfw-automate/{stage}/foundational/firewall-policy-arn`).
+- CDK assertion tests for the migrated VPC/firewall stacks and for `IntBaseStack`.
+
 ### Changed
 
+- Consolidated the `vpc/` and `firewall/` modules into `foundational/` and removed
+  their CodePipeline wrappers; foundational infrastructure now deploys via manual
+  `cdk deploy`. Foundational stack names follow
+  `{stackType}-{namePrefix}-{regionKey}-{stage}`.
+- Foundational flow-log S3 bucket and firewall alert/flow CloudWatch log groups now
+  use `RETAIN` with auto-generated names, so a delete/recreate never clashes.
 - Migrated all build scripts, Makefiles, and CI/CD workflows from npm to Yarn
 - Updated all module Makefiles to use Yarn commands
 - Updated Husky git hooks to use Yarn
@@ -46,6 +87,14 @@ guide.
 - Fixed corrupted `.gitleaks.toml` configuration file
 - Standardized bandit configuration usage across all scripts
 - Fixed all npm/npx references to use Yarn equivalents
+
+### Removed
+
+- Removed the standalone `vpc/` and `firewall/` top-level modules and their
+  CodePipeline / CDK `Stage` wrappers.
+- Removed pipeline-artifact CDK Nag suppressions (`AwsSolutions-S1`,
+  `AwsSolutions-KMS5`) and unused `@aws-cdk/aws-codepipeline*` context flags from the
+  foundational module.
 
 ### 2.1.0 (2024-04-12)
 
