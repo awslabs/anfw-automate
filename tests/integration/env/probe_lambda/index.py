@@ -9,6 +9,15 @@ Invocation payload:
 
 Response:
     {"reachable": true/false, "error": null/"message"}
+
+DNS / egress assumption (design risk, see int-environment design "Risks"):
+    The probe resolves the domain to an IP BEFORE the TCP connect. The tenant VPC
+    has no NAT/IGW — all egress (including DNS to non-VPC resolvers) is routed
+    0.0.0.0/0 -> TGW -> foundational NFW. If that path does not carry DNS
+    resolution, `socket.gaierror` is raised and surfaced explicitly below as
+    reachable=False with a "DNS resolution failed" error, so a DNS/egress
+    misconfiguration is distinguishable from a firewall block (a connect refusal)
+    rather than silently reading as "blocked".
 """
 
 import json
