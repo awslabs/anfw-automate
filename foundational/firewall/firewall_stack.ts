@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { aws_networkfirewall as anfw } from 'aws-cdk-lib';
-import { CfnOutput } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
@@ -85,15 +85,24 @@ export class NetworkFirewallStack extends TaggedStack {
       vpcId: vpcId,
     });
 
-    // Create Logging Configuration
+    // Create Logging Configuration.
+    //
+    // RETAIN on stack delete so firewall alert/flow log history survives teardown.
+    // We deliberately do NOT set an explicit `logGroupName`: CloudFormation then
+    // auto-generates a unique name per CREATE. Combined with RETAIN this means a
+    // delete → recreate cycle gets a fresh log group name and never clashes with the
+    // retained one (a fixed name + RETAIN would fail recreate with "already exists").
+    // The LoggingConfiguration below references `.logGroupName`, so the generated
+    // name flows through automatically. (LogGroup already defaults to RETAIN; we make
+    // it explicit for clarity.)
     const fwAlertLogGroup = new logs.LogGroup(this, 'FWAlertLogGroup', {
-      logGroupName: `${namedotprefix}.nfw.alert.${stage}`,
       retention: logs.RetentionDays.ONE_YEAR,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     const fwFlowLogGroup = new logs.LogGroup(this, 'FWFlowLogGroup', {
-      logGroupName: `${namedotprefix}.nfw.flow.${stage}`,
       retention: logs.RetentionDays.ONE_YEAR,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     const cfnLoggingConfiguration = new anfw.CfnLoggingConfiguration(

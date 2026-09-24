@@ -57,10 +57,32 @@ Configuration is loaded for a stage via the shared config loader (SSM parameter
 `conf/{stage}.json`). The `STAGE` is supplied to the entry point.
 
 ```bash
-# synthesize / deploy all foundational stacks for a stage
+# per-stage fabric (VPC + firewall + base-routing + routing) → firewall/solution
+# account (target_account_id). Credentials must resolve to that account.
 STAGE=int  yarn exec cdk deploy --all
 STAGE=prod yarn exec cdk deploy --all
 ```
 
-The shared Transit Gateway stack (`network/`) is a separate create-once deploy in
-the network account and is **not** part of the per-stage `cdk deploy --all` set.
+### Shared Transit Gateway (create-once, network account)
+
+The TGW hub is a **separate** create-once deploy — not part of `cdk deploy --all`
+and not stage-scoped. It uses its own entry point (`bin/transit_gateway.ts`), so
+pass an explicit `--app`. Credentials must resolve to the network account.
+
+```bash
+yarn exec cdk --app "npx ts-node --prefer-ts-exts bin/transit_gateway.ts" deploy \
+  --context networkAccountId=040781035187 \
+  --context sharePrincipals=421222417363,537622539377,868363312618 \
+  --context namePrefix=af-anfw-automate
+```
+
+This creates the Transit Gateway, RAM-shares it to the firewall + INT (+ dev)
+accounts, and publishes `/anfw-automate/shared/tgw-id`, which the per-stage fabric
+and the INT tenant tier resolve from SSM.
+
+### Deploy order (for the INT environment)
+
+1. **TGW** (network account `040781035187`) — command above.
+2. **int fabric** (`STAGE=int cdk deploy --all`, firewall account `421222417363`) —
+   publishes `/anfw-automate/int/foundational/firewall-policy-arn`.
+3. Then the `app` (int) and the INT tenant tier — see the `int-environment` spec.
