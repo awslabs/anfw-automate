@@ -29,6 +29,20 @@ describe('foundational VpcStack (migrated from vpc/lib/vpc_stack.ts)', () => {
     t.resourceCountIs('AWS::EC2::InternetGateway', 1);
   });
 
+  test('retains the flow-log bucket on delete with an auto-generated (unclashable) name', () => {
+    const t = synthVpc();
+    // RETAIN so teardown keeps flow-log history; recreate gets a fresh name.
+    t.hasResource('AWS::S3::Bucket', {
+      DeletionPolicy: 'Retain',
+      UpdateReplacePolicy: 'Retain',
+    });
+    // No explicit BucketName → CloudFormation auto-generates a unique name per create.
+    const buckets = t.findResources('AWS::S3::Bucket');
+    for (const b of Object.values(buckets)) {
+      expect(b.Properties?.BucketName).toBeUndefined();
+    }
+  });
+
   test('preserves cross-stack export names (Req 2.3)', () => {
     const t = synthVpc();
     const outputs = t.findOutputs('*');

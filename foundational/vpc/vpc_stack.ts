@@ -48,6 +48,13 @@ export class VpcStack extends TaggedStack {
     Tags.of(vpc).add('Name', `vpc.${namedotprefix}.${props.stage}`);
 
     // Flow Log S3 Bucket
+    //
+    // RETAIN on stack delete so flow-log history survives teardown. We deliberately
+    // do NOT set an explicit `bucketName`: CloudFormation then auto-generates a name
+    // with a random suffix at CREATE time. That means (a) in-place stack updates keep
+    // the same physical bucket (no delete/replace churn), and (b) if the stack is
+    // deleted (bucket retained) and later recreated, CloudFormation assigns a NEW
+    // unique name — so the recreated stack never clashes with the retained bucket.
     const flowLogsBucket = new Bucket(this, 'FlowLogBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       versioned: false,
@@ -56,7 +63,7 @@ export class VpcStack extends TaggedStack {
       enforceSSL: true,
       eventBridgeEnabled: true,
       objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     // Add flow logs

@@ -76,6 +76,18 @@ describe('foundational NetworkFirewallStack (migrated)', () => {
     t.resourceCountIs('AWS::EC2::NatGateway', 3);
   });
 
+  test('retains alert/flow log groups on delete with auto-generated (unclashable) names', () => {
+    const t = synthFirewall();
+    const groups = t.findResources('AWS::Logs::LogGroup');
+    expect(Object.keys(groups).length).toBe(2);
+    for (const g of Object.values(groups)) {
+      expect(g.DeletionPolicy).toBe('Retain');
+      expect(g.UpdateReplacePolicy).toBe('Retain');
+      // no fixed LogGroupName → CFN auto-generates a unique name per create
+      expect(g.Properties?.LogGroupName).toBeUndefined();
+    }
+  });
+
   test('publishes cross-account SSM handles (Task 3.3, int-environment Req 2.2)', () => {
     const t = synthFirewall();
     t.hasResourceProperties('AWS::SSM::Parameter', {
