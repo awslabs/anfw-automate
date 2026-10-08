@@ -200,6 +200,7 @@ export class LambdaStack extends TaggedStack {
         effect: iam.Effect.ALLOW,
         actions: [
           'network-firewall:ListTagsForResource',
+          'network-firewall:TagResource',
           'network-firewall:DeleteRuleGroup',
           'network-firewall:DescribeLoggingConfiguration',
           'network-firewall:CreateRuleGroup',
