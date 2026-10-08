@@ -11,16 +11,19 @@ function synth(): Template {
     namePrefix: NAME_PREFIX,
     stage: STAGE,
     centralAccountId: '421222417363',
+    sharedTgwId: 'tgw-0test0000000000000',
+    firewallPolicyArn:
+      'arn:aws:network-firewall:eu-west-1:421222417363:firewall-policy/plc-test-int',
   });
   return Template.fromStack(stack);
 }
 
 describe('IntBaseStack — consumes foundational, does not create hub/firewall (Req 2.3)', () => {
-  test('does NOT create a Transit Gateway (resolves shared TGW from SSM)', () => {
+  test('does NOT create a Transit Gateway (shared TGW id supplied via context)', () => {
     synth().resourceCountIs('AWS::EC2::TransitGateway', 0);
   });
 
-  test('does NOT create a Network Firewall policy (resolves foundational policy from SSM)', () => {
+  test('does NOT create a Network Firewall policy (foundational policy ARN supplied via context)', () => {
     const t = synth();
     t.resourceCountIs('AWS::NetworkFirewall::FirewallPolicy', 0);
     t.resourceCountIs('AWS::NetworkFirewall::Firewall', 0);
