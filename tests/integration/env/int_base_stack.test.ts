@@ -10,10 +10,10 @@ function synth(): Template {
   const stack = new IntBaseStack(app, 'IntBaseStack', {
     namePrefix: NAME_PREFIX,
     stage: STAGE,
-    centralAccountId: '421222417363',
+    centralAccountId: '123456789012',
     sharedTgwId: 'tgw-0test0000000000000',
     firewallPolicyArn:
-      'arn:aws:network-firewall:eu-west-1:421222417363:firewall-policy/plc-test-int',
+      'arn:aws:network-firewall:eu-west-1:123456789012:firewall-policy/plc-test-int',
   });
   return Template.fromStack(stack);
 }

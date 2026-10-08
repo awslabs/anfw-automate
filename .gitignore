@@ -81,3 +81,5 @@ Thumbs.db
 !**/conf/schema.json
 build-report.json
 NOTICE
+# CDK context cache (regenerated; may contain account/AZ lookups — never commit)
+**/cdk.context.json

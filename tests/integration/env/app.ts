@@ -9,7 +9,7 @@ const namePrefix = app.node.tryGetContext('namePrefix') ?? 'anfw';
 // The central (firewall/automation) account that runs RuleCollect/RuleExecute
 // and assumes the tenant cross-account role. Defaults (in the stack) to the
 // current account for a same-account setup; override via context for the
-// multi-account INT topology (firewall account 421222417363).
+// multi-account INT topology (the central/firewall account).
 const centralAccountId: string | undefined =
   app.node.tryGetContext('centralAccountId') ?? undefined;
 

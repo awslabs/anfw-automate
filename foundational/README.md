@@ -72,7 +72,7 @@ pass an explicit `--app`. Credentials must resolve to the network account.
 ```bash
 yarn exec cdk --app "npx ts-node --prefer-ts-exts bin/transit_gateway.ts" deploy \
   --context networkAccountId=<NETWORK_ACCOUNT_ID> \
-  --context sharePrincipals=421222417363,<INT_ACCOUNT_ID>,868363312618 \
+  --context sharePrincipals=<FIREWALL_ACCOUNT_ID>,<INT_ACCOUNT_ID>,<DEV_ACCOUNT_ID> \
   --context namePrefix=af-anfw-automate
 ```
 
@@ -83,6 +83,6 @@ and the INT tenant tier resolve from SSM.
 ### Deploy order (for the INT environment)
 
 1. **TGW** (network account `<NETWORK_ACCOUNT_ID>`) — command above.
-2. **int fabric** (`STAGE=int cdk deploy --all`, firewall account `421222417363`) —
+2. **int fabric** (`STAGE=int cdk deploy --all`, firewall account `<FIREWALL_ACCOUNT_ID>`) —
    publishes `/anfw-automate/int/foundational/firewall-policy-arn`.
 3. Then the `app` (int) and the INT tenant tier — see the `int-environment` spec.
