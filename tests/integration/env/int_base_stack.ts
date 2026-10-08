@@ -7,7 +7,6 @@ import * as events from 'aws-cdk-lib/aws-events';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
 export interface IntBaseStackProps extends StackProps {
@@ -21,6 +20,18 @@ export interface IntBaseStackProps extends StackProps {
    * cross-account role trust and the central event bus target.
    */
   readonly centralAccountId?: string;
+  /**
+   * The shared Transit Gateway id (owned by the network account, RAM-shared into
+   * this account). Passed in as context rather than read from SSM: SSM parameters
+   * are not cross-account, and this is a stable value produced by the foundational
+   * TransitGatewayStack. Required.
+   */
+  readonly sharedTgwId: string;
+  /**
+   * The int-stage foundational Network Firewall policy ARN (owned by the firewall
+   * account). Passed in as context for the same reason as sharedTgwId. Required.
+   */
+  readonly firewallPolicyArn: string;
 }
 
 /**
@@ -29,12 +40,13 @@ export interface IntBaseStackProps extends StackProps {
  * Models the full centralized ANFW + TGW topology in one stack:
  *
  *   Shared Transit Gateway (hub) — created once by the foundational
- *   TransitGatewayStack (network account) and RAM-shared here; resolved from
- *   SSM `/anfw-automate/shared/tgw-id`. NOT created by this stack.
+ *   TransitGatewayStack (network account) and RAM-shared here; its id is supplied
+ *   to this stack via context (props.sharedTgwId). NOT created by this stack.
  *    ├─ Inspection side: the int-stage foundational Network Firewall + policy
- *    │   (firewall account). This stack does NOT create a firewall/policy; it
- *    │   resolves the policy ARN from SSM so rule groups attach to the REAL
- *    │   foundational policy that probe traffic is actually inspected by.
+ *    │   (firewall account). This stack does NOT create a firewall/policy; the
+ *    │   policy ARN is supplied via context (props.firewallPolicyArn) so rule
+ *    │   groups attach to the REAL foundational policy that probe traffic is
+ *    │   actually inspected by.
  *    └─ Dummy tenant (mirrors spoke-serverless-stack.yaml + the VPC a real spoke
  *        account already has):
  *          - Workload VPC attached to the shared TGW (passes RuleCollect's
@@ -58,7 +70,7 @@ export class IntBaseStack extends Stack {
   public readonly crossAccountRole: iam.Role;
   public readonly probeFunction: lambda.Function;
 
-  constructor(scope: Construct, id: string, props: IntBaseStackProps = {}) {
+  constructor(scope: Construct, id: string, props: IntBaseStackProps) {
     super(scope, id, props);
 
     const namePrefix = props.namePrefix ?? 'anfw';
@@ -75,17 +87,15 @@ export class IntBaseStack extends Stack {
     const centralEventBusArn = `arn:aws:events:${region}:${centralAccountId}:event-bus/${centralEventBusName}`;
 
     // -------------------------------------------------------------------------
-    // Shared Transit Gateway (hub) — resolved from SSM.
+    // Shared Transit Gateway (hub) — passed in as context (KISS).
     //
     // The TGW is a shared-once, foundational-owned resource created by the
-    // network-account TransitGatewayStack and RAM-shared into this account. Its
-    // id is published to `/anfw-automate/shared/tgw-id`. We read it here rather
-    // than creating a TGW (the INT env no longer owns the hub).
+    // network-account TransitGatewayStack. Its id is a stable value supplied to
+    // this stack via context/props rather than read from SSM — SSM parameters are
+    // not cross-account, and this value changes only if the TGW is recreated.
+    // We do NOT create a TGW here (the INT env no longer owns the hub).
     // -------------------------------------------------------------------------
-    const sharedTgwId = ssm.StringParameter.valueForStringParameter(
-      this,
-      '/anfw-automate/shared/tgw-id'
-    );
+    const sharedTgwId = props.sharedTgwId;
 
     // -------------------------------------------------------------------------
     // Dummy tenant workload VPC + TGW attachment.
@@ -309,7 +319,7 @@ export class IntBaseStack extends Stack {
     // -------------------------------------------------------------------------
     new CfnOutput(this, 'IntTransitGatewayId', {
       value: sharedTgwId,
-      description: 'Shared Transit Gateway id (resolved from SSM /anfw-automate/shared/tgw-id)',
+      description: 'Shared Transit Gateway id (supplied via context)',
       exportName: `${namePrefix}-int-tgw-id-${stage}`,
     });
     new CfnOutput(this, 'IntTenantVpcId', {
@@ -318,15 +328,12 @@ export class IntBaseStack extends Stack {
       exportName: `${namePrefix}-int-tenant-vpc-id-${stage}`,
     });
     new CfnOutput(this, 'IntFirewallPolicyArn', {
-      // Resolved from the int-stage foundational fabric (firewall account) via
-      // the shared SSM parameter it publishes. The INT env no longer creates a
-      // standalone/fake firewall policy — rule groups attach to the real
-      // foundational policy that the probe traffic is actually inspected by.
-      value: ssm.StringParameter.valueForStringParameter(
-        this,
-        `/anfw-automate/${stage}/foundational/firewall-policy-arn`
-      ),
-      description: 'Int-stage foundational Network Firewall policy ARN (from SSM)',
+      // The int-stage foundational Network Firewall policy ARN (firewall account),
+      // passed in as context. The INT env no longer creates a standalone/fake
+      // firewall policy — rule groups attach to the real foundational policy that
+      // the probe traffic is actually inspected by.
+      value: props.firewallPolicyArn,
+      description: 'Int-stage foundational Network Firewall policy ARN (via context)',
       exportName: `${namePrefix}-int-firewall-policy-arn-${stage}`,
     });
     new CfnOutput(this, 'IntProbeFunctionName', {
