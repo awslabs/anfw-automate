@@ -29,6 +29,24 @@ export class RoutingStack extends TaggedStack {
     // Import values from FirewallStack using Fn::ImportValue
     const firewallArn = Fn.importValue(`nfw-arn-${props.stage}`);
 
+    // Attach the egress (firewall) VPC to the shared Transit Gateway.
+    //
+    // The TGW is owned by the network account and RAM-shared into this account.
+    // Creating routes that target the TGW (below) requires this VPC to be attached
+    // to it; without the attachment the EC2 API reports "transitGateway ID does not
+    // exist" for this account. The attachment lives on the dedicated TGW subnets
+    // (one per AZ). Foundational owns this because the egress VPC is useless for
+    // inspection unless it is on the shared TGW.
+    const tgwAttachmentSubnetIds = Object.values(props.azIds).map(
+      az => props.subnetIds[`tgw_subnet_${az[az.length - 1]}`]
+    );
+    const tgwAttachment = new ec2.CfnTransitGatewayAttachment(this, 'EgressVpcTgwAttachment', {
+      transitGatewayId: props.transitGateway,
+      vpcId: props.vpcId,
+      subnetIds: tgwAttachmentSubnetIds,
+      tags: [{ key: 'Name', value: `${props.namePrefix}-egress-tgw-attachment-${props.stage}` }],
+    });
+
     // Create Lambda function for custom resource
     const deleteRoutesLambda = new pylambda.PythonFunction(this, 'DeleteRoutesFunction', {
       entry: path.join(__dirname, 'lambda', 'delete_routes'),
@@ -121,6 +139,7 @@ export class RoutingStack extends TaggedStack {
         );
 
         firewallInternalRoute.node.addDependency(deleteRoutesCustomResource);
+        firewallInternalRoute.node.addDependency(tgwAttachment);
 
         // Create PublicInternalRoute
         const publicInternalRoute = new ec2.CfnRoute(
