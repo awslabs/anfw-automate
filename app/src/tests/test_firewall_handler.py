@@ -10,6 +10,7 @@ from RuleExecute.firewall_handler import (
     RULEGROUP_OWNER_TAG_KEY,
     RULEGROUP_OWNER_TAG_VALUE,
     RULEGROUP_STAGE_TAG_KEY,
+    POLICY_NAME_PREFIX,
 )
 from lib.rule_config import DefaultDenyRules
 
@@ -341,6 +342,8 @@ class _NfwDouble:
         describe_policy_error: bool = False,
         tags_by_arn: dict | None = None,
         tag_error_arns: set | None = None,
+        list_policies_pages: list | None = None,
+        list_policies_error: bool = False,
     ) -> None:
         # policy_arn -> list of stateful references ({"ResourceArn": ...})
         self._policies = policies or {}
@@ -350,6 +353,14 @@ class _NfwDouble:
         self._tag_error_arns = tag_error_arns or set()
         self.tag_calls: list = []
         self.list_tag_calls: list = []
+        # list_firewall_policies behaviour: a list of pages, each a list of
+        # {"Name","Arn"} dicts. Pages are returned in order and all but the last
+        # carry a NextToken, letting a test drive the pagination loop.
+        self._list_policies_pages = (
+            list_policies_pages if list_policies_pages is not None else [[]]
+        )
+        self._list_policies_error = list_policies_error
+        self.list_policies_calls: list = []
 
     def describe_firewall_policy(self, FirewallPolicyArn, **kwargs):
         if self._describe_policy_error:
@@ -375,6 +386,20 @@ class _NfwDouble:
         for t in Tags:
             merged[t["Key"]] = t["Value"]
         self._tags[ResourceArn] = [{"Key": k, "Value": v} for k, v in merged.items()]
+
+    def list_firewall_policies(self, MaxResults=None, NextToken=None, **kwargs):
+        if self._list_policies_error:
+            raise _client_error("ThrottlingException")
+        # Resolve which page this call is for from the token. The first call has
+        # no token; subsequent calls echo back the token we handed out, which is
+        # the string index of the next page.
+        self.list_policies_calls.append(NextToken)
+        index = 0 if NextToken is None else int(NextToken)
+        page = self._list_policies_pages[index]
+        response = {"FirewallPolicies": page}
+        if index + 1 < len(self._list_policies_pages):
+            response["NextToken"] = str(index + 1)
+        return response
 
 
 @patch.dict(
@@ -531,3 +556,407 @@ class TestGetAllGroupsDiscovery(TestCase):
         result = h._get_all_groups()
         self.assertEqual(result, {"0123/fresh-strict"})
         self.assertEqual([a for a, _ in double.tag_calls], ["0123/fresh-strict"])
+
+
+class _PolicyListDouble:
+    """Stand-in for the network-firewall client used to drive
+    _get_all_policies / _get_backup_policies.
+
+    Supports paginated list_firewall_policies and an optional error injection so
+    the swallow-and-continue behavior can be asserted.
+    """
+
+    def __init__(self, pages: list | None = None, list_error: bool = False) -> None:
+        # pages: list of lists of {"Name","Arn"} dicts, one per page.
+        self._pages = pages or [[]]
+        self._list_error = list_error
+        self.list_calls = 0
+
+    def list_firewall_policies(self, *args, **kwargs):
+        if self._list_error:
+            raise _client_error("ThrottlingException")
+        idx = self.list_calls
+        self.list_calls += 1
+        page = self._pages[idx] if idx < len(self._pages) else []
+        result = {"FirewallPolicies": page}
+        # Emit a NextToken for every page except the last.
+        if idx < len(self._pages) - 1:
+            result["NextToken"] = f"token-{idx}"
+        return result
+
+
+@patch.dict(
+    os.environ,
+    {
+        "POLICY_ARNS": '{"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}',
+        "SUPPORTED_REGIONS": "eu-west-1, eu-central-1",
+        "CUSTOMER_LOG_GROUP": "DemoGroup",
+        "RULE_ORDER": "STRICT_ORDER",
+        "STAGE": "int",
+    },
+)
+@patch("boto3.client", MockAWSSevice)
+class TestGetAllPoliciesBackupDiscovery(TestCase):
+    """Covers _get_all_policies unioning operator-configured policies with
+    runtime-created overflow/backup policies.
+
+    Regression guard: a rule group parked on an auto-created backup policy must
+    stay discoverable across cold starts. Group discovery (_get_all_groups)
+    walks policy attachments, so a backup policy that _get_all_policies forgets
+    would make its rule groups invisible — unread, unmanaged, never cleaned up.
+    """
+
+    CONFIGURED_ARN = (
+        "arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"
+    )
+    BACKUP_ARN = f"0123/{POLICY_NAME_PREFIX}42"
+    UNRELATED_ARN = "0123/some-other-stage-policy"
+
+    def _handler(self) -> FirewallRuleHandler:
+        return FirewallRuleHandler("eu-west-1", {}, None, "log")
+
+    def test_backup_policy_is_discovered_and_unioned_with_configured(self):
+        h = self._handler()
+        h._nfw = _PolicyListDouble(
+            pages=[
+                [
+                    {"Name": f"{POLICY_NAME_PREFIX}42", "Arn": self.BACKUP_ARN},
+                    {"Name": "foreign-stage", "Arn": self.UNRELATED_ARN},
+                ]
+            ]
+        )
+        result = h._get_all_policies("eu-west-1")
+        # Configured policy preserved AND the backup policy picked up; the
+        # unrelated (non-prefixed) policy is left alone (account isolation).
+        self.assertIn(self.CONFIGURED_ARN, result)
+        self.assertIn(self.BACKUP_ARN, result)
+        self.assertNotIn(self.UNRELATED_ARN, result)
+
+    def test_no_backup_policies_leaves_only_configured(self):
+        h = self._handler()
+        h._nfw = _PolicyListDouble(
+            pages=[[{"Name": "foreign-stage", "Arn": self.UNRELATED_ARN}]]
+        )
+        result = h._get_all_policies("eu-west-1")
+        self.assertEqual(result, {self.CONFIGURED_ARN})
+
+    def test_backup_discovery_paginates(self):
+        h = self._handler()
+        backup2 = f"0123/{POLICY_NAME_PREFIX}99"
+        double = _PolicyListDouble(
+            pages=[
+                [{"Name": f"{POLICY_NAME_PREFIX}42", "Arn": self.BACKUP_ARN}],
+                [{"Name": f"{POLICY_NAME_PREFIX}99", "Arn": backup2}],
+            ]
+        )
+        h._nfw = double
+        result = h._get_backup_policies()
+        self.assertEqual(result, {self.BACKUP_ARN, backup2})
+        # Both pages were walked (NextToken followed).
+        self.assertEqual(double.list_calls, 2)
+
+    def test_list_failure_is_swallowed_and_configured_policies_survive(self):
+        """A list_firewall_policies failure must not wipe out configured policies:
+        _get_backup_policies returns empty, the configured set remains."""
+        h = self._handler()
+        h._nfw = _PolicyListDouble(list_error=True)
+        result = h._get_all_policies("eu-west-1")
+        self.assertEqual(result, {self.CONFIGURED_ARN})
+
+    def test_get_backup_policies_empty_account(self):
+        h = self._handler()
+        h._nfw = _PolicyListDouble(pages=[[]])
+        self.assertEqual(h._get_backup_policies(), set())
+
+
+# ARN of the single operator-configured policy for eu-west-1 (matches the
+# POLICY_ARNS env var patched onto the backup-discovery test class below).
+CONFIGURED_POLICY_ARN = (
+    "arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"
+)
+
+
+@patch.dict(
+    os.environ,
+    {
+        "POLICY_ARNS": '{"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}',
+        "SUPPORTED_REGIONS": "eu-west-1, eu-central-1",
+        "CUSTOMER_LOG_GROUP": "DemoGroup",
+        "RULE_ORDER": "STRICT_ORDER",
+        "STAGE": "int",
+    },
+)
+@patch("boto3.client", MockAWSSevice)
+class TestBackupPolicyDiscovery(TestCase):
+    """Covers runtime-created overflow/backup policy discovery.
+
+    ``_get_all_policies`` unions the operator-configured POLICY_ARNS with the
+    backup policies ``_get_backup_policies`` finds by name prefix. These tests
+    isolate ``_get_backup_policies`` (the new listing + prefix-filter + paginate
+    + swallow-error logic) and the union behaviour of ``_get_all_policies``.
+    """
+
+    def _handler(self) -> FirewallRuleHandler:
+        return FirewallRuleHandler("eu-west-1", {}, None, "log")
+
+    # --- _get_backup_policies ------------------------------------------------
+
+    def test_backup_discovery_keeps_only_prefixed_policies(self):
+        """Only policies whose name starts with POLICY_NAME_PREFIX are ours."""
+        h = self._handler()
+        h._nfw = _NfwDouble(
+            list_policies_pages=[
+                [
+                    {"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"},
+                    {"Name": "someone-elses-policy", "Arn": "arn/other"},
+                    {"Name": f"{POLICY_NAME_PREFIX}2", "Arn": "arn/backup-2"},
+                ]
+            ]
+        )
+        self.assertEqual(
+            h._get_backup_policies(), {"arn/backup-1", "arn/backup-2"}
+        )
+
+    def test_backup_discovery_empty_when_no_matches(self):
+        h = self._handler()
+        h._nfw = _NfwDouble(
+            list_policies_pages=[
+                [
+                    {"Name": "unrelated-a", "Arn": "arn/a"},
+                    {"Name": "unrelated-b", "Arn": "arn/b"},
+                ]
+            ]
+        )
+        self.assertEqual(h._get_backup_policies(), set())
+
+    def test_backup_discovery_empty_when_no_policies(self):
+        h = self._handler()
+        h._nfw = _NfwDouble(list_policies_pages=[[]])
+        self.assertEqual(h._get_backup_policies(), set())
+
+    def test_backup_discovery_follows_pagination(self):
+        """All pages are walked via NextToken; matches aggregate across pages."""
+        h = self._handler()
+        double = _NfwDouble(
+            list_policies_pages=[
+                [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                [{"Name": "unrelated", "Arn": "arn/other"}],
+                [{"Name": f"{POLICY_NAME_PREFIX}3", "Arn": "arn/backup-3"}],
+            ]
+        )
+        h._nfw = double
+        self.assertEqual(
+            h._get_backup_policies(), {"arn/backup-1", "arn/backup-3"}
+        )
+        # First call has no token, then each handed-out token is echoed back.
+        self.assertEqual(double.list_policies_calls, [None, "1", "2"])
+
+    def test_backup_discovery_policy_missing_name_is_skipped(self):
+        """A policy entry without a Name must not raise (defaults to "")."""
+        h = self._handler()
+        h._nfw = _NfwDouble(
+            list_policies_pages=[
+                [
+                    {"Arn": "arn/nameless"},
+                    {"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"},
+                ]
+            ]
+        )
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+
+    def test_backup_discovery_swallows_list_error(self):
+        """A listing failure is logged and swallowed, never raised, and yields
+        an empty set so the configured policies survive."""
+        h = self._handler()
+        h._nfw = _NfwDouble(list_policies_error=True)
+        self.assertEqual(h._get_backup_policies(), set())
+
+    # --- _get_all_policies union --------------------------------------------
+
+    def test_all_policies_unions_configured_and_backup(self):
+        h = self._handler()
+        h._nfw = _NfwDouble(
+            list_policies_pages=[
+                [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}]
+            ]
+        )
+        self.assertEqual(
+            h._get_all_policies("eu-west-1"),
+            {CONFIGURED_POLICY_ARN, "arn/backup-1"},
+        )
+
+    def test_all_policies_configured_only_when_no_backups(self):
+        h = self._handler()
+        h._nfw = _NfwDouble(list_policies_pages=[[]])
+        self.assertEqual(
+            h._get_all_policies("eu-west-1"), {CONFIGURED_POLICY_ARN}
+        )
+
+    def test_all_policies_survives_backup_listing_failure(self):
+        """A transient listing error must never wipe out the configured policy."""
+        h = self._handler()
+        h._nfw = _NfwDouble(list_policies_error=True)
+        self.assertEqual(
+            h._get_all_policies("eu-west-1"), {CONFIGURED_POLICY_ARN}
+        )
+
+    def test_all_policies_region_without_configured_entry(self):
+        """A region absent from POLICY_ARNS contributes nothing from config, but
+        backup discovery still applies."""
+        h = self._handler()
+        h._nfw = _NfwDouble(
+            list_policies_pages=[
+                [{"Name": f"{POLICY_NAME_PREFIX}9", "Arn": "arn/backup-9"}]
+            ]
+        )
+        self.assertEqual(h._get_all_policies("ap-south-1"), {"arn/backup-9"})
+
+
+class _TokenEchoDouble:
+    """Stand-in for the network-firewall client that returns whatever
+    ``NextToken`` value the caller programs for each successive call.
+
+    Purpose-built to exercise the pagination termination guard in
+    ``_get_backup_policies``: the loop only continues when ``NextToken`` is a
+    non-empty *string*. Any other value (``None``, ``""``, or a malformed
+    non-string truthy value such as an int or a dict) must terminate the loop
+    so a bad API response can never spin forever.
+    """
+
+    def __init__(self, pages: list) -> None:
+        # pages: list of (policies, next_token) tuples returned in call order.
+        # policies is a list of {"Name","Arn"}; next_token is placed on the
+        # response verbatim (any type) unless it is the sentinel ``_OMIT``.
+        self._pages = pages
+        self.call_count = 0
+
+    _OMIT = object()
+
+    def list_firewall_policies(self, *args, **kwargs):
+        idx = self.call_count
+        self.call_count += 1
+        policies, next_token = self._pages[idx]
+        response = {"FirewallPolicies": policies}
+        if next_token is not self._OMIT:
+            response["NextToken"] = next_token
+        return response
+
+
+@patch.dict(
+    os.environ,
+    {
+        "POLICY_ARNS": '{"eu-west-1": ["arn:aws:network-firewall:eu-west-1:account-id:policy/policy-id-1"], "eu-central-1": ["arn:aws:network-firewall:eu-central-1:account-id:policy/policy-id-2"]}',
+        "SUPPORTED_REGIONS": "eu-west-1, eu-central-1",
+        "CUSTOMER_LOG_GROUP": "DemoGroup",
+        "RULE_ORDER": "STRICT_ORDER",
+        "STAGE": "int",
+    },
+)
+@patch("boto3.client", MockAWSSevice)
+class TestBackupDiscoveryPaginationGuard(TestCase):
+    """Covers the pagination termination guard in ``_get_backup_policies``.
+
+    The loop continues only when ``NextToken`` is a non-empty string. These
+    tests pin that guard so a malformed listing response can never cause an
+    infinite loop, while a well-formed multi-page response still fully paginates.
+    """
+
+    def _handler(self) -> FirewallRuleHandler:
+        return FirewallRuleHandler("eu-west-1", {}, None, "log")
+
+    def test_absent_next_token_stops_after_one_call(self):
+        """No NextToken key at all -> single call, no further pagination."""
+        double = _TokenEchoDouble(
+            pages=[
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                    _TokenEchoDouble._OMIT,
+                )
+            ]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+        self.assertEqual(double.call_count, 1)
+
+    def test_none_next_token_stops(self):
+        """An explicit ``NextToken: None`` terminates the loop."""
+        double = _TokenEchoDouble(
+            pages=[
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                    None,
+                )
+            ]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+        self.assertEqual(double.call_count, 1)
+
+    def test_empty_string_next_token_stops(self):
+        """An empty-string token is falsy and must terminate the loop."""
+        double = _TokenEchoDouble(
+            pages=[
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                    "",
+                )
+            ]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+        self.assertEqual(double.call_count, 1)
+
+    def test_non_string_truthy_next_token_stops_without_looping(self):
+        """A malformed truthy-but-non-string token (e.g. an int) must NOT be
+        treated as a continuation token. Before the type guard this would have
+        been forwarded as ``NextToken=<int>`` and, with a mock that keeps
+        emitting it, looped forever. The guard breaks instead."""
+        double = _TokenEchoDouble(
+            pages=[
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                    12345,  # non-string, truthy
+                )
+            ]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+        # The guard stops after the first call rather than paginating on a
+        # malformed token.
+        self.assertEqual(double.call_count, 1)
+
+    def test_non_string_dict_next_token_stops(self):
+        """Another malformed shape: a dict token must also terminate the loop."""
+        double = _TokenEchoDouble(
+            pages=[([{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}], {"a": 1})]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(h._get_backup_policies(), {"arn/backup-1"})
+        self.assertEqual(double.call_count, 1)
+
+    def test_valid_string_token_continues_then_terminates(self):
+        """A genuine string token advances to the next page; the final page
+        (no token) stops the loop. Matches aggregate across both pages."""
+        double = _TokenEchoDouble(
+            pages=[
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}1", "Arn": "arn/backup-1"}],
+                    "next-page",
+                ),
+                (
+                    [{"Name": f"{POLICY_NAME_PREFIX}2", "Arn": "arn/backup-2"}],
+                    _TokenEchoDouble._OMIT,
+                ),
+            ]
+        )
+        h = self._handler()
+        h._nfw = double
+        self.assertEqual(
+            h._get_backup_policies(), {"arn/backup-1", "arn/backup-2"}
+        )
+        self.assertEqual(double.call_count, 2)

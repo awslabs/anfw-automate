@@ -423,6 +423,15 @@ class TestFirewallRuleHandlerPureLogic:
             with patch("boto3.client") as mock_client:
                 mock_nfw = MagicMock()
                 mock_nfw.list_rule_groups.return_value = {"RuleGroups": []}
+                # _get_all_policies now also discovers backup policies via
+                # list_firewall_policies; stub it so construction stays a pure,
+                # terminating, AWS-free setup.
+                mock_nfw.list_firewall_policies.return_value = {
+                    "FirewallPolicies": []
+                }
+                mock_nfw.describe_firewall_policy.return_value = {
+                    "FirewallPolicy": {"StatefulRuleGroupReferences": []}
+                }
                 mock_client.return_value = mock_nfw
                 with patch(
                     "builtins.open",

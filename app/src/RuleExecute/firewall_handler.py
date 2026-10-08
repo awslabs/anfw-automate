@@ -177,15 +177,64 @@ class FirewallRuleHandler:
         return rule_entries, response["UpdateToken"]
 
     def _get_all_policies(self, region) -> set:
-        """Get all Firewall polices provided by user
+        """Get all Firewall policies this deployment manages.
 
-        :return: set - all policy ARNs"""
+        Two sources, unioned:
+
+        1. **Operator-configured policies** from the ``POLICY_ARNS`` env var — the
+           policies the user explicitly points the solution at.
+        2. **Runtime-created backup policies** — when a configured policy fills up
+           (``MAX_RULEGROUPS_PER_POLICY``), ``_associate_rule_group_to_policy``
+           creates an overflow policy named ``{POLICY_NAME_PREFIX}<n>`` and attaches
+           the new rule group to it. Those backup policies are NOT in
+           ``POLICY_ARNS``, so a fresh invocation would otherwise never revisit
+           them — and, because group discovery walks policy attachments
+           (``_get_all_groups``), every rule group parked on a backup policy would
+           become invisible: unread, unmanaged, and never cleaned up. We discover
+           them here by their stable name prefix so overflow groups stay managed
+           across cold starts.
+
+        :return: set - all managed policy ARNs for the region."""
         collection: set = set()
 
         policy_arns_str = os.getenv("POLICY_ARNS")
         policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
         collection.update(policy_arns.get(region, set()))
+
+        # Discover runtime-created overflow/backup policies by name prefix.
+        collection.update(self._get_backup_policies())
         return collection
+
+    def _get_backup_policies(self) -> set:
+        """List account firewall policies and return the ARNs of ours.
+
+        "Ours" = policies whose name starts with ``POLICY_NAME_PREFIX`` (the
+        overflow policies this solution creates). Best-effort: a listing failure
+        is logged and swallowed so a transient API error never wipes out the
+        configured policies — the caller has already added those.
+        """
+        backups: set = set()
+        try:
+            next_token = None
+            while True:
+                kwargs = {"MaxResults": 100}
+                if next_token:
+                    kwargs["NextToken"] = next_token
+                response = self._nfw.list_firewall_policies(**kwargs)
+                for policy in response.get("FirewallPolicies", []):
+                    if policy.get("Name", "").startswith(POLICY_NAME_PREFIX):
+                        backups.add(policy["Arn"])
+                next_token = response.get("NextToken")
+                # Only a *string* token continues pagination. Guarding on the
+                # type (not just truthiness) keeps a malformed response from
+                # looping forever.
+                if not isinstance(next_token, str) or not next_token:
+                    break
+        except ClientError as exc:
+            self.logger.warning(
+                f"Could not list firewall policies for backup discovery (ignored): {exc}"
+            )
+        return backups
 
     def _ownership_tags(self) -> list:
         """Ownership tags applied to rule groups created by this deployment.
