@@ -11,6 +11,39 @@ configurations detailed below.
 > for deployment in all regions where AWS Network Firewall is used. Choose a
 > primary region for deployment to optimize costs.
 
+## WHICH RULE GROUPS THE SOLUTION MANAGES
+
+The solution discovers the rule groups it manages by walking the
+`StatefulRuleGroupReferences` of the firewall policies you configure (via
+`firewall_policy_arns` / the `POLICY_ARNS` the Lambda receives). It does **not**
+list every rule group in the account, so it only ever touches groups that are
+attached to one of those policies. This keeps a deployment that shares an AWS
+account with other stages (for example, a dedicated INT firewall alongside
+dev/prod) from discovering and mutating rule groups it does not own.
+
+**To have a rule group managed by the solution, attach it to one of the
+configured firewall policies.** Two conditions must both hold for a group to be
+picked up:
+
+1. **Policy attachment (required).** The rule group must appear in the
+   `StatefulRuleGroupReferences` of a policy listed in your configuration. This
+   is the authoritative signal — attachment is what makes a group "managed".
+   Groups the solution creates are attached automatically; a pre-existing group
+   you want managed must be attached by you.
+2. **Rule-order name suffix.** The group name must carry the suffix that matches
+   the active `rule_order`: `-strict` when `rule_order` is `STRICT_ORDER`, or
+   `-action` when it is `DEFAULT_ACTION_ORDER`. Groups whose names do not match
+   the active rule order are ignored.
+
+### About the ownership tag
+
+As a side effect of discovery, the solution tags each managed group it finds
+with `managed-by=anfw-automate` and `stage=<stage>` for provenance and
+observability. **This tag is not how groups are selected** — tagging a rule
+group does **not** cause the solution to manage it, and an untagged-but-attached
+group is still managed (the tag is backfilled on the next run). Attach the group
+to a configured policy; do not rely on the tag to opt a group in.
+
 The optional "StackSets" submodule is necessary only if automating resource
 management in spoke accounts (those holding configuration files). It leverages
 delegated admin for AWS CloudFormation to deploy these stacksets. Alternatively,
