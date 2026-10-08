@@ -153,24 +153,52 @@ async function main() {
       baseRouting.addDependency(firewall);
       routing.addDependency(baseRouting);
 
-      // CDK auto-generates a BucketNotificationsHandler (a singleton Lambda) for the
-      // flow-logs bucket; its role uses the AWS-managed basic execution role. This is
-      // CDK-internal and not customer-controlled. The finding previously ran inside the
-      // pipeline stage; with pipelines removed (Requirement 5) it surfaces at direct
-      // synth, so we suppress it narrowly here.
-      NagSuppressions.addResourceSuppressionsByPath(
-        vpc,
-        `${vpc.node.path}/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource`,
-        [
+      // App-wide (per-stack) suppression for the AWS-managed basic execution role.
+      // The AWSLambdaBasicExecutionRole (CloudWatch Logs write) is attached to
+      // CDK-managed helper Lambdas (S3 bucket-notifications handler, LogRetention)
+      // and the routing custom-resource Lambdas. It is a universally-accepted
+      // managed policy, not customer-controlled, so AwsSolutions-IAM4 for this
+      // specific policy is suppressed on every stack rather than per-construct.
+      for (const stack of [vpc, firewall, baseRouting, routing]) {
+        NagSuppressions.addStackSuppressions(stack, [
           {
             id: 'AwsSolutions-IAM4',
             reason:
-              'CDK-managed S3 bucket-notifications handler uses the AWS-managed basic execution role; not customer-controlled.',
+              'AWS-managed AWSLambdaBasicExecutionRole (CloudWatch Logs) on CDK-managed and custom-resource Lambdas; not customer-controlled.',
             appliesTo: [
               'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
             ],
           },
-        ]
+        ]);
+      }
+
+      // Routing custom-resource Lambdas (delete_routes, fetch_vpc_endpoints) and the
+      // CDK-managed LogRetention helper carry findings beyond the basic-execution
+      // role. These were latent while the routing stack ran inside a CodePipeline
+      // stage; removing the pipeline wrappers (Requirement 5) surfaces them at direct
+      // synth. The wildcards are inherent — delete_routes acts on route tables and
+      // fetch_vpc_endpoints describes the firewall endpoint, both discovered at
+      // runtime, so the resource ARN is unknown at deploy time.
+      NagSuppressions.addResourceSuppressions(
+        routing,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason:
+              'LogRetention helper requires logs:* on * (CDK-managed). The route-table and firewall wildcards are inherent: resources are discovered at runtime, so the specific ARN is unknown at deploy time. Scoped to the resource type and region/account.',
+            appliesTo: [
+              'Resource::*',
+              'Resource::arn:aws:ec2:eu-west-1:421222417363:route-table/*',
+              'Resource::arn:aws:network-firewall:eu-west-1:421222417363:firewall/*',
+            ],
+          },
+          {
+            id: 'AwsSolutions-L1',
+            reason:
+              'The non-latest runtime is on the CDK-managed LogRetention helper Lambda, whose runtime is controlled by aws-cdk-lib, not by this stack.',
+          },
+        ],
+        true
       );
     }
 
@@ -185,8 +213,12 @@ async function main() {
       console.error(error.getDetailedMessage());
       console.error('\n💡 Troubleshooting:');
       console.error(`   - Check that configuration exists for stage '${STAGE}'`);
-      console.error(`   - SSM: /anfw-automate/${STAGE}/vpc/config and /anfw-automate/${STAGE}/firewall/config`);
-      console.error(`   - Or files: foundational/vpc/conf/${STAGE}.json and foundational/firewall/conf/${STAGE}.json`);
+      console.error(
+        `   - SSM: /anfw-automate/${STAGE}/vpc/config and /anfw-automate/${STAGE}/firewall/config`
+      );
+      console.error(
+        `   - Or files: foundational/vpc/conf/${STAGE}.json and foundational/firewall/conf/${STAGE}.json`
+      );
     } else {
       console.error('❌ Unexpected error:', error);
     }
