@@ -188,8 +188,8 @@ async function main() {
               'LogRetention helper requires logs:* on * (CDK-managed). The route-table and firewall wildcards are inherent: resources are discovered at runtime, so the specific ARN is unknown at deploy time. Scoped to the resource type and region/account.',
             appliesTo: [
               'Resource::*',
-              'Resource::arn:aws:ec2:eu-west-1:421222417363:route-table/*',
-              'Resource::arn:aws:network-firewall:eu-west-1:421222417363:firewall/*',
+              'Resource::arn:aws:ec2:*:*:route-table/*',
+              'Resource::arn:aws:network-firewall:*:*:firewall/*',
             ],
           },
           {

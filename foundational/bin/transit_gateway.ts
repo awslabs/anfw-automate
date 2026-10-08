@@ -13,8 +13,8 @@ import { TransitGatewayStack } from '../network/transit_gateway_stack';
  *
  *   cd foundational
  *   yarn exec cdk --app "npx ts-node --prefer-ts-exts bin/transit_gateway.ts" deploy \
- *     --context networkAccountId=040781035187 \
- *     --context sharePrincipals=421222417363,537622539377,868363312618 \
+ *     --context networkAccountId=<NETWORK_ACCOUNT_ID> \
+ *     --context sharePrincipals=<FIREWALL_ACCOUNT_ID>,<INT_ACCOUNT_ID>,<DEV_ACCOUNT_ID> \
  *     --context namePrefix=af-anfw-automate
  *
  * Region defaults to eu-west-1 (CDK_DEFAULT_REGION overrides). Credentials must

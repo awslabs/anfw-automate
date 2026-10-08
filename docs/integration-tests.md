@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- AWS credentials resolving to the INT account (`537622539377`)
+- AWS credentials resolving to the INT account (`<INT_ACCOUNT_ID>`)
 - Docker running (for Lambda bundling)
 - `uv` installed (`pip install uv` or `brew install astral-sh/tap/uv`)
 - Node.js 20 + corepack enabled
@@ -16,7 +16,7 @@ Replace the placeholder account ID with your real INT account:
 
 ```toml
 [int_account]
-account_id = "537622539377"
+account_id = "<INT_ACCOUNT_ID>"
 ```
 
 ### 2. Create Stage Config Files
