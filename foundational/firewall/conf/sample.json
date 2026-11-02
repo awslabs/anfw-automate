@@ -1,0 +1,27 @@
+{
+  "eu-west-1": {
+    "vpc_id": "vpc-0placeholder000000000",
+    "vpc_cidr": "10.0.0.0/24",
+    "multi_az": true,
+    "internet_gateway_id": "igw-0placeholder000000000",
+    "internal_network_cidrs": "10.0.0.0/8",
+    "transit_gateway": "tgw-0placeholder000000000",
+    "availability_zones": {
+      "az_a": "eu-west-1a",
+      "az_b": "eu-west-1b",
+      "az_c": "eu-west-1c"
+    },
+    "subnet_ids": {
+      "tgw_subnet_a": "subnet-0placeholdertgwa000",
+      "tgw_subnet_b": "subnet-0placeholdertgwb000",
+      "tgw_subnet_c": "subnet-0placeholdertgwc000",
+      "firewall_subnet_a": "subnet-0placeholderfwa0000",
+      "firewall_subnet_b": "subnet-0placeholderfwb0000",
+      "firewall_subnet_c": "subnet-0placeholderfwc0000",
+      "nat_subnet_a": "subnet-0placeholdernata000",
+      "nat_subnet_b": "subnet-0placeholdernatb000",
+      "nat_subnet_c": "subnet-0placeholdernatc000"
+    },
+    "rule_order": "STRICT_ORDER"
+  }
+}

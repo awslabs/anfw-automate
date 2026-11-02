@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+
+echo "🚀 Running pre-push checks..."
+
+# Skip all checks in CI environment (GitHub Actions)
+if [ "$CI" = "true" ] || [ "$GITHUB_ACTIONS" = "true" ]; then
+    echo "ℹ️  Running in CI environment, skipping pre-push checks"
+    exit 0
+fi
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Skip checks for main branch only (should go through PR)
+if [ "$current_branch" = "main" ]; then
+    echo "⚠️  Direct push to main detected. Please use Pull Requests for main branch."
+    echo "   If this is intentional (e.g., hotfix), use --no-verify to bypass this check."
+    exit 1
+fi
+
+# Run full linting on all modules
+echo "🔍 Running linting on all modules..."
+if ! make lint; then
+    echo ""
+    echo "❌ Linting failed. Fix issues before pushing."
+    exit 1
+fi
+
+# Run comprehensive security scan (bandit, yarn audit)
+echo "🔒 Running security scan..."
+if ! make security:python || ! make security:nodejs; then
+    echo ""
+    echo "❌ Security scan failed. Fix issues before pushing."
+    exit 1
+fi
+
+# Run tests before push
+echo "🧪 Running tests..."
+if ! make test; then
+    echo ""
+    echo "❌ Tests failed. Fix issues before pushing."
+    exit 1
+fi
+
+echo "✅ Pre-push checks passed!"

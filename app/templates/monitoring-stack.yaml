@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "(DO NOT USE) Optional sample Monitoring Stack to monitor the Customer Log Group and enable CW alarms"
+Description: '(DO NOT USE) Optional sample Monitoring Stack to monitor the Customer Log Group and enable CW alarms'
 Parameters:
   CentralEventBusARN:
     Type: String
@@ -30,7 +30,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: ANFW CloudWatch Alarms SNS Notification Topic
-      TopicName: !Sub "${NamePrefix}-CloudWatchAlarmsSNSTopic-${Stage}" 
+      TopicName: !Sub '${NamePrefix}-CloudWatchAlarmsSNSTopic-${Stage}'
 
   CloudWatchAlarmsSNSTopicPolicy:
     Type: AWS::SNS::TopicPolicy
@@ -60,39 +60,39 @@ Resources:
   DLQAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Dead letter Queue for failed eventbridge rule invocations"
+      AlarmDescription: 'Dead letter Queue for failed eventbridge rule invocations'
       AlarmName: !Sub cwa-${NamePrefix}-SQSAlarm-${Stage}
       Metrics:
-      - Expression: "m2-m1"
-        Id: "e1"
-        Label: "ChangeInAmountVisible"
-        ReturnData: true
-      - Id: "m1"
-        Label: "MessagesVisibleMin"
-        MetricStat:
+        - Expression: 'm2-m1'
+          Id: 'e1'
+          Label: 'ChangeInAmountVisible'
+          ReturnData: true
+        - Id: 'm1'
+          Label: 'MessagesVisibleMin'
+          MetricStat:
             Metric:
-                Dimensions:
+              Dimensions:
                 - Name: QueueName
                   Value: !GetAtt EBDLQueue.QueueName
-                MetricName: ApproximateNumberOfMessagesVisible
-                Namespace: "AWS/SQS"
+              MetricName: ApproximateNumberOfMessagesVisible
+              Namespace: 'AWS/SQS'
             Period: 300 # evaluate maximum over period of 5 mins
             Stat: Minimum
             Unit: Count
-        ReturnData: false
-      - Id: "m2"
-        Label: "MessagesVisibleMax"
-        MetricStat:
+          ReturnData: false
+        - Id: 'm2'
+          Label: 'MessagesVisibleMax'
+          MetricStat:
             Metric:
-                Dimensions:
+              Dimensions:
                 - Name: QueueName
                   Value: !GetAtt EBDLQueue.QueueName
-                MetricName: ApproximateNumberOfMessagesVisible
-                Namespace: "AWS/SQS"
+              MetricName: ApproximateNumberOfMessagesVisible
+              Namespace: 'AWS/SQS'
             Period: 300 # evaluate maximum over period of 5 min
             Stat: Maximum
             Unit: Count
-        ReturnData: false
+          ReturnData: false
       ComparisonOperator: GreaterThanOrEqualToThreshold
       AlarmActions:
         - !Ref CloudWatchAlarmsSNSTopic
@@ -102,10 +102,10 @@ Resources:
 
   CustomerLogBucket:
     DeletionPolicy: Retain
-    Type: "AWS::S3::Bucket"
+    Type: 'AWS::S3::Bucket'
     Description: ANFW customer log bucket
     Properties:
-      BucketName: !Sub "anfw-logs-${AWS::Region}-${AWS::AccountId}-${Stage}"
+      BucketName: !Sub 'anfw-logs-${AWS::Region}-${AWS::AccountId}-${Stage}'
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -117,8 +117,8 @@ Resources:
       NotificationConfiguration:
         EventBridgeConfiguration:
           EventBridgeEnabled: True
-      BucketEncryption: 
-        ServerSideEncryptionConfiguration: 
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
 
@@ -164,7 +164,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: !GetAtt CustomerLogBucket.Arn
-      RoleArn: 
+      RoleArn:
       LogGroupName: !Ref CustomerLogGroup
       FilterPattern: |
         {
@@ -174,77 +174,77 @@ Resources:
   ExportTaskSchedule:
     Type: AWS::Events::Rule
     Properties:
-      Description: "Export logs older than 7 days"
-      ScheduleExpression: "rate(1 day)"  # Run the task every day
+      Description: 'Export logs older than 7 days'
+      ScheduleExpression: 'rate(1 day)' # Run the task every day
       Targets:
         - Arn: !GetAtt LogExportTask.Arn
-          Id: "ExportTaskTarget"
+          Id: 'ExportTaskTarget'
 
   FailedObjectInvocationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-        AlarmName: !Sub "${NamePrefix}-S3ObjectFailedInvocations-${Stage}" 
-        # !Join [ '-', [!Ref ProjectName,'s3-object-failed-invocations', !Ref OrgScope ]]
-        ActionsEnabled: true
-        OKActions: []
-        AlarmActions:
-          - !Ref CloudWatchAlarmsSNSTopic
-        InsufficientDataActions: []
-        MetricName: FailedInvocations
-        Namespace: AWS/Events
-        Statistic: Average
-        Dimensions:
-            - Name: RuleName
-              Value: !Ref S3ObjectEventRule
-        Period: 60
-        EvaluationPeriods: 1
-        DatapointsToAlarm: 1
-        Threshold: 1
-        ComparisonOperator: GreaterThanOrEqualToThreshold
-        TreatMissingData: missing
+      AlarmName: !Sub '${NamePrefix}-S3ObjectFailedInvocations-${Stage}'
+      # !Join [ '-', [!Ref ProjectName,'s3-object-failed-invocations', !Ref OrgScope ]]
+      ActionsEnabled: true
+      OKActions: []
+      AlarmActions:
+        - !Ref CloudWatchAlarmsSNSTopic
+      InsufficientDataActions: []
+      MetricName: FailedInvocations
+      Namespace: AWS/Events
+      Statistic: Average
+      Dimensions:
+        - Name: RuleName
+          Value: !Ref S3ObjectEventRule
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
 
   FailedBucketInvocationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-        AlarmName: !Sub "${NamePrefix}-S3BucketDeleteFailedInvocations-${Stage}" 
-        # !Join [ '-', [!Ref ProjectName,'s3-bucket-delete-failed-invocations', !Ref OrgScope ]]
-        ActionsEnabled: true
-        OKActions: []
-        AlarmActions:
-            - !Ref CloudWatchAlarmsSNSTopic
-        InsufficientDataActions: []
-        MetricName: FailedInvocations
-        Namespace: AWS/Events
-        Statistic: Average
-        Dimensions:
-            - Name: RuleName
-              Value: !Ref S3BucketEventRule
-        Period: 60
-        EvaluationPeriods: 1
-        DatapointsToAlarm: 1
-        Threshold: 1
-        ComparisonOperator: GreaterThanOrEqualToThreshold
-        TreatMissingData: missing
+      AlarmName: !Sub '${NamePrefix}-S3BucketDeleteFailedInvocations-${Stage}'
+      # !Join [ '-', [!Ref ProjectName,'s3-bucket-delete-failed-invocations', !Ref OrgScope ]]
+      ActionsEnabled: true
+      OKActions: []
+      AlarmActions:
+        - !Ref CloudWatchAlarmsSNSTopic
+      InsufficientDataActions: []
+      MetricName: FailedInvocations
+      Namespace: AWS/Events
+      Statistic: Average
+      Dimensions:
+        - Name: RuleName
+          Value: !Ref S3BucketEventRule
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
 
   FailedVpcInvocationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-        AlarmName: !Sub "${NamePrefix}-VpcDeleteFailedInvocations-${Stage}" 
-        # !Join [ '-', [!Ref ProjectName,'vpc-delete-failed-invocations', !Ref OrgScope ]]
-        ActionsEnabled: true
-        OKActions: []
-        AlarmActions:
-            - !Ref CloudWatchAlarmsSNSTopic
-        InsufficientDataActions: []
-        MetricName: FailedInvocations
-        Namespace: AWS/Events
-        Statistic: Average
-        Dimensions:
-            - Name: RuleName
-              Value: !Ref VPCDeleteEventRule
-        Period: 60
-        EvaluationPeriods: 1
-        DatapointsToAlarm: 1
-        Threshold: 1
-        ComparisonOperator: GreaterThanOrEqualToThreshold
-        TreatMissingData: missing
+      AlarmName: !Sub '${NamePrefix}-VpcDeleteFailedInvocations-${Stage}'
+      # !Join [ '-', [!Ref ProjectName,'vpc-delete-failed-invocations', !Ref OrgScope ]]
+      ActionsEnabled: true
+      OKActions: []
+      AlarmActions:
+        - !Ref CloudWatchAlarmsSNSTopic
+      InsufficientDataActions: []
+      MetricName: FailedInvocations
+      Namespace: AWS/Events
+      Statistic: Average
+      Dimensions:
+        - Name: RuleName
+          Value: !Ref VPCDeleteEventRule
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing

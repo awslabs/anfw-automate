@@ -1,0 +1,152 @@
+import { Construct } from 'constructs';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import { aws_networkfirewall as anfw } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { TaggedStack, TaggedStackProps } from '../../shared/lib/tagged_stack';
+
+type RuleOrder = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
+
+export interface NetworkFirewallProps extends TaggedStackProps {
+  namePrefix: string;
+  vpcId: string;
+  subnetIds: { [key: string]: string };
+  azIds: { [key: string]: string };
+  internalNet: string;
+  ruleOrder: RuleOrder;
+}
+
+export class NetworkFirewallStack extends TaggedStack {
+  constructor(scope: Construct, id: string, props: NetworkFirewallProps) {
+    super(scope, id, props);
+
+    const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
+    const absoluteFilePath = path.join(__dirname, 'policy', `${props.ruleOrder}.json`);
+
+    // Create subnet mappings based on the provided dictionary
+    const subnetMappingList: anfw.CfnFirewall.SubnetMappingProperty[] = [];
+    for (const az of Object.values(azIds)) {
+      const azSuffix = az[az.length - 1];
+      const subnetMappingProperty: anfw.CfnFirewall.SubnetMappingProperty = {
+        subnetId: subnetIds[`firewall_subnet_${azSuffix}`],
+        ipAddressType: 'IPV4',
+      };
+      subnetMappingList.push(subnetMappingProperty);
+
+      // Create an Elastic IP
+      const eip = new ec2.CfnEIP(this, `EIP${azSuffix}`);
+
+      // Create a NAT Gateway and associate the Elastic IP with it
+      const natGateway = new ec2.CfnNatGateway(this, `NATGateway${azSuffix}`, {
+        allocationId: eip.attrAllocationId,
+        subnetId: subnetIds[`nat_subnet_${azSuffix}`],
+      });
+
+      new CfnOutput(this, `NATGatewayId${azSuffix.toUpperCase()}`, {
+        description: 'NAT Gateway ID',
+        exportName: `nat-id-${stage}-${azSuffix}`,
+        value: natGateway.attrNatGatewayId,
+      });
+    }
+
+    const internal_net_list: string[] = internalNet.split(',');
+
+    const policyContent = fs.readFileSync(absoluteFilePath, 'utf-8');
+    const firewallPolicyJson = JSON.parse(policyContent);
+
+    // Update HOME_NET policyVariables in the policy
+    firewallPolicyJson.policyVariables = {
+      ruleVariables: {
+        HOME_NET: {
+          definition: internal_net_list,
+        },
+      },
+    };
+
+    const ordername: string = props.ruleOrder === 'DEFAULT_ACTION_ORDER' ? 'action' : 'strict';
+
+    // Create a Network Firewall policy
+    const firewallPolicy = new anfw.CfnFirewallPolicy(this, 'FirewallPolicy', {
+      firewallPolicyName: `plc-${namePrefix}-fwbase-00-${ordername}-${stage}`,
+      firewallPolicy: {
+        ...firewallPolicyJson,
+      },
+    });
+
+    // Create a Network Firewall
+    const firewall = new anfw.CfnFirewall(this, 'NetworkFirewall', {
+      firewallName: `nfw-${namePrefix}-${stage}`,
+      subnetMappings: subnetMappingList,
+      firewallPolicyArn: firewallPolicy.attrFirewallPolicyArn,
+      vpcId: vpcId,
+    });
+
+    // Create Logging Configuration.
+    //
+    // RETAIN on stack delete so firewall alert/flow log history survives teardown.
+    // We deliberately do NOT set an explicit `logGroupName`: CloudFormation then
+    // auto-generates a unique name per CREATE. Combined with RETAIN this means a
+    // delete → recreate cycle gets a fresh log group name and never clashes with the
+    // retained one (a fixed name + RETAIN would fail recreate with "already exists").
+    // The LoggingConfiguration below references `.logGroupName`, so the generated
+    // name flows through automatically. (LogGroup already defaults to RETAIN; we make
+    // it explicit for clarity.)
+    const fwAlertLogGroup = new logs.LogGroup(this, 'FWAlertLogGroup', {
+      retention: logs.RetentionDays.ONE_YEAR,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    const fwFlowLogGroup = new logs.LogGroup(this, 'FWFlowLogGroup', {
+      retention: logs.RetentionDays.ONE_YEAR,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    const cfnLoggingConfiguration = new anfw.CfnLoggingConfiguration(
+      this,
+      'MyCfnLoggingConfiguration',
+      {
+        firewallArn: firewall.attrFirewallArn,
+        loggingConfiguration: {
+          logDestinationConfigs: [
+            {
+              logDestination: { logGroup: fwAlertLogGroup.logGroupName },
+              logDestinationType: 'CloudWatchLogs',
+              logType: 'ALERT',
+            },
+            {
+              logDestination: { logGroup: fwFlowLogGroup.logGroupName },
+              logDestinationType: 'CloudWatchLogs',
+              logType: 'FLOW',
+            },
+          ],
+        },
+      }
+    );
+
+    // Ensure logging configuration is created after firewall
+    cfnLoggingConfiguration.node.addDependency(firewall);
+
+    // TODO: Create export to s3 task for logs and reduce CW retention
+
+    new CfnOutput(this, 'FirewallArn', {
+      description: 'AWS Network Firewall ARN',
+      exportName: `nfw-arn-${stage}`,
+      value: firewall.attrFirewallArn,
+    });
+
+    // Cross-account handles for consumers (e.g. the int-environment spec), published
+    // IN ADDITION to the CloudFormation exports above (which stay byte-identical).
+    // CloudFormation exports do not cross account boundaries; shared SSM parameters do.
+    new ssm.StringParameter(this, 'FirewallPolicyArnParam', {
+      parameterName: `/anfw-automate/${stage}/foundational/firewall-policy-arn`,
+      stringValue: firewallPolicy.attrFirewallPolicyArn,
+    });
+    new ssm.StringParameter(this, 'FirewallArnParam', {
+      parameterName: `/anfw-automate/${stage}/foundational/nfw-arn`,
+      stringValue: firewall.attrFirewallArn,
+    });
+  }
+}

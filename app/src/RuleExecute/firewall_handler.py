@@ -27,6 +27,13 @@ POLICY_NAME_PREFIX: str = "anfw-policy-backup-"  # policy name e.g. anfw-policy-
 RULEGROUP_CAPACITY: int = 2000  # Max 30.000
 RESERVED_RULEGROUP_CAPACITY: int = 100  # Max 30.000
 
+# Ownership tags applied to rule groups this system manages. Used for provenance
+# and observability only — rule-group discovery is authoritative via policy
+# attachment (see _get_all_groups), so these tags are never load-bearing.
+RULEGROUP_OWNER_TAG_KEY: str = "managed-by"
+RULEGROUP_OWNER_TAG_VALUE: str = "anfw-automate"
+RULEGROUP_STAGE_TAG_KEY: str = "stage"
+
 
 class FirewallRuleHandler:
     """Provide the Firewall Update functionality."""
@@ -62,39 +69,85 @@ class FirewallRuleHandler:
     # Initial get functions -#############################################
 
     def _get_all_groups(self) -> set:
-        """Get all Firewall rule groups.
+        """Get all Firewall rule groups managed by this deployment.
 
-        :return: set - ARNs of the existing rule groups."""
+        Enumerates rule groups by walking the StatefulRuleGroupReferences of the
+        configured policies (``self.policy_collection``) rather than listing every
+        rule group in the account. Every group this system creates is auto-attached
+        to one of these policies (see ``_associate_rule_group_to_policy``), so the
+        policy references are an authoritative, account-isolated view of "our"
+        groups. This prevents a deployment sharing an account with other stages
+        (e.g. a dedicated INT firewall alongside dev/prod) from discovering and
+        mutating rule groups it does not own.
+
+        Backward compatibility: existing deployments already have their groups
+        attached to their policy, so the walk finds them with no migration. As a
+        best-effort, self-healing side effect, any discovered group that is missing
+        the ownership tag is tagged here. Tagging is NEVER load-bearing for
+        correctness and NEVER allowed to break rule processing — failures are
+        logged and swallowed (the Lambda has a tight timeout).
+
+        :return: set - ARNs of the existing rule groups attached to our policies.
+        """
         names: set = set()
-        # TODO: Potential NetworkFirewall.Client.exceptions.ThrottlingException / 100 is max
-        # Why 100 ? There are only 50 possible ?
-        groups = self._nfw.list_rule_groups(Scope="ACCOUNT", MaxResults=100)
-        # First chunk of rules
-        for group_name in groups["RuleGroups"]:
-            if (
-                self.rule_order == "DEFAULT_ACTION_ORDER"
-                and "-action" in group_name["Name"]
-            ):
-                names.add(group_name["Arn"])
-            elif self.rule_order == "STRICT_ORDER" and "-strict" in group_name["Name"]:
-                names.add(group_name["Arn"])
-        # if there are more, get another 100 until end
-        while "NextToken" in groups:
-            groups = self._nfw.list_rule_groups(
-                Scope="ACCOUNT", MaxResults=100, NextToken=groups["NextToken"]
-            )
-            for group_name in groups["RuleGroups"]:
-                if (
-                    self.rule_order == "DEFAULT_ACTION_ORDER"
-                    and "-action" in group_name["Name"]
-                ):
-                    names.add(group_name["Arn"])
-                elif (
-                    self.rule_order == "STRICT_ORDER"
-                    and "-strict" in group_name["Name"]
-                ):
-                    names.add(group_name["Arn"])
+        for policy_arn in self.policy_collection:
+            try:
+                policy = self._nfw.describe_firewall_policy(FirewallPolicyArn=policy_arn)
+            except ClientError as exc:
+                self.logger.warning(
+                    f"Could not describe policy {policy_arn} during group discovery: {exc}"
+                )
+                continue
+            references = policy["FirewallPolicy"].get("StatefulRuleGroupReferences", [])
+            for ref in references:
+                arn = ref.get("ResourceArn")
+                if not arn:
+                    continue
+                # Preserve the existing rule-order scoping: a group belongs to this
+                # run only if its name matches the active rule order suffix.
+                group_name = self._arn_to_name(arn)
+                if self.rule_order == "DEFAULT_ACTION_ORDER" and "-action" not in group_name:
+                    continue
+                if self.rule_order == "STRICT_ORDER" and "-strict" not in group_name:
+                    continue
+                names.add(arn)
+
+        # Best-effort, self-healing ownership tagging of discovered groups.
+        self._ensure_group_tags(names)
         return names
+
+    def _ensure_group_tags(self, rule_group_arns: set) -> None:
+        """Tag discovered rule groups with the ownership tag if missing.
+
+        Best-effort and self-healing: reads existing tags and adds the ownership
+        tag only where absent. Any failure (missing IAM, throttling, timeout
+        pressure) is logged and swallowed — tagging must never break rule
+        processing, and the policy-walk discovery does not depend on tags.
+        """
+        if not rule_group_arns:
+            return
+        stage = os.getenv("STAGE", "")
+        for arn in rule_group_arns:
+            try:
+                existing = self._nfw.list_tags_for_resource(ResourceArn=arn).get(
+                    "Tags", []
+                )
+                keys = {t["Key"] for t in existing}
+                if RULEGROUP_OWNER_TAG_KEY in keys and RULEGROUP_STAGE_TAG_KEY in keys:
+                    continue
+                self._nfw.tag_resource(
+                    ResourceArn=arn,
+                    Tags=[
+                        {"Key": RULEGROUP_OWNER_TAG_KEY, "Value": RULEGROUP_OWNER_TAG_VALUE},
+                        {"Key": RULEGROUP_STAGE_TAG_KEY, "Value": stage},
+                    ],
+                )
+                self.logger.debug(f"Backfilled ownership tags on rule group {arn}")
+            except ClientError as exc:
+                # Never fail rule processing because of tagging.
+                self.logger.warning(
+                    f"Best-effort tagging of {arn} failed (ignored): {exc}"
+                )
 
     def _get_rule_entries(self) -> list:
         """Get all rule entries in all rule groups.
@@ -124,15 +177,75 @@ class FirewallRuleHandler:
         return rule_entries, response["UpdateToken"]
 
     def _get_all_policies(self, region) -> set:
-        """Get all Firewall polices provided by user
+        """Get all Firewall policies this deployment manages.
 
-        :return: set - all policy ARNs"""
+        Two sources, unioned:
+
+        1. **Operator-configured policies** from the ``POLICY_ARNS`` env var — the
+           policies the user explicitly points the solution at.
+        2. **Runtime-created backup policies** — when a configured policy fills up
+           (``MAX_RULEGROUPS_PER_POLICY``), ``_associate_rule_group_to_policy``
+           creates an overflow policy named ``{POLICY_NAME_PREFIX}<n>`` and attaches
+           the new rule group to it. Those backup policies are NOT in
+           ``POLICY_ARNS``, so a fresh invocation would otherwise never revisit
+           them — and, because group discovery walks policy attachments
+           (``_get_all_groups``), every rule group parked on a backup policy would
+           become invisible: unread, unmanaged, and never cleaned up. We discover
+           them here by their stable name prefix so overflow groups stay managed
+           across cold starts.
+
+        :return: set - all managed policy ARNs for the region."""
         collection: set = set()
 
         policy_arns_str = os.getenv("POLICY_ARNS")
         policy_arns = json.loads(policy_arns_str) if policy_arns_str else {}
         collection.update(policy_arns.get(region, set()))
+
+        # Discover runtime-created overflow/backup policies by name prefix.
+        collection.update(self._get_backup_policies())
         return collection
+
+    def _get_backup_policies(self) -> set:
+        """List account firewall policies and return the ARNs of ours.
+
+        "Ours" = policies whose name starts with ``POLICY_NAME_PREFIX`` (the
+        overflow policies this solution creates). Best-effort: a listing failure
+        is logged and swallowed so a transient API error never wipes out the
+        configured policies — the caller has already added those.
+        """
+        backups: set = set()
+        try:
+            next_token = None
+            while True:
+                kwargs = {"MaxResults": 100}
+                if next_token:
+                    kwargs["NextToken"] = next_token
+                response = self._nfw.list_firewall_policies(**kwargs)
+                for policy in response.get("FirewallPolicies", []):
+                    if policy.get("Name", "").startswith(POLICY_NAME_PREFIX):
+                        backups.add(policy["Arn"])
+                next_token = response.get("NextToken")
+                # Only a *string* token continues pagination. Guarding on the
+                # type (not just truthiness) keeps a malformed response from
+                # looping forever.
+                if not isinstance(next_token, str) or not next_token:
+                    break
+        except ClientError as exc:
+            self.logger.warning(
+                f"Could not list firewall policies for backup discovery (ignored): {exc}"
+            )
+        return backups
+
+    def _ownership_tags(self) -> list:
+        """Ownership tags applied to rule groups created by this deployment.
+
+        Provenance/observability only — discovery is authoritative via policy
+        attachment, so these tags are not load-bearing.
+        """
+        return [
+            {"Key": RULEGROUP_OWNER_TAG_KEY, "Value": RULEGROUP_OWNER_TAG_VALUE},
+            {"Key": RULEGROUP_STAGE_TAG_KEY, "Value": os.getenv("STAGE", "")},
+        ]
 
     # End get functions ##############################################
 
@@ -445,6 +558,7 @@ class FirewallRuleHandler:
             Description="Autogenerated - DONT CHANGE",
             Capacity=RULEGROUP_CAPACITY,
             RuleGroup=ipset,
+            Tags=self._ownership_tags(),
         )
 
         # After creation - associate with one policy
@@ -493,6 +607,7 @@ class FirewallRuleHandler:
             Description="Autogenerated Reserved Group- DONT CHANGE",
             Capacity=RESERVED_RULEGROUP_CAPACITY,
             RuleGroup=ipset,
+            Tags=self._ownership_tags(),
         )
         # After creation - associate with one policy
         arn: str = new_rule["RuleGroupResponse"]["RuleGroupArn"]

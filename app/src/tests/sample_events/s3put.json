@@ -1,29 +1,27 @@
 {
+  "version": "0",
+  "id": "12345678-1111-aaaa-ffff-12345678",
+  "detail-type": "Object Created",
+  "source": "aws.s3",
+  "account": "123456789123",
+  "time": "2023-10-12T10: 31: 42Z",
+  "region": "eu-west-1",
+  "resources": ["arn:aws:s3: : :anfw-allowlist-eu-west-1-123456789123-local"],
+  "detail": {
     "version": "0",
-    "id": "12345678-1111-aaaa-ffff-12345678",
-    "detail-type": "Object Created",
-    "source": "aws.s3",
-    "account": "123456789123",
-    "time": "2023-10-12T10: 31: 42Z",
-    "region": "eu-west-1",
-    "resources": [
-        "arn:aws:s3: : :anfw-allowlist-eu-west-1-123456789123-local"
-    ],
-    "detail": {
-        "version": "0",
-        "bucket": {
-            "name": "anfw-allowlist-eu-west-1-123456789123-local"
-        },
-        "object": {
-            "key": "eu-west-1-config.yaml",
-            "size": 746,
-            "etag": "0123123123123123",
-            "version-id": "abcde_adbacde.abcedef",
-            "sequencer": "123123123123123"
-        },
-        "request-id": "FABCD123123123",
-        "requester": "123456789123",
-        "source-ip-address": "192.168.0.12",
-        "reason": "PutObject"
-    }
+    "bucket": {
+      "name": "anfw-allowlist-eu-west-1-123456789123-local"
+    },
+    "object": {
+      "key": "eu-west-1-config.yaml",
+      "size": 746,
+      "etag": "0123123123123123",
+      "version-id": "abcde_adbacde.abcedef",
+      "sequencer": "123123123123123"
+    },
+    "request-id": "FABCD123123123",
+    "requester": "123456789123",
+    "source-ip-address": "192.168.0.12",
+    "reason": "PutObject"
+  }
 }

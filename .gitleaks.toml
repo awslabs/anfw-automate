@@ -1,0 +1,34 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks Configuration"
+
+# Exclude build artifacts and generated files
+[allowlist]
+paths = [
+    # CDK synthesized CloudFormation
+    '''cdk\.out/''',
+    '''.*/cdk\.out/''',
+    
+    # Build artifacts
+    '''dist/''',
+    '''.*/dist/''',
+    '''build/''',
+    '''.*/build/''',
+    
+    # Dependencies
+    '''node_modules/''',
+    '''.*/node_modules/''',
+    '''\.venv/''',
+    '''.*/\.venv/''',
+    '''__pycache__/''',
+    '''.*/__pycache__/''',
+    
+    # Lock files
+    '''yarn\.lock''',
+    '''package-lock\.json''',
+    
+    # Compiled files
+    '''\.js\.map''',
+    '''\.d\.ts''',
+]

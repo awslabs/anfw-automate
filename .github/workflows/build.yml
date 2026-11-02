@@ -1,0 +1,70 @@
+name: Build
+
+# Full synth of every module for PRs into main. Unit tests run in ci.yml
+# (unit-gate); deployment and INT tests run in the app CodePipeline.
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Python dependencies
+        run: cd app/src && uv sync
+
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        # Yarn 4 has no signature audit; npm verifies the installed node_modules tree
+        # (nodeLinker: node-modules) against registry signatures and attestations.
+        # npm is pinned so the check does not drift with the runner's bundled npm.
+        # On failure, dump what npm saw: registry keys come from the sigstore TUF
+        # repo (target registry.npmjs.org/keys.json), cached under ~/.npm/_tuf.
+        env:
+          NPM_CONFIG_UPDATE_NOTIFIER: 'false'
+        run: |
+          if npx --yes npm@11.12.1 audit signatures; then
+            exit 0
+          fi
+          echo "::group::npm debug log (keys, TUF, attestation errors)"
+          grep -hiE 'tuf|keys|attestation|signature|EMISSING|error' ~/.npm/_logs/*-debug-*.log | tail -n 200 || true
+          echo "::endgroup::"
+          echo "::group::registry keys served by TUF to this runner"
+          cat ~/.npm/_tuf/tuf-repo-cdn.sigstore.dev/targets/registry.npmjs.org%2Fkeys.json || echo "(no TUF keys.json cached)"
+          echo
+          echo "::endgroup::"
+          exit 1
+
+      - name: Build project
+        # 'sample' is the only stage with tracked config; no AWS credentials are
+        # available here, so the config loader falls back to the sample files.
+        env:
+          STAGE: sample
+          AWS_REGION: eu-west-1
+        run: make build

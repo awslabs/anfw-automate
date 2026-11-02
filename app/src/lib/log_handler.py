@@ -105,10 +105,10 @@ class CustomerLogHandler:
 
     def _generate_time_stamp(self) -> int:
         """Generates the current time stamp for the log entry."""
-        today = datetime.datetime.now()
+        today = datetime.datetime.now(datetime.timezone.utc)
         return int(round(today.timestamp() * 1000))
 
     def _generate_time_stamp_29d(self) -> int:
         """Generates a time stamp 29d in the past."""
-        start_date = datetime.datetime.now() - datetime.timedelta(29)
+        start_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(29)
         return int(round(start_date.timestamp() * 1000))

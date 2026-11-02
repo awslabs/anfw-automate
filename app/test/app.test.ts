@@ -4,7 +4,7 @@
 
 // example test. To run these tests, uncomment this file along with the
 // example resource in lib/app-stack.ts
-test('SQS Queue Created', () => {
+// test('SQS Queue Created', () => {
 //   const app = new cdk.App();
 //     // WHEN
 //   const stack = new App.AppStack(app, 'MyTestStack');
@@ -14,4 +14,8 @@ test('SQS Queue Created', () => {
 //   template.hasResourceProperties('AWS::SQS::Queue', {
 //     VisibilityTimeout: 300
 //   });
+// });
+
+test('placeholder test', () => {
+  expect(true).toBe(true);
 });
