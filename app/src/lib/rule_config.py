@@ -131,7 +131,7 @@ class ConfigEntry:
         :rtype: str
         """
         # fmt: off
-        return hashlib.md5(hash_input.encode()).hexdigest()[:10] # nosec: Not used for security
+        return hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest()[:10] # nosec: Not used for security
         # fmt: on
 
     def _validate_custom_rule_format(self, rulestring: str, ruleoptions: str) -> bool:
@@ -223,7 +223,7 @@ class ConfigEntry:
         # Do join in hash-input to introduce bit shift and have positive values
         # fmt: off
         hash_input = domain.join(protocol)
-        rule_name_hash = hashlib.md5(hash_input.encode()).hexdigest()[:10] # nosec: Not used for security
+        rule_name_hash = hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest()[:10] # nosec: Not used for security
         rule_name: str = f"{self.account}-{self.vpc}-{rule_name_hash}"
 
         # Keep the rule name for later cleanup
@@ -272,7 +272,7 @@ class ConfigEntry:
                 # Create suricata rule
                 # Do join in hash-input to introduce bit shift and have positive values
                 # fmt: off
-                rule_name_hash = hashlib.md5(rule.encode()).hexdigest()[:10] # nosec: Not used for security
+                rule_name_hash = hashlib.md5(rule.encode(), usedforsecurity=False).hexdigest()[:10] # nosec: Not used for security
                 rule_name: str = f"{self.account}-{self.vpc}-{rule_name_hash}"
 
                 # Keep the rule name for later cleanup
