@@ -129,7 +129,7 @@ jobs:
 
       - name: Run security scan
         run: make security:scan
-  
+
   unit-gate:
     name: Unit Test Gate
     runs-on: ubuntu-latest

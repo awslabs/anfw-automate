@@ -17,7 +17,8 @@ Brief description of the changes made in this PR.
 ## Module(s) Affected
 
 - [ ] `app` - Application Lambda functions
-- [ ] `foundational` - VPC, Network Firewall, and routing (supporting infrastructure)
+- [ ] `foundational` - VPC, Network Firewall, and routing (supporting
+      infrastructure)
 - [ ] `shared` - Shared libraries and utilities
 - [ ] `scripts` - Build and deployment scripts
 - [ ] `docs` - Documentation

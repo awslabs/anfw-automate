@@ -8,15 +8,15 @@ NOT emitted, blocking promotion.
 
 ## Signals to Check
 
-| Signal | Where to look | What to look for |
-|--------|--------------|-----------------|
-| Test output | CI job logs / terminal | Specific `FAILED` test case(s) and assertion messages |
-| IntRunReport | `.velocity/reports/` or CI artifacts | JUnit XML + JSON with `mutations_reverted`, `baseline_restored` |
-| Account guardrail | Test output (early abort) | "account is not the allowlisted INT account" |
-| Stable tier health | CloudFormation console | IntBaseStack + app stacks in `UPDATE_COMPLETE` |
-| Ephemeral cleanup | IntRunReport | `mutations_reverted: false` means leaked artifacts |
-| Timeouts | Test output | `wait_until` timeout failures (predicate unmet in 240s) |
-| Network Firewall state | NF console / customer logs | Rule processing outcomes in tenant CW logs |
+| Signal                 | Where to look                        | What to look for                                                |
+| ---------------------- | ------------------------------------ | --------------------------------------------------------------- |
+| Test output            | CI job logs / terminal               | Specific `FAILED` test case(s) and assertion messages           |
+| IntRunReport           | `.velocity/reports/` or CI artifacts | JUnit XML + JSON with `mutations_reverted`, `baseline_restored` |
+| Account guardrail      | Test output (early abort)            | "account is not the allowlisted INT account"                    |
+| Stable tier health     | CloudFormation console               | IntBaseStack + app stacks in `UPDATE_COMPLETE`                  |
+| Ephemeral cleanup      | IntRunReport                         | `mutations_reverted: false` means leaked artifacts              |
+| Timeouts               | Test output                          | `wait_until` timeout failures (predicate unmet in 240s)         |
+| Network Firewall state | NF console / customer logs           | Rule processing outcomes in tenant CW logs                      |
 
 ## Actions
 
@@ -35,6 +35,7 @@ Or check the JUnit XML for specific test case failures.
 #### A. Account guardrail rejection
 
 If the error says the account is not allowlisted:
+
 - Verify `scripts/velocity/config.toml` has the correct `int_account_id`.
 - Verify your AWS credentials resolve to the INT account:
   ```bash
@@ -46,6 +47,7 @@ If the error says the account is not allowlisted:
 #### B. Stable tier not ready
 
 If the error references a missing stack, handle, or CloudFormation failure:
+
 - Check CloudFormation for stack status (ROLLBACK, UPDATE_FAILED, etc.).
 - Run `ensure_base_infra()` manually to see the deploy output:
   ```bash
@@ -57,6 +59,7 @@ If the error references a missing stack, handle, or CloudFormation failure:
 #### C. Timeout waiting for rule materialization
 
 If `wait_until` timed out (predicate unmet in 240s):
+
 - Check RuleCollect + RuleExecute Lambda logs for the run-id.
 - Use the Diagnoser to correlate the event:
   ```bash
@@ -68,16 +71,19 @@ If `wait_until` timed out (predicate unmet in 240s):
       print(f'{e.timestamp} [{e.source}] {e.summary}')
   "
   ```
-- Common causes: Lambda cold starts + throttling, EventBridge rule misconfiguration,
-  SQS visibility timeout issues.
+- Common causes: Lambda cold starts + throttling, EventBridge rule
+  misconfiguration, SQS visibility timeout issues.
 
 **Fix:** Address the root cause (see "Rule Didn't Appear" runbook), then re-run.
 
 #### D. Assertion failure (rule content mismatch)
 
 If a test asserts on rule names, group content, or customer logs:
-- The business logic may have regressed (e.g., hash algorithm change, format change).
-- Check if source code changes affected `rule_config.py` or `firewall_handler.py`.
+
+- The business logic may have regressed (e.g., hash algorithm change, format
+  change).
+- Check if source code changes affected `rule_config.py` or
+  `firewall_handler.py`.
 
 **Fix:** Either fix the regression or update the test expectations if the change
 is intentional.
@@ -85,12 +91,14 @@ is intentional.
 #### E. Cleanup failure (mutations not reverted)
 
 If `mutations_reverted: false` in the report:
+
 - Run-id artifacts leaked into the INT environment.
 - Check for rule groups matching the run-id pattern.
 - The `Run_Sweeper` backstop will clean them after 24h, but manual cleanup is
   preferred for a clean next run.
 
 **Fix:**
+
 ```bash
 # List run-id rule groups
 aws network-firewall list-rule-groups | grep "<run-id>"
@@ -106,6 +114,7 @@ make int
 ```
 
 If the failure persists after addressing the root cause, check for:
+
 - Concurrent runs conflicting (should not happen with serial default).
 - AWS service degradation (check the AWS health dashboard).
 - Stale credentials (re-assume the INT role).
@@ -113,6 +122,7 @@ If the failure persists after addressing the root cause, check for:
 ### 4. Verify cleanup
 
 After a failed run, always confirm the environment is clean:
+
 - Check that no run-id rule groups remain (unless the sweeper will handle them).
 - Verify the firewall policy references only baseline rule groups.
 - Confirm `baseline_restored: true` in the next successful run.
@@ -120,6 +130,7 @@ After a failed run, always confirm the environment is clean:
 ## Escalation
 
 If the INT run fails repeatedly despite fixes:
+
 1. Check if the INT account has hit a Network Firewall service quota.
 2. Verify the TGW attachment is still active (VPCs attached).
 3. Check if the EventBridge bus/rules were accidentally modified.

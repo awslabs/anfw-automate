@@ -118,24 +118,25 @@ make int
 ```
 
 `make int` will:
+
 1. Verify the unit gate marker is fresh (SHA == HEAD, generated ≤60 min ago)
 2. Run `pytest -m integration` against `tests/integration/cases/`
-3. The conftest fixtures handle: account guardrail check, baseline capture,
-   and guaranteed revert of all ephemeral artifacts
+3. The conftest fixtures handle: account guardrail check, baseline capture, and
+   guaranteed revert of all ephemeral artifacts
 4. Write the INT gate marker on success
 
 ## Common Issues
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| "sha mismatch" | You committed after `make unit` | Run `make unit` again, then `make int` |
-| "Marker 'unit' is stale" | Unit marker >60 min old | Run `make unit` again |
-| "Marker 'unit' is missing" | Never ran `make unit` | Run `make unit` first |
-| "account is not the allowlisted INT account" | Wrong AWS credentials | Switch to INT account creds |
-| "placeholder" error | Config not updated | Replace placeholder in `config.toml` |
-| Docker 403 on ECR Public | Not logged in | Run `make ecr-login` |
-| "STAGE not defined" | Missing env var | Use `STAGE=int make deploy:app` |
-| Config validation error | Field length constraints | See `conf/sample.json` for valid format |
+| Error                                        | Cause                           | Fix                                     |
+| -------------------------------------------- | ------------------------------- | --------------------------------------- |
+| "sha mismatch"                               | You committed after `make unit` | Run `make unit` again, then `make int`  |
+| "Marker 'unit' is stale"                     | Unit marker >60 min old         | Run `make unit` again                   |
+| "Marker 'unit' is missing"                   | Never ran `make unit`           | Run `make unit` first                   |
+| "account is not the allowlisted INT account" | Wrong AWS credentials           | Switch to INT account creds             |
+| "placeholder" error                          | Config not updated              | Replace placeholder in `config.toml`    |
+| Docker 403 on ECR Public                     | Not logged in                   | Run `make ecr-login`                    |
+| "STAGE not defined"                          | Missing env var                 | Use `STAGE=int make deploy:app`         |
+| Config validation error                      | Field length constraints        | See `conf/sample.json` for valid format |
 
 ## Architecture Recap
 
@@ -151,5 +152,5 @@ Per-run (ephemeral — created and reverted each run):
 
 The integration tests upload configs to the tenant's real S3 bucket and verify
 outcomes via customer CloudWatch logs and network reachability probes. Cleanup
-is handled by deleting configs from S3 in fixture teardown, triggering the
-real delete flow.
+is handled by deleting configs from S3 in fixture teardown, triggering the real
+delete flow.

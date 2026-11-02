@@ -23,7 +23,8 @@ import { TransitGatewayStack } from '../network/transit_gateway_stack';
 const app = new cdk.App();
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
-const networkAccountId = app.node.tryGetContext('networkAccountId') ?? process.env.CDK_DEFAULT_ACCOUNT;
+const networkAccountId =
+  app.node.tryGetContext('networkAccountId') ?? process.env.CDK_DEFAULT_ACCOUNT;
 if (!networkAccountId) {
   console.error(
     'networkAccountId is required (pass --context networkAccountId=<acct> or set CDK_DEFAULT_ACCOUNT)'

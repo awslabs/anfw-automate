@@ -8,15 +8,15 @@ queue without successful processing.
 
 ## Signals to Check
 
-| Signal | Where to look | What to look for |
-|--------|--------------|-----------------|
-| DLQ depth | CloudWatch metrics / SQS console | `ApproximateNumberOfMessagesVisible > 0` |
-| DLQ message content | SQS console → "Send and receive" | Message body (JSON with rule config) |
-| Message attributes | SQS console → message details | `Account`, `Region`, `Event`, `Version`, `CorrelationId` |
-| RuleExecute errors | Lambda CloudWatch Logs | Errors during the receive count attempts |
-| RuleExecute X-Ray | X-Ray traces | Fault/error segments with annotations |
-| InvalidTokenException alarm | CloudWatch alarms | Retries > 3 indicates token staleness |
-| ANFW throttle alarm | CloudWatch alarms | Throttling > 0 indicates rate limits |
+| Signal                      | Where to look                    | What to look for                                         |
+| --------------------------- | -------------------------------- | -------------------------------------------------------- |
+| DLQ depth                   | CloudWatch metrics / SQS console | `ApproximateNumberOfMessagesVisible > 0`                 |
+| DLQ message content         | SQS console → "Send and receive" | Message body (JSON with rule config)                     |
+| Message attributes          | SQS console → message details    | `Account`, `Region`, `Event`, `Version`, `CorrelationId` |
+| RuleExecute errors          | Lambda CloudWatch Logs           | Errors during the receive count attempts                 |
+| RuleExecute X-Ray           | X-Ray traces                     | Fault/error segments with annotations                    |
+| InvalidTokenException alarm | CloudWatch alarms                | Retries > 3 indicates token staleness                    |
+| ANFW throttle alarm         | CloudWatch alarms                | Throttling > 0 indicates rate limits                     |
 
 ## Actions
 
@@ -32,8 +32,8 @@ aws sqs receive-message \
   --visibility-timeout 0
 ```
 
-Note: Using `--visibility-timeout 0` ensures messages remain visible for
-further inspection or replay.
+Note: Using `--visibility-timeout 0` ensures messages remain visible for further
+inspection or replay.
 
 ### 2. Identify the failure cause
 
@@ -50,6 +50,7 @@ for e in timeline.events:
 ```
 
 Common causes:
+
 - **InvalidTokenException**: The update token for the rule group became stale
   (concurrent modification). Usually resolves on retry; DLQ indicates max
   retries exhausted.
@@ -88,6 +89,7 @@ for r in report.results:
 ### 5. Verify resolution
 
 After replay, monitor:
+
 - DLQ depth returns to 0 (alarm clears within 5 minutes).
 - RuleExecute processes the replayed messages (check invocation count).
 - Expected rule groups appear in Network Firewall.
@@ -95,6 +97,7 @@ After replay, monitor:
 ## Escalation
 
 If messages continue to fail after replay:
+
 1. Check if the Network Firewall rule group limit has been reached.
 2. Verify the firewall policy has capacity for new rule group references.
 3. Check AWS service quotas for Network Firewall in the region.

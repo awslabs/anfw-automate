@@ -53,8 +53,8 @@ make test        # jest CDK assertion tests
 ## Deploy
 
 Configuration is loaded for a stage via the shared config loader (SSM parameter
-`/anfw-automate/{stage}/foundational/config` first, then
-`conf/{stage}.json`). The `STAGE` is supplied to the entry point.
+`/anfw-automate/{stage}/foundational/config` first, then `conf/{stage}.json`).
+The `STAGE` is supplied to the entry point.
 
 ```bash
 # per-stage fabric (VPC + firewall + base-routing + routing) → firewall/solution
@@ -65,9 +65,10 @@ STAGE=prod yarn exec cdk deploy --all
 
 ### Shared Transit Gateway (create-once, network account)
 
-The TGW hub is a **separate** create-once deploy — not part of `cdk deploy --all`
-and not stage-scoped. It uses its own entry point (`bin/transit_gateway.ts`), so
-pass an explicit `--app`. Credentials must resolve to the network account.
+The TGW hub is a **separate** create-once deploy — not part of
+`cdk deploy --all` and not stage-scoped. It uses its own entry point
+(`bin/transit_gateway.ts`), so pass an explicit `--app`. Credentials must
+resolve to the network account.
 
 ```bash
 yarn exec cdk --app "npx ts-node --prefer-ts-exts bin/transit_gateway.ts" deploy \
@@ -77,12 +78,14 @@ yarn exec cdk --app "npx ts-node --prefer-ts-exts bin/transit_gateway.ts" deploy
 ```
 
 This creates the Transit Gateway, RAM-shares it to the firewall + INT (+ dev)
-accounts, and publishes `/anfw-automate/shared/tgw-id`, which the per-stage fabric
-and the INT tenant tier resolve from SSM.
+accounts, and publishes `/anfw-automate/shared/tgw-id`, which the per-stage
+fabric and the INT tenant tier resolve from SSM.
 
 ### Deploy order (for the INT environment)
 
 1. **TGW** (network account `<NETWORK_ACCOUNT_ID>`) — command above.
-2. **int fabric** (`STAGE=int cdk deploy --all`, firewall account `<FIREWALL_ACCOUNT_ID>`) —
-   publishes `/anfw-automate/int/foundational/firewall-policy-arn`.
-3. Then the `app` (int) and the INT tenant tier — see the `int-environment` spec.
+2. **int fabric** (`STAGE=int cdk deploy --all`, firewall account
+   `<FIREWALL_ACCOUNT_ID>`) — publishes
+   `/anfw-automate/int/foundational/firewall-policy-arn`.
+3. Then the `app` (int) and the INT tenant tier — see the `int-environment`
+   spec.

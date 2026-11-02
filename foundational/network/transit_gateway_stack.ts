@@ -47,9 +47,7 @@ export class TransitGatewayStack extends TaggedStack {
     new ram.CfnResourceShare(this, 'TransitGatewayShare', {
       name: `ram-${namePrefix}-tgw-shared`,
       allowExternalPrincipals: false,
-      resourceArns: [
-        `arn:aws:ec2:${this.region}:${this.account}:transit-gateway/${tgw.ref}`,
-      ],
+      resourceArns: [`arn:aws:ec2:${this.region}:${this.account}:transit-gateway/${tgw.ref}`],
       principals: sharePrincipals,
     });
 
