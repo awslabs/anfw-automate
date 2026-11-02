@@ -10,9 +10,7 @@ import { LambdaStack } from '../lib/lambda_stack';
  */
 jest.mock('@aws-cdk/aws-lambda-python-alpha', () => {
   const actual = jest.requireActual('@aws-cdk/aws-lambda-python-alpha');
-  const cdk = require('aws-cdk-lib');
   const lambda = require('aws-cdk-lib/aws-lambda');
-  const { Construct } = require('constructs');
 
   class MockPythonLayerVersion extends lambda.LayerVersion {
     constructor(scope: any, id: string, props: any) {

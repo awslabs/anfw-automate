@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Template, Match } from 'aws-cdk-lib/assertions';
+import { Template } from 'aws-cdk-lib/assertions';
 import { VpcStack } from '../vpc/vpc_stack';
 
 const STAGE = 'int';

@@ -147,7 +147,7 @@ export class AppPipelineStack extends TaggedStack {
       },
     });
 
-    const intTestWave = pipeline.addWave('IntegrationTests', {
+    pipeline.addWave('IntegrationTests', {
       post: [intTestStep],
     });
 

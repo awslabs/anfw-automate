@@ -24,7 +24,6 @@ export class NetworkFirewallStack extends TaggedStack {
     super(scope, id, props);
 
     const { namePrefix, vpcId, subnetIds, azIds, stage, internalNet } = props;
-    const namedotprefix = namePrefix.replace(/-/g, '.');
     const absoluteFilePath = path.join(__dirname, 'policy', `${props.ruleOrder}.json`);
 
     // Create subnet mappings based on the provided dictionary
