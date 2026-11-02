@@ -116,7 +116,8 @@ gate: unit
 # ---------------------------------------------------------------------------
 # Core build and test commands (delegate to yarn workspaces)
 # ---------------------------------------------------------------------------
-build:
+## Synth needs the app dist/ Lambda bundles, which a clean checkout lacks.
+build: app-package
 	@echo "🏗️  Building all modules..."
 	yarn build
 
