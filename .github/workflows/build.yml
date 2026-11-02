@@ -43,7 +43,23 @@ jobs:
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         # Yarn 4 has no signature audit; npm verifies the installed node_modules tree
         # (nodeLinker: node-modules) against registry signatures and attestations.
-        run: npm audit signatures
+        # npm is pinned so the check does not drift with the runner's bundled npm.
+        # On failure, dump what npm saw: registry keys come from the sigstore TUF
+        # repo (target registry.npmjs.org/keys.json), cached under ~/.npm/_tuf.
+        env:
+          NPM_CONFIG_UPDATE_NOTIFIER: 'false'
+        run: |
+          if npx --yes npm@11.12.1 audit signatures; then
+            exit 0
+          fi
+          echo "::group::npm debug log (keys, TUF, attestation errors)"
+          grep -hiE 'tuf|keys|attestation|signature|EMISSING|error' ~/.npm/_logs/*-debug-*.log | tail -n 200 || true
+          echo "::endgroup::"
+          echo "::group::registry keys served by TUF to this runner"
+          cat ~/.npm/_tuf/tuf-repo-cdn.sigstore.dev/targets/registry.npmjs.org%2Fkeys.json || echo "(no TUF keys.json cached)"
+          echo
+          echo "::endgroup::"
+          exit 1
 
       - name: Build project
         # 'sample' is the only stage with tracked config; no AWS credentials are
