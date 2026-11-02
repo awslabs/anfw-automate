@@ -2,8 +2,8 @@
 
 Global configuration is used by all stacks and to control the deployment of
 stacks. Create a configuration file by referring the
-[JSON schema](conf/schema.json), the [sample config](conf/sample.json) and,
-parameter glossary below.
+[JSON schema](../conf/schema.json), the [sample config](../conf/sample.json)
+and, parameter glossary below.
 
 | Parameter                    | Datatype              | Description                                                                                                  |
 | ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -27,8 +27,8 @@ parameter glossary below.
 ## Application Module
 
 Application configuration is used to deploy application stacks. Create a
-configuration file by referring the [JSON schema](app/conf/schema.json), the
-[sample config](app/conf/sample.json) and, parameter glossary below.
+configuration file by referring the [JSON schema](../app/conf/schema.json), the
+[sample config](../app/conf/sample.json) and, parameter glossary below.
 
 > You must define configuration for each region you want to deploy the
 > application. Region name must be double-quoted for safe YAML parsing. e.g.
@@ -45,8 +45,8 @@ configuration file by referring the [JSON schema](app/conf/schema.json), the
 
 Stackset configuration is used to control stackset deployment in the Delegated
 Administrator Account. Create a configuration application config file by
-referring the [JSON schema](app/conf/schema.json), the
-[sample config](app/conf/sample.json) and, parameter glossary below.
+referring the [JSON schema](../app/conf/schema.json), the
+[sample config](../app/conf/sample.json) and, parameter glossary below.
 
 > Although stackset configuration is optional, all the parameters in stackset
 > configuration are required.
@@ -66,8 +66,10 @@ referring the [JSON schema](app/conf/schema.json), the
 ## Firewall Module
 
 Firewall configuration is used to deploy AWS Network Firewall stacks. Create a
-configuration file by referring the [JSON schema](firewall/conf/schemas.json),
-the [sample config](firewall/conf/sample.json) and, parameter glossary below.
+configuration file by referring the
+[JSON schema](../foundational/firewall/conf/schema.json), the
+[sample config](../foundational/firewall/conf/sample.json) and, parameter
+glossary below.
 
 > You must define configuration for each region you want to deploy the AWS
 > Network Firewall. Region name must be double-quoted for safe YAML parsing.
@@ -91,8 +93,9 @@ VPC configuration is used to deploy VPC setup required for AWS Network Firewall
 in a
 [Centralized AWS Network Firewall deployment model](https://aws.amazon.com/blogs/networking-and-content-delivery/deployment-models-for-aws-network-firewall/).
 Create a configuration file by referring the
-[JSON schema](vpc/conf/schema.json), the [sample config](vpc/conf/sample.json)
-and, parameter glossary below.
+[JSON schema](../foundational/vpc/conf/schema.json), the
+[sample config](../foundational/vpc/conf/sample.json) and, parameter glossary
+below.
 
 > You must define configuration for each region you want to deploy the AWS
 > Network Firewall. Region name must be double-quoted for safe YAML parsing.

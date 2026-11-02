@@ -25,7 +25,7 @@ Before starting development, ensure you have:
 - **Node.js 20.8.1+** - JavaScript runtime
 - **Yarn 4.12.0+** - Package manager (install with `corepack enable`)
 - **Python 3.11+** - Lambda runtime
-- **Poetry** - Python dependency management
+- **uv** - Python dependency management
 - **AWS CLI** - AWS command line interface
 - **Git** - Version control
 
@@ -114,7 +114,7 @@ yarn global add @commitlint/cli @commitlint/config-conventional
 - Node.js 20.8.1+
 - Yarn 4.0.0+ (install with `corepack enable`)
 - Python 3.11+
-- Poetry (Python package manager)
+- uv (Python package manager)
 - AWS CLI (for AWS deployment)
 
 ### Quick Setup
@@ -282,12 +282,13 @@ make deploy
 
 ### Pipeline Structure
 
-Each module (app, firewall, vpc) has its own CodePipeline:
+The `app` module deploys through CodePipeline; `foundational` is deployed with
+`cdk deploy` and has no pipeline.
 
-1. **Source**: CodeCommit/GitHub repository
-2. **Build**: Enhanced build with validation
-3. **Deploy**: Multi-region deployment
-4. **Approval**: Manual approval for production
+1. **Source**: GitHub repository
+2. **Synth**: Build and CDK synth
+3. **Deploy**: Lambda, Serverless and StackSet waves across regions
+4. **Integration Tests**: Final wave against the freshly deployed stacks
 
 ## Best Practices
 
@@ -333,7 +334,7 @@ Each module (app, firewall, vpc) has its own CodePipeline:
 
 2. **Test failures**:
    - Ensure all modules are built before running tests
-   - Check Python dependencies are installed with Poetry
+   - Check Python dependencies are installed with `uv sync` (in `app/src`)
    - Review test output for specific error messages
 
 3. **Deployment issues**:

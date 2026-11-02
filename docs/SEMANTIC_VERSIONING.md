@@ -1,7 +1,8 @@
-# Semantic Versioning & Automated Releases
+# Semantic Versioning & Releases
 
-This project uses **semantic-release** to automatically manage versions and
-releases based on conventional commit messages.
+This project uses **semantic-release** to calculate versions and generate
+releases from conventional commit messages. Releases are cut by running
+`yarn release` from `main`; no CI workflow runs it.
 
 ## How It Works
 
@@ -34,11 +35,12 @@ releases based on conventional commit messages.
 yarn release:dry-run
 ```
 
-### Manual Release (if needed)
+### Cutting a Release
 
 ```bash
-# Trigger release manually
-yarn release
+# From an up-to-date main, with a token that can push tags and create releases
+git checkout main && git pull
+GITHUB_TOKEN=<token> yarn release
 ```
 
 ### Workspace Version Sync
@@ -84,29 +86,22 @@ git commit -m "ci: fix workflow"
 
 ## Release Process
 
-### Automatic (Recommended)
+1. **Merge to main**: Merge the PR once CI is green
+2. **Dry run**: `yarn release:dry-run` to preview the version and notes
+3. **Release**: `GITHUB_TOKEN=<token> yarn release` from `main`
+4. **Version bump**: Calculates the new version from commits
+5. **Update files**: Updates package.json files and CHANGELOG.md, commits them
+6. **Create release**: Tags and creates the GitHub release
 
-1. **Merge to main**: Push/merge commits to main branch
-2. **GitHub Actions**: Automatically runs release workflow
-3. **Version bump**: Calculates new version from commits
-4. **Update files**: Updates package.json, CHANGELOG.md
-5. **Create release**: Tags and creates GitHub release
-
-### Manual Override
-
-If you need to skip automatic release:
-
-```bash
-git commit -m "fix(app): urgent hotfix [skip ci]"
-```
+Deployment is separate: the app CodePipeline deploys from the repository and
+runs the integration tests as its final wave.
 
 ## Monorepo Handling
 
 All workspace packages maintain the same version:
 
 - `app/package.json`
-- `firewall/package.json`
-- `vpc/package.json`
+- `foundational/package.json`
 - `shared/package.json`
 
 The version sync script ensures consistency across all packages.
@@ -115,15 +110,14 @@ The version sync script ensures consistency across all packages.
 
 - **`.releaserc.json`**: Semantic-release configuration
 - **`scripts/sync-versions.js`**: Workspace version synchronization
-- **`.github/workflows/release.yml`**: GitHub Actions release workflow
 
 ## Troubleshooting
 
-### Release Not Triggered
+### No Release Created
 
 - Check commit messages follow conventional format
-- Ensure commits are on main or dev branch
-- Verify GitHub Actions workflow is enabled
+- Ensure you are on main or dev and up to date with the remote
+- Check `GITHUB_TOKEN` is set and can push tags and create releases
 
 ### Version Sync Issues
 
@@ -145,8 +139,7 @@ git push origin main
 1. **Use conventional commits** - Required for automatic versioning
 2. **Test with dry-run** - Always test before releasing
 3. **Review CHANGELOG** - Check generated release notes
-4. **Monitor releases** - Watch GitHub Actions for issues
-5. **Keep workspaces in sync** - Use version sync script
+4. **Keep workspaces in sync** - Use version sync script
 
 ## Examples
 
@@ -163,7 +156,7 @@ git commit -m "feat(app): add rule validation system"
 # 3. Push and create PR
 git push origin feature/add-validation
 
-# 4. Merge to main → Automatic release!
+# 4. Merge to main, then run `yarn release` from main
 # Result: Version bumped to 2.2.0, CHANGELOG updated, GitHub release created
 ```
 
@@ -175,8 +168,8 @@ git checkout -b hotfix/critical-fix
 
 # 2. Fix and commit
 git add .
-git commit -m "fix(firewall): resolve critical security issue"
+git commit -m "fix(foundational): resolve critical security issue"
 
-# 3. Merge to main → Automatic patch release!
+# 3. Merge to main, then run `yarn release` → patch release
 # Result: Version bumped to 2.1.1, hotfix documented
 ```

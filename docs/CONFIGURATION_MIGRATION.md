@@ -12,8 +12,8 @@ All module entry points have been successfully migrated to use enhanced
 configuration management:
 
 - **App Module**: `app/bin/app.ts` ✅
-- **Firewall Module**: `firewall/bin/firewall.ts` ✅
-- **VPC Module**: `vpc/bin/vpc.ts` ✅
+- **Foundational Module** (VPC + firewall): `foundational/bin/foundational.ts`
+  ✅
 
 ### Key Improvements
 
@@ -68,13 +68,13 @@ conf/{stage}.json
 
 Module Configuration:
 app/conf/{stage}.json
-firewall/conf/{stage}.json
-vpc/conf/{stage}.json
+foundational/firewall/conf/{stage}.json
+foundational/vpc/conf/{stage}.json
 
 Environment Overrides:
 app/conf/{stage}-overrides.json
-firewall/conf/{stage}-overrides.json
-vpc/conf/{stage}-overrides.json
+foundational/firewall/conf/{stage}-overrides.json
+foundational/vpc/conf/{stage}-overrides.json
 ```
 
 ## Error Handling Examples

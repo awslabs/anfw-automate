@@ -97,6 +97,8 @@ Install these tools before starting:
 - **[Yarn 4.0.0+](https://yarnpkg.com/)** - Package manager (install with
   `corepack enable`)
 - **[Python 3.11+](https://www.python.org/)** - For Lambda functions
+- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** - Python
+  package manager for the Lambda code and tests
 - **[Git](https://git-scm.com/)** - Version control
 
 #### Optional Tools
@@ -108,7 +110,6 @@ Install these tools before starting:
 
 These are installed automatically via `yarn install`:
 
-- **Poetry** - Python package manager
 - **Husky** - Git hooks for commit standards
 
 ### AWS Accounts (for Cloud Deployment)
@@ -218,11 +219,16 @@ cd app && yarn test
 
 ### Pipeline Architecture
 
-Each module has its own AWS CodePipeline:
+The `app` module deploys through AWS CodePipeline, with integration tests as the
+final wave against the freshly deployed stacks:
 
 ```
-Source → Build → Deploy → [Manual Approval] → Production
+Source → Synth → Deploy (Lambda → Serverless → StackSet) → Integration Tests
 ```
+
+The `foundational` module (VPC, firewall, routing, Transit Gateway) has no
+pipeline; it is deployed once per stage with `cdk deploy`. See
+[foundational/README.md](foundational/README.md).
 
 #### Pipeline Features
 
