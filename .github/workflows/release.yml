@@ -51,8 +51,11 @@ jobs:
         run: npm audit signatures
 
       - name: Build project
+        # 'sample' is the only stage with tracked config; no AWS credentials are
+        # available here, so the config loader falls back to the sample files.
         env:
-          STAGE: dev
+          STAGE: sample
+          AWS_REGION: eu-west-1
         run: make build
 
       - name: Run unit tests

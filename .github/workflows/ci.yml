@@ -61,9 +61,10 @@ jobs:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
           echo "Validating branch name: $BRANCH_NAME"
-          if [[ ! "$BRANCH_NAME" =~ ^(feature|hotfix|release)/.+ ]]; then
+          # 'dev' is allowed as a source so dev -> main promotion PRs pass.
+          if [[ ! "$BRANCH_NAME" =~ ^(dev$|(feature|hotfix|release)/.+) ]]; then
             echo "❌ Branch name '$BRANCH_NAME' does not follow the required pattern."
-            echo "   Branch names must follow: feature/*, hotfix/*, or release/*"
+            echo "   Branch names must follow: dev, feature/*, hotfix/*, or release/*"
             echo "   Examples:"
             echo "   - feature/add-new-validation"
             echo "   - hotfix/fix-critical-bug"
