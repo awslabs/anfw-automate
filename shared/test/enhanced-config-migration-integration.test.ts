@@ -423,7 +423,9 @@ describe('Enhanced Configuration Migration Integration Tests', () => {
   describe('Error Handling and Troubleshooting', () => {
     it('should provide specific troubleshooting guidance for common issues', async () => {
       try {
-        await configManager.loadConfig('invalid-module' as any, 'dev');
+        // 'sample' is the only stage with a tracked global config (conf/sample.json),
+        // so the loader gets past global config and fails on the module lookup.
+        await configManager.loadConfig('invalid-module' as any, 'sample');
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeInstanceOf(ConfigurationError);
