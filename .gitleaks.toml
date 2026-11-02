@@ -27,7 +27,6 @@ paths = [
     # Lock files
     '''yarn\.lock''',
     '''package-lock\.json''',
-    '''poetry\.lock''',
     
     # Compiled files
     '''\.js\.map''',
