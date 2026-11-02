@@ -15,6 +15,7 @@
     ]
   },
   "context": {
+    "availability-zones:account=000011112222:region=eu-west-1": ["eu-west-1a", "eu-west-1b", "eu-west-1c"],
     "@aws-cdk/core:bootstrapQualifier": "anfw",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,

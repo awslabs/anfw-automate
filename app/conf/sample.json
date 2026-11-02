@@ -4,8 +4,8 @@
     "rule_order": "DEFAULT_ACTION_ORDER",
     "supported_regions": ["eu-west-1", "eu-central-1"],
     "firewall_policy_arns": {
-      "eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"],
-      "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]
+      "eu-west-1": ["arn:aws:network-firewall:eu-west-1:123456789012:firewall-policy/policy-id-1"],
+      "eu-central-1": ["arn:aws:network-firewall:eu-central-1:123456789012:firewall-policy/policy-id-2"]
     },
     "stackset": {
       "permission_model": "SERVICE_MANAGED",
@@ -24,8 +24,8 @@
     "rule_order": "STRICT_ORDER",
     "supported_regions": ["eu-west-1", "eu-central-1"],
     "firewall_policy_arns": {
-      "eu-west-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-1"],
-      "eu-central-1": ["arn:aws:network-firewall:region:account-id:policy/policy-id-2"]
+      "eu-west-1": ["arn:aws:network-firewall:eu-west-1:123456789012:firewall-policy/policy-id-1"],
+      "eu-central-1": ["arn:aws:network-firewall:eu-central-1:123456789012:firewall-policy/policy-id-2"]
     },
     "stackset": {
       "permission_model": "SERVICE_MANAGED",
