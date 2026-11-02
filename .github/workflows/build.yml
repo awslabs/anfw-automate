@@ -1,27 +1,22 @@
-name: Release
+name: Build
 
+# Full synth of every module for PRs into main. Unit tests run in ci.yml
+# (unit-gate); deployment and INT tests run in the app CodePipeline.
 on:
   pull_request:
     branches:
       - main
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  id-token: write
+  contents: read
 
 jobs:
   test:
     name: Test & Build
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -57,37 +52,3 @@ jobs:
           STAGE: sample
           AWS_REGION: eu-west-1
         run: make build
-
-      - name: Run unit tests
-        run: make unit
-
-  release:
-    name: Release (Requires Approval)
-    runs-on: ubuntu-latest
-    environment: production
-    needs: test
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          HUSKY: 0 # Disable Husky in CI
-        run: yarn exec semantic-release
