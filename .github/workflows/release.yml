@@ -46,7 +46,9 @@ jobs:
         run: cd app/src && uv sync
 
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
-        run: yarn npm audit signatures
+        # Yarn 4 has no signature audit; npm verifies the installed node_modules tree
+        # (nodeLinker: node-modules) against registry signatures and attestations.
+        run: npm audit signatures
 
       - name: Build project
         env:
